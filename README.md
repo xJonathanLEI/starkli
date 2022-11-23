@@ -9,7 +9,7 @@
 The package will be published to crates.io when it's more feature-complete. For now, install from GitHub directly for the latest features and bug fixes:
 
 ```sh
-$ cargo install --git https://github.com/xJonathanLEI/starkli
+$ cargo install --locked --git https://github.com/xJonathanLEI/starkli
 ```
 
 ## License
