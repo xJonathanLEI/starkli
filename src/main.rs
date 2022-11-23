@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use crate::subcommands::{completions::Completions, selector::Selector};
+use crate::subcommands::{class_hash::ClassHash, completions::Completions, selector::Selector};
 
 mod subcommands;
 
@@ -16,6 +16,8 @@ struct Cli {
 enum Subcommands {
     #[clap(about = "Calculate selector from name")]
     Selector(Selector),
+    #[clap(about = "Calculate class hash from compiled contract artifact")]
+    ClassHash(ClassHash),
     #[clap(about = "Generate shell completions script")]
     Completions(Completions),
 }
@@ -31,6 +33,7 @@ async fn main() {
 async fn run_command(cli: Cli) -> Result<()> {
     match cli.command {
         Subcommands::Selector(cmd) => cmd.run(),
+        Subcommands::ClassHash(cmd) => cmd.run(),
         Subcommands::Completions(cmd) => cmd.run(),
     }
 }

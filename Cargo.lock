@@ -1277,6 +1277,7 @@ dependencies = [
  "anyhow",
  "clap",
  "clap_complete",
+ "serde_json",
  "starknet",
  "tokio",
 ]

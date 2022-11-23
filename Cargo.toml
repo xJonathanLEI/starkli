@@ -12,5 +12,6 @@ Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for StarkNet powered by star
 anyhow = "1.0.66"
 clap = { version = "4.0.26", features = ["derive"] }
 clap_complete = "4.0.5"
+serde_json = "1.0.89"
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs" }
 tokio = { version = "1.22.0", default-features = false, features = ["macros", "rt-multi-thread"] }
