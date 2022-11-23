@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::subcommands::selector::Selector;
+use crate::subcommands::{completions::Completions, selector::Selector};
 
 mod subcommands;
 
@@ -15,6 +15,8 @@ struct Cli {
 enum Subcommands {
     #[clap(about = "Calculate selector from name")]
     Selector(Selector),
+    #[clap(about = "Generate shell completions script")]
+    Completions(Completions),
 }
 
 #[tokio::main]
@@ -23,6 +25,9 @@ async fn main() {
 
     match cli.command {
         Subcommands::Selector(cmd) => {
+            cmd.run();
+        }
+        Subcommands::Completions(cmd) => {
             cmd.run();
         }
     }
