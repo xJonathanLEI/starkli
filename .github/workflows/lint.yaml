@@ -1,0 +1,43 @@
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
+
+name: "Linting"
+
+jobs:
+  lint:
+    name: "Lints"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v3"
+
+      - name: "Setup stable toolchain"
+        uses: "actions-rs/toolchain@v1"
+        with:
+          toolchain: "stable"
+          profile: "minimal"
+          override: true
+
+      - name: "Use Rust cache"
+        uses: "Swatinem/rust-cache@v2"
+        with:
+          cache-on-failure: true
+
+      - name: "Install prettier"
+        run: |
+          yarn global add prettier
+
+      - name: "Check prettier format"
+        run: |
+          prettier --ignore-path .gitignore --check .
+
+      - name: "Check Rust format"
+        run: |
+          cargo fmt --all -- --check
+
+      - name: "Run Clippy lints"
+        run: |
+          cargo clippy --all --all-targets
