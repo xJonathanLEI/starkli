@@ -9,6 +9,7 @@ Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for StarkNet powered by star
 """
 
 [dependencies]
+anyhow = "1.0.66"
 clap = { version = "4.0.26", features = ["derive"] }
 clap_complete = "4.0.5"
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs" }

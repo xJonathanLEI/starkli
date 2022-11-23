@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::Parser;
 use starknet::core::utils::get_selector_from_name;
 
@@ -9,9 +10,10 @@ pub struct Selector {
 }
 
 impl Selector {
-    pub fn run(self) {
-        let selector =
-            get_selector_from_name(self.name.trim()).expect("error calculating selector");
+    pub fn run(self) -> Result<()> {
+        let selector = get_selector_from_name(self.name.trim())?;
         println!("{:#064x}", selector);
+
+        Ok(())
     }
 }

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::{CommandFactory, Parser};
 use clap_complete::{generate, Shell};
 
@@ -11,12 +12,14 @@ pub struct Completions {
 }
 
 impl Completions {
-    pub fn run(self) {
+    pub fn run(self) -> Result<()> {
         generate(
             self.shell,
             &mut Cli::command(),
             env!("CARGO_PKG_NAME"),
             &mut std::io::stdout(),
         );
+
+        Ok(())
     }
 }

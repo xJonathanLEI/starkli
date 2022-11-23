@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use crate::subcommands::{completions::Completions, selector::Selector};
@@ -21,14 +22,15 @@ enum Subcommands {
 
 #[tokio::main]
 async fn main() {
-    let cli = Cli::parse();
+    if let Err(err) = run_command(Cli::parse()).await {
+        eprintln!("Error: {}", err);
+        std::process::exit(1);
+    }
+}
 
+async fn run_command(cli: Cli) -> Result<()> {
     match cli.command {
-        Subcommands::Selector(cmd) => {
-            cmd.run();
-        }
-        Subcommands::Completions(cmd) => {
-            cmd.run();
-        }
+        Subcommands::Selector(cmd) => cmd.run(),
+        Subcommands::Completions(cmd) => cmd.run(),
     }
 }
