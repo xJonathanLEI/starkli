@@ -10,7 +10,7 @@ Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for StarkNet powered by star
 
 [dependencies]
 anyhow = "1.0.66"
-clap = { version = "4.0.26", features = ["derive"] }
+clap = { version = "4.0.26", features = ["derive", "env"] }
 clap_complete = "4.0.5"
 colored_json = "3.0.1"
 serde_json = { version = "1.0.89", features = ["preserve_order"] }

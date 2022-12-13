@@ -10,7 +10,11 @@ use url::Url;
 #[derive(Debug, Parser)]
 #[clap(author, version, about)]
 pub struct GetTransaction {
-    #[clap(long = "rpc", help = "StarkNet JSON-RPC endpoint")]
+    #[clap(
+        long = "rpc",
+        env = "STARKNET_RPC",
+        help = "StarkNet JSON-RPC endpoint"
+    )]
     rpc: Url,
     #[clap(help = "Transaction hash")]
     hash: String,
