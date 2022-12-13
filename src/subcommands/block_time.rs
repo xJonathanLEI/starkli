@@ -1,4 +1,5 @@
 use anyhow::Result;
+use chrono::{TimeZone, Utc};
 use clap::Parser;
 use starknet::providers::jsonrpc::{
     models::MaybePendingBlockWithTxHashes, HttpTransport, JsonRpcClient,
@@ -10,6 +11,18 @@ use crate::{utils::parse_block_id, JsonRpcArgs};
 pub struct BlockTime {
     #[clap(flatten)]
     jsonrpc: JsonRpcArgs,
+    #[clap(
+        long,
+        conflicts_with = "rfc2822",
+        help = "Show block time in Unix timestamp format"
+    )]
+    unix: bool,
+    #[clap(
+        long,
+        conflicts_with = "unix",
+        help = "Show block time in RFC 2822 format"
+    )]
+    rfc2822: bool,
     #[clap(
         default_value = "latest",
         help = "Block number, hash, or tag (latest/pending)"
@@ -29,7 +42,23 @@ impl BlockTime {
             MaybePendingBlockWithTxHashes::PendingBlock(block) => block.timestamp,
         };
 
-        println!("{timestamp}");
+        if self.unix {
+            println!("{timestamp}");
+        } else {
+            let timestamp = Utc
+                .timestamp_opt(
+                    timestamp
+                        .try_into()
+                        .map_err(|_| anyhow::anyhow!("Block timesetamp out of range"))?,
+                    0,
+                )
+                .unwrap();
+            if self.rfc2822 {
+                println!("{}", timestamp.to_rfc2822())
+            } else {
+                println!("{}", timestamp.to_rfc3339())
+            }
+        }
 
         Ok(())
     }
