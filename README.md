@@ -23,14 +23,15 @@ Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for StarkNet powered by star
 Usage: starkli <COMMAND>
 
 Commands:
-  selector         Calculate selector from name
-  class-hash       Calculate class hash from compiled contract artifact
-  get-transaction  Get StarkNet transaction by hash
-  block-number     Get latest block number
-  get-block        Get StarkNet block
-  block-time       Get StarkNet block timestamp only
-  completions      Generate shell completions script
-  help             Print this message or the help of the given subcommand(s)
+  selector                 Calculate selector from name
+  class-hash               Calculate class hash from compiled contract artifact
+  get-transaction          Get StarkNet transaction by hash
+  block-number             Get latest block number
+  get-block                Get StarkNet block
+  block-time               Get StarkNet block timestamp only
+  get-transaction-receipt  Get transaction receipt by hash
+  completions              Generate shell completions script
+  help                     Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help information

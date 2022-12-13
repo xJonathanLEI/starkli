@@ -11,3 +11,5 @@ pub mod block_number;
 pub mod get_block;
 
 pub mod block_time;
+
+pub mod get_transaction_receipt;

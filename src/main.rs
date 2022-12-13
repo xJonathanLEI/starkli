@@ -5,7 +5,7 @@ use url::Url;
 use crate::subcommands::{
     block_number::BlockNumber, block_time::BlockTime, class_hash::ClassHash,
     completions::Completions, get_block::GetBlock, get_transaction::GetTransaction,
-    selector::Selector,
+    get_transaction_receipt::GetTransactionReceipt, selector::Selector,
 };
 
 mod subcommands;
@@ -42,6 +42,8 @@ enum Subcommands {
     GetBlock(GetBlock),
     #[clap(about = "Get StarkNet block timestamp only")]
     BlockTime(BlockTime),
+    #[clap(about = "Get transaction receipt by hash")]
+    GetTransactionReceipt(GetTransactionReceipt),
     #[clap(about = "Generate shell completions script")]
     Completions(Completions),
 }
@@ -62,6 +64,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::BlockNumber(cmd) => cmd.run().await,
         Subcommands::GetBlock(cmd) => cmd.run().await,
         Subcommands::BlockTime(cmd) => cmd.run().await,
+        Subcommands::GetTransactionReceipt(cmd) => cmd.run().await,
         Subcommands::Completions(cmd) => cmd.run(),
     }
 }
