@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use colored_json::{ColorMode, Output};
 use starknet::{
     core::types::FieldElement,
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
@@ -24,7 +25,9 @@ impl GetTransaction {
             .get_transaction_by_hash(transaction_hash)
             .await?;
 
-        let transaction_json = serde_json::to_string_pretty(&transaction)?;
+        let transaction_json = serde_json::to_value(&transaction)?;
+        let transaction_json =
+            colored_json::to_colored_json(&transaction_json, ColorMode::Auto(Output::StdOut))?;
         println!("{transaction_json}");
 
         Ok(())

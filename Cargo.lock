@@ -256,6 +256,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "colored_json"
+version = "3.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "633215cdbb84194508d4c07c08d06e92ee9d489d54e68d17913d8d1bacfcfdeb"
+dependencies = [
+ "atty",
+ "serde",
+ "serde_json",
+ "yansi",
+]
+
+[[package]]
 name = "cpufeatures"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1183,6 +1195,7 @@ version = "1.0.89"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "020ff22c755c2ed3f8cf162dbb41a7268d934702f3ed3631656ea597e08fc3db"
 dependencies = [
+ "indexmap",
  "itoa",
  "ryu",
  "serde",
@@ -1277,6 +1290,7 @@ dependencies = [
  "anyhow",
  "clap",
  "clap_complete",
+ "colored_json",
  "serde_json",
  "starknet",
  "tokio",
@@ -1911,6 +1925,12 @@ name = "wyz"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
+
+[[package]]
+name = "yansi"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09041cd90cf85f7f8b2df60c646f853b7f535ce68f85244eb6731cf89fa498ec"
 
 [[package]]
 name = "zeroize"
