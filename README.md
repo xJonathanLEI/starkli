@@ -28,6 +28,7 @@ Commands:
   get-transaction  Get StarkNet transaction by hash
   block-number     Get latest block number
   get-block        Get StarkNet block
+  block-time       Get StarkNet block timestamp only
   completions      Generate shell completions script
   help             Print this message or the help of the given subcommand(s)
 

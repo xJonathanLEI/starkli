@@ -1,16 +1,9 @@
 use anyhow::Result;
 use clap::Parser;
 use colored_json::{ColorMode, Output};
-use regex::Regex;
-use starknet::{
-    core::types::FieldElement,
-    providers::jsonrpc::{
-        models::{BlockId, BlockTag},
-        HttpTransport, JsonRpcClient,
-    },
-};
+use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 
-use crate::JsonRpcArgs;
+use crate::{utils::parse_block_id, JsonRpcArgs};
 
 #[derive(Debug, Parser)]
 pub struct GetBlock {
@@ -29,17 +22,7 @@ impl GetBlock {
     pub async fn run(self) -> Result<()> {
         let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
 
-        let regex_block_number = Regex::new("^[0-9]{1,}$").unwrap();
-
-        let block_id = if self.block_id == "latest" {
-            BlockId::Tag(BlockTag::Latest)
-        } else if self.block_id == "pending" {
-            BlockId::Tag(BlockTag::Pending)
-        } else if regex_block_number.is_match(&self.block_id) {
-            BlockId::Number(self.block_id.parse::<u64>()?)
-        } else {
-            BlockId::Hash(FieldElement::from_hex_be(&self.block_id)?)
-        };
+        let block_id = parse_block_id(&self.block_id)?;
 
         let block_json = if self.full {
             serde_json::to_value(&jsonrpc_client.get_block_with_txs(&block_id).await?)?
