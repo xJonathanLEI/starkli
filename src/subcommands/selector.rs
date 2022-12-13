@@ -3,7 +3,6 @@ use clap::Parser;
 use starknet::core::utils::get_selector_from_name;
 
 #[derive(Debug, Parser)]
-#[clap(author, version, about)]
 pub struct Selector {
     #[clap(help = "Selector name")]
     name: String,

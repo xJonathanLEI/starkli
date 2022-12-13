@@ -5,7 +5,6 @@ use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use crate::JsonRpcArgs;
 
 #[derive(Debug, Parser)]
-#[clap(author, version, about)]
 pub struct BlockNumber {
     #[clap(flatten)]
     jsonrpc: JsonRpcArgs,

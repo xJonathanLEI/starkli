@@ -5,7 +5,6 @@ use clap_complete::{generate, Shell};
 use crate::Cli;
 
 #[derive(Debug, Parser)]
-#[clap(author, version, about)]
 pub struct Completions {
     #[clap(help = "Shell name")]
     shell: Shell,

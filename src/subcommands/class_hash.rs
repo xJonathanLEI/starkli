@@ -5,7 +5,6 @@ use clap::Parser;
 use starknet::core::types::ContractArtifact;
 
 #[derive(Debug, Parser)]
-#[clap(author, version, about)]
 pub struct ClassHash {
     #[clap(help = "Path to contract artifact file")]
     file: PathBuf,

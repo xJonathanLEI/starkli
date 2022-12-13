@@ -9,7 +9,6 @@ use starknet::{
 use crate::JsonRpcArgs;
 
 #[derive(Debug, Parser)]
-#[clap(author, version, about)]
 pub struct GetTransaction {
     #[clap(flatten)]
     jsonrpc: JsonRpcArgs,

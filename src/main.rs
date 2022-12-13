@@ -17,7 +17,6 @@ struct Cli {
 }
 
 #[derive(Debug, Clone, Parser)]
-#[clap(author, version, about)]
 struct JsonRpcArgs {
     #[clap(
         long = "rpc",
