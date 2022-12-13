@@ -5,7 +5,8 @@ use url::Url;
 use crate::subcommands::{
     block_number::BlockNumber, block_time::BlockTime, chain_id::ChainId, class_hash::ClassHash,
     completions::Completions, get_block::GetBlock, get_transaction::GetTransaction,
-    get_transaction_receipt::GetTransactionReceipt, selector::Selector,
+    get_transaction_receipt::GetTransactionReceipt, parse_cairo_string::ParseCairoString,
+    selector::Selector, to_cairo_string::ToCairoString,
 };
 
 mod subcommands;
@@ -34,6 +35,10 @@ enum Subcommands {
     Selector(Selector),
     #[clap(about = "Calculate class hash from compiled contract artifact")]
     ClassHash(ClassHash),
+    #[clap(about = "Encode string into felt with the Cairo short string representation")]
+    ToCairoString(ToCairoString),
+    #[clap(about = "Decode string from felt with the Cairo short string representation")]
+    ParseCairoString(ParseCairoString),
     #[clap(about = "Get StarkNet transaction by hash")]
     GetTransaction(GetTransaction),
     #[clap(about = "Get latest block number")]
@@ -62,6 +67,8 @@ async fn run_command(cli: Cli) -> Result<()> {
     match cli.command {
         Subcommands::Selector(cmd) => cmd.run(),
         Subcommands::ClassHash(cmd) => cmd.run(),
+        Subcommands::ToCairoString(cmd) => cmd.run(),
+        Subcommands::ParseCairoString(cmd) => cmd.run(),
         Subcommands::GetTransaction(cmd) => cmd.run().await,
         Subcommands::BlockNumber(cmd) => cmd.run().await,
         Subcommands::GetBlock(cmd) => cmd.run().await,

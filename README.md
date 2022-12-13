@@ -25,6 +25,8 @@ Usage: starkli <COMMAND>
 Commands:
   selector                 Calculate selector from name
   class-hash               Calculate class hash from compiled contract artifact
+  to-cairo-string          Encode string into felt with the Cairo short string representation
+  parse-cairo-string       Decode string from felt with the Cairo short string representation
   get-transaction          Get StarkNet transaction by hash
   block-number             Get latest block number
   get-block                Get StarkNet block

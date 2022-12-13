@@ -18,3 +18,13 @@ pub fn parse_block_id(id: &str) -> Result<BlockId> {
         Ok(BlockId::Hash(FieldElement::from_hex_be(id)?))
     }
 }
+
+pub fn parse_felt_value(felt: &str) -> Result<FieldElement> {
+    let regex_dec_number = Regex::new("^[0-9]{1,}$").unwrap();
+
+    if regex_dec_number.is_match(felt) {
+        Ok(FieldElement::from_dec_str(felt)?)
+    } else {
+        Ok(FieldElement::from_hex_be(felt)?)
+    }
+}
