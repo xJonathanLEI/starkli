@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 use url::Url;
 
 use crate::subcommands::{
-    block_number::BlockNumber, block_time::BlockTime, class_hash::ClassHash,
+    block_number::BlockNumber, block_time::BlockTime, chain_id::ChainId, class_hash::ClassHash,
     completions::Completions, get_block::GetBlock, get_transaction::GetTransaction,
     get_transaction_receipt::GetTransactionReceipt, selector::Selector,
 };
@@ -44,6 +44,8 @@ enum Subcommands {
     BlockTime(BlockTime),
     #[clap(about = "Get transaction receipt by hash")]
     GetTransactionReceipt(GetTransactionReceipt),
+    #[clap(about = "Get StarkNet network ID")]
+    ChainId(ChainId),
     #[clap(about = "Generate shell completions script")]
     Completions(Completions),
 }
@@ -65,6 +67,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::GetBlock(cmd) => cmd.run().await,
         Subcommands::BlockTime(cmd) => cmd.run().await,
         Subcommands::GetTransactionReceipt(cmd) => cmd.run().await,
+        Subcommands::ChainId(cmd) => cmd.run().await,
         Subcommands::Completions(cmd) => cmd.run(),
     }
 }

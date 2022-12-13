@@ -30,6 +30,7 @@ Commands:
   get-block                Get StarkNet block
   block-time               Get StarkNet block timestamp only
   get-transaction-receipt  Get transaction receipt by hash
+  chain-id                 Get StarkNet network ID
   completions              Generate shell completions script
   help                     Print this message or the help of the given subcommand(s)
 
