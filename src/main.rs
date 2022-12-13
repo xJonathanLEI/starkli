@@ -2,8 +2,8 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use crate::subcommands::{
-    class_hash::ClassHash, completions::Completions, get_transaction::GetTransaction,
-    selector::Selector,
+    block_number::BlockNumber, class_hash::ClassHash, completions::Completions,
+    get_transaction::GetTransaction, selector::Selector,
 };
 
 mod subcommands;
@@ -23,6 +23,8 @@ enum Subcommands {
     ClassHash(ClassHash),
     #[clap(about = "Get StarkNet transaction by hash")]
     GetTransaction(GetTransaction),
+    #[clap(about = "Get latest block number")]
+    BlockNumber(BlockNumber),
     #[clap(about = "Generate shell completions script")]
     Completions(Completions),
 }
@@ -40,6 +42,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::Selector(cmd) => cmd.run(),
         Subcommands::ClassHash(cmd) => cmd.run(),
         Subcommands::GetTransaction(cmd) => cmd.run().await,
+        Subcommands::BlockNumber(cmd) => cmd.run().await,
         Subcommands::Completions(cmd) => cmd.run(),
     }
 }

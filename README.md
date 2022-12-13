@@ -27,6 +27,7 @@ Commands:
   selector         Calculate selector from name
   class-hash       Calculate class hash from compiled contract artifact
   get-transaction  Get StarkNet transaction by hash
+  block-number     Get latest block number
   completions      Generate shell completions script
   help             Print this message or the help of the given subcommand(s)
 
