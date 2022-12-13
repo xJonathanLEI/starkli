@@ -1,22 +1,19 @@
 use anyhow::Result;
 use clap::Parser;
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
-use url::Url;
+
+use crate::JsonRpcArgs;
 
 #[derive(Debug, Parser)]
 #[clap(author, version, about)]
 pub struct BlockNumber {
-    #[clap(
-        long = "rpc",
-        env = "STARKNET_RPC",
-        help = "StarkNet JSON-RPC endpoint"
-    )]
-    rpc: Url,
+    #[clap(flatten)]
+    jsonrpc: JsonRpcArgs,
 }
 
 impl BlockNumber {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.rpc));
+        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
 
         let block_number = jsonrpc_client.block_number().await?;
 

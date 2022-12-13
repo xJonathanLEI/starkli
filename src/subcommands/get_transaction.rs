@@ -5,24 +5,21 @@ use starknet::{
     core::types::FieldElement,
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
 };
-use url::Url;
+
+use crate::JsonRpcArgs;
 
 #[derive(Debug, Parser)]
 #[clap(author, version, about)]
 pub struct GetTransaction {
-    #[clap(
-        long = "rpc",
-        env = "STARKNET_RPC",
-        help = "StarkNet JSON-RPC endpoint"
-    )]
-    rpc: Url,
+    #[clap(flatten)]
+    jsonrpc: JsonRpcArgs,
     #[clap(help = "Transaction hash")]
     hash: String,
 }
 
 impl GetTransaction {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.rpc));
+        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
         let transaction_hash = FieldElement::from_hex_be(&self.hash)?;
 
         let transaction = jsonrpc_client

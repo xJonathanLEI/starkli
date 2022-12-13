@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use url::Url;
 
 use crate::subcommands::{
     block_number::BlockNumber, class_hash::ClassHash, completions::Completions,
@@ -13,6 +14,17 @@ mod subcommands;
 struct Cli {
     #[clap(subcommand)]
     command: Subcommands,
+}
+
+#[derive(Debug, Clone, Parser)]
+#[clap(author, version, about)]
+struct JsonRpcArgs {
+    #[clap(
+        long = "rpc",
+        env = "STARKNET_RPC",
+        help = "StarkNet JSON-RPC endpoint"
+    )]
+    rpc: Url,
 }
 
 #[derive(Debug, Subcommand)]
