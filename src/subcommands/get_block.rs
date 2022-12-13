@@ -16,6 +16,8 @@ use crate::JsonRpcArgs;
 pub struct GetBlock {
     #[clap(flatten)]
     jsonrpc: JsonRpcArgs,
+    #[clap(long, help = "Fetch full transactions instead of hashes only")]
+    full: bool,
     #[clap(
         default_value = "latest",
         help = "Block number, hash, or tag (latest/pending)"
@@ -39,9 +41,12 @@ impl GetBlock {
             BlockId::Hash(FieldElement::from_hex_be(&self.block_id)?)
         };
 
-        let block = jsonrpc_client.get_block_with_tx_hashes(&block_id).await?;
+        let block_json = if self.full {
+            serde_json::to_value(&jsonrpc_client.get_block_with_txs(&block_id).await?)?
+        } else {
+            serde_json::to_value(&jsonrpc_client.get_block_with_tx_hashes(&block_id).await?)?
+        };
 
-        let block_json = serde_json::to_value(&block)?;
         let block_json =
             colored_json::to_colored_json(&block_json, ColorMode::Auto(Output::StdOut))?;
         println!("{block_json}");
