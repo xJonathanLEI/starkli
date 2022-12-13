@@ -11,6 +11,7 @@ anyhow = "1.0.66"
 clap = { version = "4.0.26", features = ["derive", "env"] }
 clap_complete = "4.0.5"
 colored_json = "3.0.1"
+regex = "1.7.0"
 serde_json = { version = "1.0.89", features = ["preserve_order"] }
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs" }
 tokio = { version = "1.22.0", default-features = false, features = ["macros", "rt-multi-thread"] }

@@ -20,7 +20,6 @@ Check the list of available commands by simply running `starkli` without argumen
 $ starkli
 Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for StarkNet powered by starknet-rs
 
-
 Usage: starkli <COMMAND>
 
 Commands:
@@ -28,6 +27,7 @@ Commands:
   class-hash       Calculate class hash from compiled contract artifact
   get-transaction  Get StarkNet transaction by hash
   block-number     Get latest block number
+  get-block        Get StarkNet block
   completions      Generate shell completions script
   help             Print this message or the help of the given subcommand(s)
 

@@ -4,7 +4,7 @@ use url::Url;
 
 use crate::subcommands::{
     block_number::BlockNumber, class_hash::ClassHash, completions::Completions,
-    get_transaction::GetTransaction, selector::Selector,
+    get_block::GetBlock, get_transaction::GetTransaction, selector::Selector,
 };
 
 mod subcommands;
@@ -36,6 +36,8 @@ enum Subcommands {
     GetTransaction(GetTransaction),
     #[clap(about = "Get latest block number")]
     BlockNumber(BlockNumber),
+    #[clap(about = "Get StarkNet block")]
+    GetBlock(GetBlock),
     #[clap(about = "Generate shell completions script")]
     Completions(Completions),
 }
@@ -54,6 +56,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::ClassHash(cmd) => cmd.run(),
         Subcommands::GetTransaction(cmd) => cmd.run().await,
         Subcommands::BlockNumber(cmd) => cmd.run().await,
+        Subcommands::GetBlock(cmd) => cmd.run().await,
         Subcommands::Completions(cmd) => cmd.run(),
     }
 }
