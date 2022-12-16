@@ -25,7 +25,7 @@ impl GetTransactionReceipt {
             .get_transaction_receipt(transaction_hash)
             .await?;
 
-        let receipt_json = serde_json::to_value(&receipt)?;
+        let receipt_json = serde_json::to_value(receipt)?;
         let receipt_json =
             colored_json::to_colored_json(&receipt_json, ColorMode::Auto(Output::StdOut))?;
         println!("{receipt_json}");

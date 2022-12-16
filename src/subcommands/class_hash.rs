@@ -13,7 +13,7 @@ pub struct ClassHash {
 impl ClassHash {
     pub fn run(self) -> Result<()> {
         let contract_artifact: ContractArtifact =
-            serde_json::from_reader(std::fs::File::open(&self.file)?)?;
+            serde_json::from_reader(std::fs::File::open(self.file)?)?;
 
         let class_hash = contract_artifact.class_hash()?;
         println!("{:#064x}", class_hash);

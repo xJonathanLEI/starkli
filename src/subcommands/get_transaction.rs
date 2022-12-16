@@ -25,7 +25,7 @@ impl GetTransaction {
             .get_transaction_by_hash(transaction_hash)
             .await?;
 
-        let transaction_json = serde_json::to_value(&transaction)?;
+        let transaction_json = serde_json::to_value(transaction)?;
         let transaction_json =
             colored_json::to_colored_json(&transaction_json, ColorMode::Auto(Output::StdOut))?;
         println!("{transaction_json}");
