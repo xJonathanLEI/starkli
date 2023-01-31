@@ -2,12 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use url::Url;
 
-use crate::subcommands::{
-    block_number::BlockNumber, block_time::BlockTime, chain_id::ChainId, class_hash::ClassHash,
-    completions::Completions, get_block::GetBlock, get_transaction::GetTransaction,
-    get_transaction_receipt::GetTransactionReceipt, parse_cairo_string::ParseCairoString,
-    selector::Selector, to_cairo_string::ToCairoString,
-};
+use crate::subcommands::*;
 
 mod subcommands;
 mod utils;
@@ -31,6 +26,9 @@ struct JsonRpcArgs {
 
 #[derive(Debug, Subcommand)]
 enum Subcommands {
+    //
+    // Local utilities
+    //
     #[clap(about = "Calculate selector from name")]
     Selector(Selector),
     #[clap(about = "Calculate class hash from compiled contract artifact")]
@@ -39,6 +37,9 @@ enum Subcommands {
     ToCairoString(ToCairoString),
     #[clap(about = "Decode string from felt with the Cairo short string representation")]
     ParseCairoString(ParseCairoString),
+    //
+    // JSON-RPC query client
+    //
     #[clap(about = "Get StarkNet transaction by hash")]
     GetTransaction(GetTransaction),
     #[clap(about = "Get latest block number")]
@@ -51,6 +52,9 @@ enum Subcommands {
     GetTransactionReceipt(GetTransactionReceipt),
     #[clap(about = "Get StarkNet network ID")]
     ChainId(ChainId),
+    //
+    // Misc
+    //
     #[clap(about = "Generate shell completions script")]
     Completions(Completions),
 }

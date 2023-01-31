@@ -1,21 +1,32 @@
-pub mod selector;
+mod selector;
+pub use selector::Selector;
 
-pub mod completions;
+mod completions;
+pub use completions::Completions;
 
-pub mod class_hash;
+mod class_hash;
+pub use class_hash::ClassHash;
 
-pub mod get_transaction;
+mod get_transaction;
+pub use get_transaction::GetTransaction;
 
-pub mod block_number;
+mod block_number;
+pub use block_number::BlockNumber;
 
-pub mod get_block;
+mod get_block;
+pub use get_block::GetBlock;
 
-pub mod block_time;
+mod block_time;
+pub use block_time::BlockTime;
 
-pub mod get_transaction_receipt;
+mod get_transaction_receipt;
+pub use get_transaction_receipt::GetTransactionReceipt;
 
-pub mod chain_id;
+mod chain_id;
+pub use chain_id::ChainId;
 
-pub mod to_cairo_string;
+mod to_cairo_string;
+pub use to_cairo_string::ToCairoString;
 
-pub mod parse_cairo_string;
+mod parse_cairo_string;
+pub use parse_cairo_string::ParseCairoString;
