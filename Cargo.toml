@@ -11,6 +11,7 @@ anyhow = "1.0.66"
 chrono = "0.4.23"
 clap = { version = "4.0.26", features = ["derive", "env"] }
 clap_complete = "4.0.5"
+colored = "2.0.0"
 colored_json = "3.0.1"
 regex = "1.7.0"
 serde_json = { version = "1.0.89", features = ["preserve_order"] }

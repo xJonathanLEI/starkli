@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use colored::Colorize;
 use url::Url;
 
 use crate::subcommands::*;
@@ -62,7 +63,7 @@ enum Subcommands {
 #[tokio::main]
 async fn main() {
     if let Err(err) = run_command(Cli::parse()).await {
-        eprintln!("Error: {err}");
+        eprintln!("{}", format!("Error: {err}").red());
         std::process::exit(1);
     }
 }
