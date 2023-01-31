@@ -16,7 +16,7 @@ impl ClassHash {
             serde_json::from_reader(std::fs::File::open(self.file)?)?;
 
         let class_hash = contract_artifact.class_hash()?;
-        println!("{:#064x}", class_hash);
+        println!("{class_hash:#064x}");
 
         Ok(())
     }

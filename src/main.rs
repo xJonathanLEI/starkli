@@ -58,7 +58,7 @@ enum Subcommands {
 #[tokio::main]
 async fn main() {
     if let Err(err) = run_command(Cli::parse()).await {
-        eprintln!("Error: {}", err);
+        eprintln!("Error: {err}");
         std::process::exit(1);
     }
 }

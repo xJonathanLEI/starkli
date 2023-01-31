@@ -14,9 +14,9 @@ impl ToCairoString {
     pub fn run(self) -> Result<()> {
         let felt_value = cairo_short_string_to_felt(&self.text)?;
         if self.dec {
-            println!("{}", felt_value);
+            println!("{felt_value}");
         } else {
-            println!("{:#x}", felt_value);
+            println!("{felt_value:#x}");
         }
 
         Ok(())

@@ -19,7 +19,7 @@ impl Selector {
         }
 
         let selector = get_selector_from_name(trimmed_name)?;
-        println!("{:#064x}", selector);
+        println!("{selector:#064x}");
 
         Ok(())
     }
