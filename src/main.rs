@@ -38,6 +38,8 @@ enum Subcommands {
     ToCairoString(ToCairoString),
     #[clap(about = "Decode string from felt with the Cairo short string representation")]
     ParseCairoString(ParseCairoString),
+    #[clap(about = "Prints the montgomery representation of a field element")]
+    Mont(Mont),
     //
     // JSON-RPC query client
     //
@@ -74,6 +76,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::ClassHash(cmd) => cmd.run(),
         Subcommands::ToCairoString(cmd) => cmd.run(),
         Subcommands::ParseCairoString(cmd) => cmd.run(),
+        Subcommands::Mont(cmd) => cmd.run(),
         Subcommands::GetTransaction(cmd) => cmd.run().await,
         Subcommands::BlockNumber(cmd) => cmd.run().await,
         Subcommands::GetBlock(cmd) => cmd.run().await,
