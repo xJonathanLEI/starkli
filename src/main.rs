@@ -32,7 +32,7 @@ enum Subcommands {
     //
     #[clap(about = "Calculate selector from name")]
     Selector(Selector),
-    #[clap(about = "Calculate class hash from compiled contract artifact")]
+    #[clap(about = "Calculate class hash from any contract artifacts (Sierra, casm, legacy)")]
     ClassHash(ClassHash),
     #[clap(about = "Encode string into felt with the Cairo short string representation")]
     ToCairoString(ToCairoString),
