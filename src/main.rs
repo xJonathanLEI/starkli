@@ -20,7 +20,7 @@ struct JsonRpcArgs {
     #[clap(
         long = "rpc",
         env = "STARKNET_RPC",
-        help = "StarkNet JSON-RPC endpoint"
+        help = "Starknet JSON-RPC endpoint"
     )]
     rpc: Url,
 }
@@ -43,17 +43,17 @@ enum Subcommands {
     //
     // JSON-RPC query client
     //
-    #[clap(about = "Get StarkNet transaction by hash")]
+    #[clap(about = "Get Starknet transaction by hash")]
     GetTransaction(GetTransaction),
     #[clap(about = "Get latest block number")]
     BlockNumber(BlockNumber),
-    #[clap(about = "Get StarkNet block")]
+    #[clap(about = "Get Starknet block")]
     GetBlock(GetBlock),
-    #[clap(about = "Get StarkNet block timestamp only")]
+    #[clap(about = "Get Starknet block timestamp only")]
     BlockTime(BlockTime),
     #[clap(about = "Get transaction receipt by hash")]
     GetTransactionReceipt(GetTransactionReceipt),
-    #[clap(about = "Get StarkNet network ID")]
+    #[clap(about = "Get Starknet network ID")]
     ChainId(ChainId),
     //
     // Misc

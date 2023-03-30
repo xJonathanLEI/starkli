@@ -2,7 +2,7 @@
   <h1 align="center">starkli</h1>
 </p>
 
-**Starkli (/ˈstɑːrklaɪ/), a :zap: blazing :zap: fast :zap: CLI tool for StarkNet powered by :crab: [starknet-rs](https://github.com/xJonathanLEI/starknet-rs) :crab:**
+**Starkli (/ˈstɑːrklaɪ/), a :zap: blazing :zap: fast :zap: CLI tool for Starknet powered by :crab: [starknet-rs](https://github.com/xJonathanLEI/starknet-rs) :crab:**
 
 ## Installation
 
@@ -18,21 +18,22 @@ Check the list of available commands by simply running `starkli` without argumen
 
 ```console
 $ starkli
-Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for StarkNet powered by starknet-rs
+Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for Starknet powered by starknet-rs
 
 Usage: starkli <COMMAND>
 
 Commands:
   selector                 Calculate selector from name
-  class-hash               Calculate class hash from compiled contract artifact
+  class-hash               Calculate class hash from any contract artifacts (Sierra, casm, legacy)
   to-cairo-string          Encode string into felt with the Cairo short string representation
   parse-cairo-string       Decode string from felt with the Cairo short string representation
-  get-transaction          Get StarkNet transaction by hash
+  mont                     Prints the montgomery representation of a field element
+  get-transaction          Get Starknet transaction by hash
   block-number             Get latest block number
-  get-block                Get StarkNet block
-  block-time               Get StarkNet block timestamp only
+  get-block                Get Starknet block
+  block-time               Get Starknet block timestamp only
   get-transaction-receipt  Get transaction receipt by hash
-  chain-id                 Get StarkNet network ID
+  chain-id                 Get Starknet network ID
   completions              Generate shell completions script
   help                     Print this message or the help of the given subcommand(s)
 
