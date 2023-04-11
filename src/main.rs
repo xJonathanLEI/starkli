@@ -43,7 +43,7 @@ enum Subcommands {
     //
     // JSON-RPC query client
     //
-    #[clap(about = "Get Starknet transaction by hash")]
+    #[clap(alias = "tx", about = "Get Starknet transaction by hash")]
     Transaction(Transaction),
     #[clap(about = "Get latest block number")]
     BlockNumber(BlockNumber),
@@ -51,7 +51,7 @@ enum Subcommands {
     Block(Block),
     #[clap(about = "Get Starknet block timestamp only")]
     BlockTime(BlockTime),
-    #[clap(about = "Get transaction receipt by hash")]
+    #[clap(alias = "receipt", about = "Get transaction receipt by hash")]
     TransactionReceipt(TransactionReceipt),
     #[clap(about = "Get Starknet network ID")]
     ChainId(ChainId),
