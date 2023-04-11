@@ -44,15 +44,15 @@ enum Subcommands {
     // JSON-RPC query client
     //
     #[clap(about = "Get Starknet transaction by hash")]
-    GetTransaction(GetTransaction),
+    Transaction(Transaction),
     #[clap(about = "Get latest block number")]
     BlockNumber(BlockNumber),
     #[clap(about = "Get Starknet block")]
-    GetBlock(GetBlock),
+    Block(Block),
     #[clap(about = "Get Starknet block timestamp only")]
     BlockTime(BlockTime),
     #[clap(about = "Get transaction receipt by hash")]
-    GetTransactionReceipt(GetTransactionReceipt),
+    TransactionReceipt(TransactionReceipt),
     #[clap(about = "Get Starknet network ID")]
     ChainId(ChainId),
     //
@@ -77,11 +77,11 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::ToCairoString(cmd) => cmd.run(),
         Subcommands::ParseCairoString(cmd) => cmd.run(),
         Subcommands::Mont(cmd) => cmd.run(),
-        Subcommands::GetTransaction(cmd) => cmd.run().await,
+        Subcommands::Transaction(cmd) => cmd.run().await,
         Subcommands::BlockNumber(cmd) => cmd.run().await,
-        Subcommands::GetBlock(cmd) => cmd.run().await,
+        Subcommands::Block(cmd) => cmd.run().await,
         Subcommands::BlockTime(cmd) => cmd.run().await,
-        Subcommands::GetTransactionReceipt(cmd) => cmd.run().await,
+        Subcommands::TransactionReceipt(cmd) => cmd.run().await,
         Subcommands::ChainId(cmd) => cmd.run().await,
         Subcommands::Completions(cmd) => cmd.run(),
     }

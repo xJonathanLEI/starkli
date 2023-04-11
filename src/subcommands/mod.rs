@@ -7,20 +7,20 @@ pub use completions::Completions;
 mod class_hash;
 pub use class_hash::ClassHash;
 
-mod get_transaction;
-pub use get_transaction::GetTransaction;
+mod transaction;
+pub use transaction::Transaction;
 
 mod block_number;
 pub use block_number::BlockNumber;
 
-mod get_block;
-pub use get_block::GetBlock;
+mod block;
+pub use block::Block;
 
 mod block_time;
 pub use block_time::BlockTime;
 
-mod get_transaction_receipt;
-pub use get_transaction_receipt::GetTransactionReceipt;
+mod transaction_receipt;
+pub use transaction_receipt::TransactionReceipt;
 
 mod chain_id;
 pub use chain_id::ChainId;

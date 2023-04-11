@@ -6,7 +6,7 @@ use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use crate::{utils::parse_block_id, JsonRpcArgs};
 
 #[derive(Debug, Parser)]
-pub struct GetBlock {
+pub struct Block {
     #[clap(flatten)]
     jsonrpc: JsonRpcArgs,
     #[clap(long, help = "Fetch full transactions instead of hashes only")]
@@ -18,7 +18,7 @@ pub struct GetBlock {
     block_id: String,
 }
 
-impl GetBlock {
+impl Block {
     pub async fn run(self) -> Result<()> {
         let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
 
