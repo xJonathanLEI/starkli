@@ -33,3 +33,6 @@ pub use parse_cairo_string::ParseCairoString;
 
 mod mont;
 pub use mont::Mont;
+
+mod class_by_hash;
+pub use class_by_hash::ClassByHash;

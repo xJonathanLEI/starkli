@@ -55,6 +55,8 @@ enum Subcommands {
     TransactionReceipt(TransactionReceipt),
     #[clap(about = "Get Starknet network ID")]
     ChainId(ChainId),
+    #[clap(about = "Get contract class by hash")]
+    ClassByHash(ClassByHash),
     //
     // Misc
     //
@@ -83,6 +85,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::BlockTime(cmd) => cmd.run().await,
         Subcommands::TransactionReceipt(cmd) => cmd.run().await,
         Subcommands::ChainId(cmd) => cmd.run().await,
+        Subcommands::ClassByHash(cmd) => cmd.run().await,
         Subcommands::Completions(cmd) => cmd.run(),
     }
 }

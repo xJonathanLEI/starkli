@@ -34,6 +34,7 @@ Commands:
   block-time           Get Starknet block timestamp only
   transaction-receipt  Get transaction receipt by hash
   chain-id             Get Starknet network ID
+  class-by-hash        Get contract class by hash
   completions          Generate shell completions script
   help                 Print this message or the help of the given subcommand(s)
 
