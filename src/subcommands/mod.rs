@@ -48,3 +48,6 @@ pub use class_at::ClassAt;
 
 mod class_hash_at;
 pub use class_hash_at::ClassHashAt;
+
+mod nonce;
+pub use nonce::Nonce;
