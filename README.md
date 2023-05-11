@@ -30,17 +30,24 @@ Commands:
   mont                 Prints the montgomery representation of a field element
   transaction          Get Starknet transaction by hash
   block-number         Get latest block number
+  block-hash           Get latest block hash
   block                Get Starknet block
   block-time           Get Starknet block timestamp only
+  state-update         Get state update from a certain block
   transaction-receipt  Get transaction receipt by hash
   chain-id             Get Starknet network ID
+  nonce                Get nonce for a certain contract
+  storage              Get storage value for a slot at a contract
+  class-hash-at        Get contract class hash deployed at a certain address
   class-by-hash        Get contract class by hash
+  class-at             Get contract class deployed at a certain address
+  syncing              Get node syncing status
   completions          Generate shell completions script
   help                 Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help     Print help information
-  -V, --version  Print version information
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 
 ## License
