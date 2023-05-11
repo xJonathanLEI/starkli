@@ -39,3 +39,6 @@ pub use mont::Mont;
 
 mod class_by_hash;
 pub use class_by_hash::ClassByHash;
+
+mod syncing;
+pub use syncing::Syncing;
