@@ -54,3 +54,6 @@ pub use nonce::Nonce;
 
 mod storage;
 pub use storage::Storage;
+
+mod state_update;
+pub use state_update::StateUpdate;
