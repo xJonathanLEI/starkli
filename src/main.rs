@@ -57,6 +57,8 @@ enum Subcommands {
     TransactionReceipt(TransactionReceipt),
     #[clap(about = "Get Starknet network ID")]
     ChainId(ChainId),
+    #[clap(about = "Get contract class hash deployed at a certain address")]
+    ClassHashAt(ClassHashAt),
     #[clap(about = "Get contract class by hash")]
     ClassByHash(ClassByHash),
     #[clap(about = "Get contract class deployed at a certain address")]
@@ -92,6 +94,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::BlockTime(cmd) => cmd.run().await,
         Subcommands::TransactionReceipt(cmd) => cmd.run().await,
         Subcommands::ChainId(cmd) => cmd.run().await,
+        Subcommands::ClassHashAt(cmd) => cmd.run().await,
         Subcommands::ClassByHash(cmd) => cmd.run().await,
         Subcommands::ClassAt(cmd) => cmd.run().await,
         Subcommands::Syncing(cmd) => cmd.run().await,
