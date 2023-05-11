@@ -7,14 +7,14 @@ edition = "2021"
 description = "Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for Starknet powered by starknet-rs"
 
 [dependencies]
-anyhow = "1.0.70"
+anyhow = "1.0.71"
 chrono = "0.4.24"
-clap = { version = "4.2.4", features = ["derive", "env"] }
-clap_complete = "4.2.1"
+clap = { version = "4.2.7", features = ["derive", "env"] }
+clap_complete = "4.2.2"
 colored = "2.0.0"
 colored_json = "3.1.0"
 regex = "1.8.1"
 serde_json = { version = "1.0.96", features = ["preserve_order"] }
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs" }
-tokio = { version = "1.27.0", default-features = false, features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.28.1", default-features = false, features = ["macros", "rt-multi-thread"] }
 url = "2.3.1"
