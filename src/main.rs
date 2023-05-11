@@ -59,6 +59,8 @@ enum Subcommands {
     ChainId(ChainId),
     #[clap(about = "Get contract class by hash")]
     ClassByHash(ClassByHash),
+    #[clap(about = "Get contract class deployed at a certain address")]
+    ClassAt(ClassAt),
     #[clap(about = "Get node syncing status")]
     Syncing(Syncing),
     //
@@ -91,6 +93,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::TransactionReceipt(cmd) => cmd.run().await,
         Subcommands::ChainId(cmd) => cmd.run().await,
         Subcommands::ClassByHash(cmd) => cmd.run().await,
+        Subcommands::ClassAt(cmd) => cmd.run().await,
         Subcommands::Syncing(cmd) => cmd.run().await,
         Subcommands::Completions(cmd) => cmd.run(),
     }

@@ -42,3 +42,6 @@ pub use class_by_hash::ClassByHash;
 
 mod syncing;
 pub use syncing::Syncing;
+
+mod class_at;
+pub use class_at::ClassAt;
