@@ -51,3 +51,6 @@ pub use class_hash_at::ClassHashAt;
 
 mod nonce;
 pub use nonce::Nonce;
+
+mod storage;
+pub use storage::Storage;
