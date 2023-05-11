@@ -13,6 +13,9 @@ pub use transaction::Transaction;
 mod block_number;
 pub use block_number::BlockNumber;
 
+mod block_hash;
+pub use block_hash::BlockHash;
+
 mod block;
 pub use block::Block;
 

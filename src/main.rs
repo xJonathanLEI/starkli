@@ -47,6 +47,8 @@ enum Subcommands {
     Transaction(Transaction),
     #[clap(about = "Get latest block number")]
     BlockNumber(BlockNumber),
+    #[clap(about = "Get latest block hash")]
+    BlockHash(BlockHash),
     #[clap(about = "Get Starknet block")]
     Block(Block),
     #[clap(about = "Get Starknet block timestamp only")]
@@ -81,6 +83,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::Mont(cmd) => cmd.run(),
         Subcommands::Transaction(cmd) => cmd.run().await,
         Subcommands::BlockNumber(cmd) => cmd.run().await,
+        Subcommands::BlockHash(cmd) => cmd.run().await,
         Subcommands::Block(cmd) => cmd.run().await,
         Subcommands::BlockTime(cmd) => cmd.run().await,
         Subcommands::TransactionReceipt(cmd) => cmd.run().await,
