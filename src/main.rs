@@ -72,6 +72,11 @@ enum Subcommands {
     #[clap(about = "Get node syncing status")]
     Syncing(Syncing),
     //
+    // Wallet management
+    //
+    #[clap(about = "Wallet management commands")]
+    Wallet(Wallet),
+    //
     // Misc
     //
     #[clap(about = "Generate shell completions script")]
@@ -107,6 +112,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::ClassByHash(cmd) => cmd.run().await,
         Subcommands::ClassAt(cmd) => cmd.run().await,
         Subcommands::Syncing(cmd) => cmd.run().await,
+        Subcommands::Wallet(cmd) => cmd.run(),
         Subcommands::Completions(cmd) => cmd.run(),
     }
 }

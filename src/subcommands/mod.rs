@@ -57,3 +57,6 @@ pub use storage::Storage;
 
 mod state_update;
 pub use state_update::StateUpdate;
+
+mod wallet;
+pub use wallet::Wallet;
