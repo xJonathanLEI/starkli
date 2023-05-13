@@ -18,7 +18,7 @@ impl InspectPrivate {
             anyhow::bail!("keystore file not found");
         }
 
-        let password = rpassword::prompt_password("Enter Password: ")?;
+        let password = rpassword::prompt_password("Enter password: ")?;
 
         let key = SigningKey::from_keystore(self.file, &password)?;
 
