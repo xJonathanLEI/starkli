@@ -14,6 +14,7 @@ clap_complete = "4.2.2"
 colored = "2.0.0"
 colored_json = "3.1.0"
 regex = "1.8.1"
+rpassword = "7.2.0"
 serde_json = { version = "1.0.96", features = ["preserve_order"] }
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs" }
 tokio = { version = "1.28.1", default-features = false, features = ["macros", "rt-multi-thread"] }
