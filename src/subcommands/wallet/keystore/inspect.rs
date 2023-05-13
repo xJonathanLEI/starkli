@@ -6,6 +6,8 @@ use starknet::signers::SigningKey;
 
 #[derive(Debug, Parser)]
 pub struct Inspect {
+    #[clap(long, help = "Print the public key only")]
+    raw: bool,
     #[clap(help = "Path to the JSON keystore")]
     file: PathBuf,
 }
@@ -19,7 +21,12 @@ impl Inspect {
         let password = rpassword::prompt_password("Enter Password: ")?;
 
         let key = SigningKey::from_keystore(self.file, &password)?;
-        println!("Public key: {:#064x}", key.verifying_key().scalar());
+
+        if self.raw {
+            println!("{:#064x}", key.verifying_key().scalar());
+        } else {
+            println!("Public key: {:#064x}", key.verifying_key().scalar());
+        }
 
         Ok(())
     }
