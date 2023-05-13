@@ -7,6 +7,9 @@ use new::New;
 mod inspect;
 use inspect::Inspect;
 
+mod inspect_private;
+use inspect_private::InspectPrivate;
+
 #[derive(Debug, Parser)]
 pub struct Keystore {
     #[clap(subcommand)]
@@ -19,6 +22,8 @@ enum Subcommands {
     New(New),
     #[clap(about = "Check the public key of an existing keystore file")]
     Inspect(Inspect),
+    #[clap(about = "Check the private key of an existing keystore file")]
+    InspectPrivate(InspectPrivate),
 }
 
 impl Keystore {
@@ -26,6 +31,7 @@ impl Keystore {
         match self.command {
             Subcommands::New(cmd) => cmd.run(),
             Subcommands::Inspect(cmd) => cmd.run(),
+            Subcommands::InspectPrivate(cmd) => cmd.run(),
         }
     }
 }
