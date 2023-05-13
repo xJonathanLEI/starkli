@@ -38,7 +38,7 @@ enum Subcommands {
     ToCairoString(ToCairoString),
     #[clap(about = "Decode string from felt with the Cairo short string representation")]
     ParseCairoString(ParseCairoString),
-    #[clap(about = "Prints the montgomery representation of a field element")]
+    #[clap(about = "Print the montgomery representation of a field element")]
     Mont(Mont),
     //
     // JSON-RPC query client

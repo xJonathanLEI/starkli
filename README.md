@@ -27,7 +27,7 @@ Commands:
   class-hash           Calculate class hash from any contract artifacts (Sierra, casm, legacy)
   to-cairo-string      Encode string into felt with the Cairo short string representation
   parse-cairo-string   Decode string from felt with the Cairo short string representation
-  mont                 Prints the montgomery representation of a field element
+  mont                 Print the montgomery representation of a field element
   transaction          Get Starknet transaction by hash
   block-number         Get latest block number
   block-hash           Get latest block hash
@@ -42,6 +42,7 @@ Commands:
   class-by-hash        Get contract class by hash
   class-at             Get contract class deployed at a certain address
   syncing              Get node syncing status
+  wallet               Wallet management commands
   completions          Generate shell completions script
   help                 Print this message or the help of the given subcommand(s)
 
