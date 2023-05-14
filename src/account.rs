@@ -1,9 +1,17 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use starknet::core::{
-    serde::unsigned_field_element::UfeHex, types::FieldElement, utils::get_contract_address,
+use starknet::{
+    core::{
+        serde::unsigned_field_element::UfeHex, types::FieldElement, utils::get_contract_address,
+    },
+    macros::felt,
 };
+
+pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 1] = [KnownAccountClass {
+    class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
+    variant: AccountVariantType::OpenZeppelin,
+}];
 
 #[derive(Serialize, Deserialize)]
 pub struct AccountConfig {
@@ -23,6 +31,15 @@ pub enum AccountVariant {
 pub enum DeploymentStatus {
     Undeployed(UndeployedStatus),
     Deployed(DeployedStatus),
+}
+
+pub struct KnownAccountClass {
+    pub class_hash: FieldElement,
+    pub variant: AccountVariantType,
+}
+
+pub enum AccountVariantType {
+    OpenZeppelin,
 }
 
 #[serde_as]
