@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
+use colored::Colorize;
 use starknet::signers::SigningKey;
 
 #[derive(Debug, Parser)]
@@ -27,7 +28,10 @@ impl New {
             "Created new encrypted keystore file: {}",
             std::fs::canonicalize(self.file)?.display()
         );
-        println!("Public key: {:#064x}", key.verifying_key().scalar());
+        println!(
+            "Public key: {}",
+            format!("{:#064x}", key.verifying_key().scalar()).bright_yellow()
+        );
 
         Ok(())
     }
