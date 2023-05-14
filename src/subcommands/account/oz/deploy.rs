@@ -1,14 +1,17 @@
-use std::{io::Write, path::PathBuf};
+use std::{io::Write, path::PathBuf, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
     accounts::{AccountFactory, OpenZeppelinAccountFactory},
-    core::{chain_id, types::FieldElement},
+    core::{
+        chain_id,
+        types::{FieldElement, TransactionStatus},
+    },
     providers::{
         jsonrpc::{HttpTransport, JsonRpcClient},
-        SequencerGatewayProvider,
+        Provider, SequencerGatewayProvider,
     },
     signers::{LocalWallet, SigningKey},
 };
@@ -30,7 +33,7 @@ pub struct Deploy {
 
 impl Deploy {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
+        let jsonrpc_client = Arc::new(JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc)));
 
         if !self.file.exists() {
             anyhow::bail!("account config file not found");
@@ -73,7 +76,7 @@ impl Deploy {
             undeployed_status.class_hash,
             chain_id,
             LocalWallet::from_signing_key(key.clone()),
-            jsonrpc_client,
+            jsonrpc_client.clone(),
         )
         .await?;
 
@@ -155,7 +158,43 @@ impl Deploy {
 
         // By default we wait for the tx to confirm so that we don't incorrectly mark the account
         // as deployed
-        // TODO: wait for tx
+        eprintln!(
+            "Waiting for transaction {} to confirm. \
+            If this process is interrupted, you will need to run `{}` to update the account file.",
+            format!("{:#064x}", account_deployment_tx).bright_yellow(),
+            "starkli account fetch".bright_yellow(),
+        );
+        loop {
+            // TODO: check with sequencer gateway if it's not confirmed after an extended period of
+            // time, as full nodes don't have access to failed transactions and would report them
+            // as `NotReceived`.
+            let tx_status = jsonrpc_client
+                .get_transaction_status(account_deployment_tx)
+                .await?;
+
+            match tx_status.status {
+                TransactionStatus::NotReceived | TransactionStatus::Received => {
+                    eprintln!("Transaction not confirmed yet...");
+                }
+                TransactionStatus::Pending
+                | TransactionStatus::AcceptedOnL2
+                | TransactionStatus::AcceptedOnL1 => {
+                    eprintln!(
+                        "Transaction {} confirmed",
+                        format!("{:#064x}", account_deployment_tx).bright_yellow()
+                    );
+                    break;
+                }
+                TransactionStatus::Rejected => {
+                    anyhow::bail!(
+                        "transaction rejected with error: {:?}",
+                        tx_status.transaction_failure_reason
+                    );
+                }
+            }
+
+            tokio::time::sleep(Duration::from_secs(10)).await;
+        }
 
         account.deployment = DeploymentStatus::Deployed(DeployedStatus {
             class_hash: undeployed_status.class_hash,
