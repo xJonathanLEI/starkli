@@ -5,6 +5,7 @@ use url::Url;
 
 use crate::subcommands::*;
 
+mod account;
 mod subcommands;
 mod utils;
 
@@ -118,7 +119,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::ClassAt(cmd) => cmd.run().await,
         Subcommands::Syncing(cmd) => cmd.run().await,
         Subcommands::Wallet(cmd) => cmd.run(),
-        Subcommands::Account(cmd) => cmd.run(),
+        Subcommands::Account(cmd) => cmd.run().await,
         Subcommands::Completions(cmd) => cmd.run(),
     }
 }

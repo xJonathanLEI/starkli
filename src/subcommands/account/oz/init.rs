@@ -3,14 +3,10 @@ use std::{io::Write, path::PathBuf};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
-use serde::Serialize;
-use serde_with::serde_as;
-use starknet::{
-    core::{
-        serde::unsigned_field_element::UfeHex, types::FieldElement, utils::get_contract_address,
-    },
-    macros::felt,
-    signers::SigningKey,
+use starknet::{core::types::FieldElement, macros::felt, signers::SigningKey};
+
+use crate::account::{
+    AccountConfig, AccountVariant, DeploymentStatus, OzAccountConfig, UndeployedStatus,
 };
 
 /// OpenZeppelin account contract v0.6.1 compiled with cairo-lang v0.11.0.2
@@ -30,42 +26,6 @@ pub struct Init {
     force: bool,
     #[clap(help = "Path to save the account config file")]
     output: PathBuf,
-}
-
-#[derive(Serialize)]
-struct AccountConfig {
-    version: u64,
-    variant: AccountVariant,
-    deployment: DeploymentStatus,
-}
-
-#[derive(Serialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
-enum AccountVariant {
-    OpenZeppelin(OzAccountConfig),
-}
-
-#[derive(Serialize)]
-#[serde(tag = "status", rename_all = "snake_case")]
-enum DeploymentStatus {
-    Undeployed(UndeployedStatus),
-}
-
-#[serde_as]
-#[derive(Serialize)]
-struct OzAccountConfig {
-    version: u64,
-    #[serde_as(as = "UfeHex")]
-    public_key: FieldElement,
-}
-
-#[serde_as]
-#[derive(Serialize)]
-struct UndeployedStatus {
-    #[serde_as(as = "UfeHex")]
-    class_hash: FieldElement,
-    #[serde_as(as = "UfeHex")]
-    salt: FieldElement,
 }
 
 impl Init {
@@ -96,12 +56,7 @@ impl Init {
             }),
         };
 
-        let deployed_address = get_contract_address(
-            salt,
-            OZ_ACCOUNT_CLASS_HASH,
-            &[key.verifying_key().scalar()],
-            FieldElement::ZERO,
-        );
+        let deployed_address = account_config.deploy_account_address()?;
 
         let mut file = std::fs::File::create(&self.output)?;
         serde_json::to_writer_pretty(&mut file, &account_config)?;

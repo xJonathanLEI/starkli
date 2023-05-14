@@ -17,9 +17,9 @@ enum Subcommands {
 }
 
 impl Account {
-    pub fn run(self) -> Result<()> {
+    pub async fn run(self) -> Result<()> {
         match self.command {
-            Subcommands::Oz(cmd) => cmd.run(),
+            Subcommands::Oz(cmd) => cmd.run().await,
         }
     }
 }
