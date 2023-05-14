@@ -43,6 +43,8 @@ Commands:
   class-at             Get contract class deployed at a certain address
   syncing              Get node syncing status
   wallet               Wallet management commands
+  account              Account management commands
+  deploy               Deploy contract via the Universal Deployer Contract
   completions          Generate shell completions script
   help                 Print this message or the help of the given subcommand(s)
 

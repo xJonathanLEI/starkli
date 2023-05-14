@@ -83,6 +83,11 @@ enum Subcommands {
     #[clap(about = "Account management commands")]
     Account(Account),
     //
+    // Sending out transactions
+    //
+    #[clap(about = "Deploy contract via the Universal Deployer Contract")]
+    Deploy(Deploy),
+    //
     // Misc
     //
     #[clap(about = "Generate shell completions script")]
@@ -120,6 +125,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::Syncing(cmd) => cmd.run().await,
         Subcommands::Wallet(cmd) => cmd.run(),
         Subcommands::Account(cmd) => cmd.run().await,
+        Subcommands::Deploy(cmd) => cmd.run().await,
         Subcommands::Completions(cmd) => cmd.run(),
     }
 }

@@ -1,23 +1,21 @@
-use std::{io::Write, path::PathBuf, sync::Arc, time::Duration};
+use std::{io::Write, path::PathBuf, sync::Arc};
 
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
     accounts::{AccountFactory, OpenZeppelinAccountFactory},
-    core::{
-        chain_id,
-        types::{FieldElement, TransactionStatus},
-    },
+    core::{chain_id, types::FieldElement},
     providers::{
         jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider, SequencerGatewayProvider,
+        SequencerGatewayProvider,
     },
     signers::{LocalWallet, SigningKey},
 };
 
 use crate::{
     account::{AccountConfig, AccountVariant, DeployedStatus, DeploymentStatus},
+    utils::watch_tx,
     JsonRpcArgs,
 };
 
@@ -164,37 +162,7 @@ impl Deploy {
             format!("{:#064x}", account_deployment_tx).bright_yellow(),
             "starkli account fetch".bright_yellow(),
         );
-        loop {
-            // TODO: check with sequencer gateway if it's not confirmed after an extended period of
-            // time, as full nodes don't have access to failed transactions and would report them
-            // as `NotReceived`.
-            let tx_status = jsonrpc_client
-                .get_transaction_status(account_deployment_tx)
-                .await?;
-
-            match tx_status.status {
-                TransactionStatus::NotReceived | TransactionStatus::Received => {
-                    eprintln!("Transaction not confirmed yet...");
-                }
-                TransactionStatus::Pending
-                | TransactionStatus::AcceptedOnL2
-                | TransactionStatus::AcceptedOnL1 => {
-                    eprintln!(
-                        "Transaction {} confirmed",
-                        format!("{:#064x}", account_deployment_tx).bright_yellow()
-                    );
-                    break;
-                }
-                TransactionStatus::Rejected => {
-                    anyhow::bail!(
-                        "transaction rejected with error: {:?}",
-                        tx_status.transaction_failure_reason
-                    );
-                }
-            }
-
-            tokio::time::sleep(Duration::from_secs(10)).await;
-        }
+        watch_tx(&jsonrpc_client, account_deployment_tx).await?;
 
         account.deployment = DeploymentStatus::Deployed(DeployedStatus {
             class_hash: undeployed_status.class_hash,

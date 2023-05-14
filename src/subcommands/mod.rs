@@ -63,3 +63,6 @@ pub use wallet::Wallet;
 
 mod account;
 pub use account::Account;
+
+mod deploy;
+pub use deploy::Deploy;
