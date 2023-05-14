@@ -77,6 +77,11 @@ enum Subcommands {
     #[clap(about = "Wallet management commands")]
     Wallet(Wallet),
     //
+    // Account management
+    //
+    #[clap(about = "Account management commands")]
+    Account(Account),
+    //
     // Misc
     //
     #[clap(about = "Generate shell completions script")]
@@ -113,6 +118,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::ClassAt(cmd) => cmd.run().await,
         Subcommands::Syncing(cmd) => cmd.run().await,
         Subcommands::Wallet(cmd) => cmd.run(),
+        Subcommands::Account(cmd) => cmd.run(),
         Subcommands::Completions(cmd) => cmd.run(),
     }
 }

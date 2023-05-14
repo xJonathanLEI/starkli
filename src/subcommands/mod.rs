@@ -60,3 +60,6 @@ pub use state_update::StateUpdate;
 
 mod wallet;
 pub use wallet::Wallet;
+
+mod account;
+pub use account::Account;
