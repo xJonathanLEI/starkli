@@ -3,29 +3,26 @@ use clap::Parser;
 use colored_json::{ColorMode, Output};
 use starknet::{
     core::types::{BlockId, BlockTag, FieldElement},
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider,
-    },
+    providers::Provider,
 };
 
-use crate::JsonRpcArgs;
+use crate::ProviderArgs;
 
 #[derive(Debug, Parser)]
 pub struct ClassByHash {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
     #[clap(help = "Class hash")]
     hash: String,
 }
 
 impl ClassByHash {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
+        let provider = self.provider.into_provider();
         let class_hash = FieldElement::from_hex_be(&self.hash)?;
 
         // TODO: allow custom block
-        let class = jsonrpc_client
+        let class = provider
             .get_class(BlockId::Tag(BlockTag::Latest), class_hash)
             .await?;
 

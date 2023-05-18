@@ -6,23 +6,20 @@ use colored::Colorize;
 use starknet::{
     accounts::{AccountFactory, OpenZeppelinAccountFactory},
     core::{chain_id, types::FieldElement},
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider, SequencerGatewayProvider,
-    },
+    providers::{Provider, SequencerGatewayProvider},
     signers::{LocalWallet, SigningKey},
 };
 
 use crate::{
     account::{AccountConfig, AccountVariant, DeployedStatus, DeploymentStatus},
     utils::watch_tx,
-    JsonRpcArgs,
+    ProviderArgs,
 };
 
 #[derive(Debug, Parser)]
 pub struct Deploy {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
     #[clap(long, help = "Path to keystore JSON file")]
     keystore: PathBuf,
     #[clap(help = "Path to the account config file")]
@@ -31,7 +28,7 @@ pub struct Deploy {
 
 impl Deploy {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = Arc::new(JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc)));
+        let provider = Arc::new(self.provider.into_provider());
 
         if !self.file.exists() {
             anyhow::bail!("account config file not found");
@@ -68,13 +65,13 @@ impl Deploy {
             );
         }
 
-        let chain_id = jsonrpc_client.chain_id().await?;
+        let chain_id = provider.chain_id().await?;
 
         let factory = OpenZeppelinAccountFactory::new(
             undeployed_status.class_hash,
             chain_id,
             LocalWallet::from_signing_key(key.clone()),
-            jsonrpc_client.clone(),
+            provider.clone(),
         )
         .await?;
 
@@ -162,7 +159,7 @@ impl Deploy {
             format!("{:#064x}", account_deployment_tx).bright_yellow(),
             "starkli account fetch".bright_yellow(),
         );
-        watch_tx(&jsonrpc_client, account_deployment_tx).await?;
+        watch_tx(&provider, account_deployment_tx).await?;
 
         account.deployment = DeploymentStatus::Deployed(DeployedStatus {
             class_hash: undeployed_status.class_hash,

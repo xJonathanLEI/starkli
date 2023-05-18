@@ -1,27 +1,21 @@
 use anyhow::Result;
 use clap::Parser;
 use colored_json::{ColorMode, Output};
-use starknet::{
-    core::types::SyncStatusType,
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider,
-    },
-};
+use starknet::{core::types::SyncStatusType, providers::Provider};
 
-use crate::JsonRpcArgs;
+use crate::ProviderArgs;
 
 #[derive(Debug, Parser)]
 pub struct Syncing {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
 }
 
 impl Syncing {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
+        let provider = self.provider.into_provider();
 
-        let sync_status = jsonrpc_client.syncing().await?;
+        let sync_status = provider.syncing().await?;
 
         match sync_status {
             SyncStatusType::Syncing(status) => {

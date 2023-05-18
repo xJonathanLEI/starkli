@@ -6,10 +6,7 @@ use colored::Colorize;
 use starknet::{
     core::types::{BlockId, BlockTag, FieldElement, FunctionCall},
     macros::selector,
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider,
-    },
+    providers::Provider,
 };
 
 use crate::{
@@ -17,13 +14,13 @@ use crate::{
         AccountConfig, AccountVariant, AccountVariantType, DeployedStatus, DeploymentStatus,
         OzAccountConfig, KNOWN_ACCOUNT_CLASSES,
     },
-    JsonRpcArgs,
+    ProviderArgs,
 };
 
 #[derive(Debug, Parser)]
 pub struct Fetch {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
     #[clap(long, help = "Overwrite the file if it already exists")]
     force: bool,
     #[clap(long, help = "Path to save the account config file")]
@@ -38,10 +35,10 @@ impl Fetch {
             anyhow::bail!("account config file already exists");
         }
 
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
+        let provider = self.provider.into_provider();
         let address = FieldElement::from_hex_be(&self.address)?;
 
-        let class_hash = jsonrpc_client
+        let class_hash = provider
             .get_class_hash_at(BlockId::Tag(BlockTag::Pending), address)
             .await?;
 
@@ -63,7 +60,7 @@ impl Fetch {
 
         let account = match known_class.variant {
             AccountVariantType::OpenZeppelin => {
-                let public_key = jsonrpc_client
+                let public_key = provider
                     .call(
                         FunctionCall {
                             contract_address: address,

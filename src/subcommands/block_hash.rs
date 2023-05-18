@@ -1,23 +1,20 @@
 use anyhow::Result;
 use clap::Parser;
-use starknet::providers::{
-    jsonrpc::{HttpTransport, JsonRpcClient},
-    Provider,
-};
+use starknet::providers::Provider;
 
-use crate::JsonRpcArgs;
+use crate::ProviderArgs;
 
 #[derive(Debug, Parser)]
 pub struct BlockHash {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
 }
 
 impl BlockHash {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
+        let provider = self.provider.into_provider();
 
-        let block = jsonrpc_client.block_hash_and_number().await?;
+        let block = provider.block_hash_and_number().await?;
 
         println!("{:#064x}", block.block_hash);
 

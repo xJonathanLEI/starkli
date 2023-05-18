@@ -3,29 +3,26 @@ use clap::Parser;
 use colored_json::{ColorMode, Output};
 use starknet::{
     core::types::{BlockId, BlockTag, FieldElement},
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider,
-    },
+    providers::Provider,
 };
 
-use crate::JsonRpcArgs;
+use crate::ProviderArgs;
 
 #[derive(Debug, Parser)]
 pub struct ClassAt {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
     #[clap(help = "Contract address")]
     address: String,
 }
 
 impl ClassAt {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
+        let provider = self.provider.into_provider();
         let address = FieldElement::from_hex_be(&self.address)?;
 
         // TODO: allow custom block
-        let class = jsonrpc_client
+        let class = provider
             .get_class_at(BlockId::Tag(BlockTag::Latest), address)
             .await?;
 

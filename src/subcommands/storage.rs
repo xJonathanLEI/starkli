@@ -2,18 +2,15 @@ use anyhow::Result;
 use clap::Parser;
 use starknet::{
     core::types::{BlockId, BlockTag, FieldElement},
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider,
-    },
+    providers::Provider,
 };
 
-use crate::JsonRpcArgs;
+use crate::ProviderArgs;
 
 #[derive(Debug, Parser)]
 pub struct Storage {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
     #[clap(help = "Contract address")]
     address: String,
     #[clap(help = "Storage key")]
@@ -22,12 +19,12 @@ pub struct Storage {
 
 impl Storage {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
+        let provider = self.provider.into_provider();
         let address = FieldElement::from_hex_be(&self.address)?;
         let key = FieldElement::from_hex_be(&self.key)?;
 
         // TODO: allow custom block
-        let value = jsonrpc_client
+        let value = provider
             .get_storage_at(address, key, BlockId::Tag(BlockTag::Latest))
             .await?;
 

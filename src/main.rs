@@ -1,11 +1,11 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
-use url::Url;
 
-use crate::subcommands::*;
+use crate::{provider::ProviderArgs, subcommands::*};
 
 mod account;
+mod provider;
 mod subcommands;
 mod utils;
 
@@ -14,16 +14,6 @@ mod utils;
 struct Cli {
     #[clap(subcommand)]
     command: Subcommands,
-}
-
-#[derive(Debug, Clone, Parser)]
-struct JsonRpcArgs {
-    #[clap(
-        long = "rpc",
-        env = "STARKNET_RPC",
-        help = "Starknet JSON-RPC endpoint"
-    )]
-    rpc: Url,
 }
 
 #[derive(Debug, Subcommand)]

@@ -1,32 +1,24 @@
 use anyhow::Result;
 use clap::Parser;
 use colored_json::{ColorMode, Output};
-use starknet::{
-    core::types::FieldElement,
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider,
-    },
-};
+use starknet::{core::types::FieldElement, providers::Provider};
 
-use crate::JsonRpcArgs;
+use crate::ProviderArgs;
 
 #[derive(Debug, Parser)]
 pub struct Transaction {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
     #[clap(help = "Transaction hash")]
     hash: String,
 }
 
 impl Transaction {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
+        let provider = self.provider.into_provider();
         let transaction_hash = FieldElement::from_hex_be(&self.hash)?;
 
-        let transaction = jsonrpc_client
-            .get_transaction_by_hash(transaction_hash)
-            .await?;
+        let transaction = provider.get_transaction_by_hash(transaction_hash).await?;
 
         let transaction_json = serde_json::to_value(transaction)?;
         let transaction_json =

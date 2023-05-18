@@ -2,29 +2,26 @@ use anyhow::Result;
 use clap::Parser;
 use starknet::{
     core::types::{BlockId, BlockTag, FieldElement},
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider,
-    },
+    providers::Provider,
 };
 
-use crate::JsonRpcArgs;
+use crate::ProviderArgs;
 
 #[derive(Debug, Parser)]
 pub struct ClassHashAt {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
     #[clap(help = "Contract address")]
     address: String,
 }
 
 impl ClassHashAt {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
+        let provider = self.provider.into_provider();
         let address = FieldElement::from_hex_be(&self.address)?;
 
         // TODO: allow custom block
-        let class_hash = jsonrpc_client
+        let class_hash = provider
             .get_class_hash_at(BlockId::Tag(BlockTag::Latest), address)
             .await?;
 

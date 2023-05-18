@@ -1,19 +1,13 @@
 use anyhow::Result;
 use clap::Parser;
-use starknet::{
-    core::utils::parse_cairo_short_string,
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider,
-    },
-};
+use starknet::{core::utils::parse_cairo_short_string, providers::Provider};
 
-use crate::JsonRpcArgs;
+use crate::ProviderArgs;
 
 #[derive(Debug, Parser)]
 pub struct ChainId {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
     #[clap(long, help = "Do not show the decoded text")]
     no_decode: bool,
     #[clap(
@@ -30,9 +24,9 @@ pub struct ChainId {
 
 impl ChainId {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
+        let provider = self.provider.into_provider();
 
-        let raw_chain_id = jsonrpc_client.chain_id().await?;
+        let raw_chain_id = provider.chain_id().await?;
 
         println!(
             "{}{}",

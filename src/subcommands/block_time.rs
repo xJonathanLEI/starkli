@@ -1,20 +1,14 @@
 use anyhow::Result;
 use chrono::{TimeZone, Utc};
 use clap::Parser;
-use starknet::{
-    core::types::MaybePendingBlockWithTxHashes,
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider,
-    },
-};
+use starknet::{core::types::MaybePendingBlockWithTxHashes, providers::Provider};
 
-use crate::{utils::parse_block_id, JsonRpcArgs};
+use crate::{utils::parse_block_id, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct BlockTime {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
     #[clap(
         long,
         conflicts_with = "rfc2822",
@@ -36,11 +30,11 @@ pub struct BlockTime {
 
 impl BlockTime {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc));
+        let provider = self.provider.into_provider();
 
         let block_id = parse_block_id(&self.block_id)?;
 
-        let block = jsonrpc_client.get_block_with_tx_hashes(block_id).await?;
+        let block = provider.get_block_with_tx_hashes(block_id).await?;
         let timestamp = match block {
             MaybePendingBlockWithTxHashes::Block(block) => block.timestamp,
             MaybePendingBlockWithTxHashes::PendingBlock(block) => block.timestamp,

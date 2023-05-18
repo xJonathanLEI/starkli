@@ -7,23 +7,20 @@ use starknet::{
     accounts::SingleOwnerAccount,
     contract::ContractFactory,
     core::{chain_id, types::FieldElement},
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider, SequencerGatewayProvider,
-    },
+    providers::{Provider, SequencerGatewayProvider},
     signers::{LocalWallet, SigningKey},
 };
 
 use crate::{
     account::{AccountConfig, DeploymentStatus},
     utils::watch_tx,
-    JsonRpcArgs,
+    ProviderArgs,
 };
 
 #[derive(Debug, Parser)]
 pub struct Deploy {
     #[clap(flatten)]
-    jsonrpc: JsonRpcArgs,
+    provider: ProviderArgs,
     #[clap(long, help = "Do not derive contract address from deployer address")]
     not_unique: bool,
     #[clap(long, help = "Path to keystore JSON file")]
@@ -40,7 +37,7 @@ pub struct Deploy {
 
 impl Deploy {
     pub async fn run(self) -> Result<()> {
-        let jsonrpc_client = Arc::new(JsonRpcClient::new(HttpTransport::new(self.jsonrpc.rpc)));
+        let provider = Arc::new(self.provider.into_provider());
 
         if !self.keystore.exists() {
             anyhow::bail!("keystore file not found");
@@ -73,10 +70,10 @@ impl Deploy {
         let password = rpassword::prompt_password("Enter keystore password: ")?;
         let key = SigningKey::from_keystore(self.keystore, &password)?;
 
-        let chain_id = jsonrpc_client.chain_id().await?;
+        let chain_id = provider.chain_id().await?;
 
         let account = SingleOwnerAccount::new(
-            jsonrpc_client.clone(),
+            provider.clone(),
             LocalWallet::from_signing_key(key.clone()),
             account_address,
             chain_id,
@@ -149,7 +146,7 @@ impl Deploy {
                 "Waiting for transaction {} to confirm...",
                 format!("{:#064x}", deployment_tx).bright_yellow(),
             );
-            watch_tx(&jsonrpc_client, deployment_tx).await?;
+            watch_tx(&provider, deployment_tx).await?;
         }
 
         Ok(())
