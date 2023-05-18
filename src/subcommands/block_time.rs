@@ -1,8 +1,12 @@
 use anyhow::Result;
 use chrono::{TimeZone, Utc};
 use clap::Parser;
-use starknet::providers::jsonrpc::{
-    models::MaybePendingBlockWithTxHashes, HttpTransport, JsonRpcClient,
+use starknet::{
+    core::types::MaybePendingBlockWithTxHashes,
+    providers::{
+        jsonrpc::{HttpTransport, JsonRpcClient},
+        Provider,
+    },
 };
 
 use crate::{utils::parse_block_id, JsonRpcArgs};
@@ -36,7 +40,7 @@ impl BlockTime {
 
         let block_id = parse_block_id(&self.block_id)?;
 
-        let block = jsonrpc_client.get_block_with_tx_hashes(&block_id).await?;
+        let block = jsonrpc_client.get_block_with_tx_hashes(block_id).await?;
         let timestamp = match block {
             MaybePendingBlockWithTxHashes::Block(block) => block.timestamp,
             MaybePendingBlockWithTxHashes::PendingBlock(block) => block.timestamp,

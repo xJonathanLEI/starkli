@@ -1,7 +1,13 @@
 use anyhow::Result;
 use clap::Parser;
 use colored_json::{ColorMode, Output};
-use starknet::providers::jsonrpc::{models::SyncStatusType, HttpTransport, JsonRpcClient};
+use starknet::{
+    core::types::SyncStatusType,
+    providers::{
+        jsonrpc::{HttpTransport, JsonRpcClient},
+        Provider,
+    },
+};
 
 use crate::JsonRpcArgs;
 

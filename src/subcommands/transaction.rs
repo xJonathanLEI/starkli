@@ -3,7 +3,10 @@ use clap::Parser;
 use colored_json::{ColorMode, Output};
 use starknet::{
     core::types::FieldElement,
-    providers::jsonrpc::{HttpTransport, JsonRpcClient},
+    providers::{
+        jsonrpc::{HttpTransport, JsonRpcClient},
+        Provider,
+    },
 };
 
 use crate::JsonRpcArgs;

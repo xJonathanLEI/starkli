@@ -1,7 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
 use colored_json::{ColorMode, Output};
-use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
+use starknet::providers::{
+    jsonrpc::{HttpTransport, JsonRpcClient},
+    Provider,
+};
 
 use crate::{utils::parse_block_id, JsonRpcArgs};
 
@@ -22,7 +25,7 @@ impl StateUpdate {
 
         let block_id = parse_block_id(&self.block_id)?;
 
-        let update_json = serde_json::to_value(jsonrpc_client.get_state_update(&block_id).await?)?;
+        let update_json = serde_json::to_value(jsonrpc_client.get_state_update(block_id).await?)?;
 
         let update_json =
             colored_json::to_colored_json(&update_json, ColorMode::Auto(Output::StdOut))?;

@@ -1,6 +1,9 @@
 use anyhow::Result;
 use clap::Parser;
-use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
+use starknet::providers::{
+    jsonrpc::{HttpTransport, JsonRpcClient},
+    Provider,
+};
 
 use crate::JsonRpcArgs;
 

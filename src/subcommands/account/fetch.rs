@@ -4,11 +4,11 @@ use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    core::types::FieldElement,
+    core::types::{BlockId, BlockTag, FieldElement, FunctionCall},
     macros::selector,
-    providers::jsonrpc::{
-        models::{BlockId, BlockTag, FunctionCall},
-        HttpTransport, JsonRpcClient,
+    providers::{
+        jsonrpc::{HttpTransport, JsonRpcClient},
+        Provider,
     },
 };
 

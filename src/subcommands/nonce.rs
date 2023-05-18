@@ -1,10 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
 use starknet::{
-    core::types::FieldElement,
-    providers::jsonrpc::{
-        models::{BlockId, BlockTag},
-        HttpTransport, JsonRpcClient,
+    core::types::{BlockId, BlockTag, FieldElement},
+    providers::{
+        jsonrpc::{HttpTransport, JsonRpcClient},
+        Provider,
     },
 };
 
@@ -25,7 +25,7 @@ impl Nonce {
 
         // TODO: allow custom block
         let nonce = jsonrpc_client
-            .get_nonce(&BlockId::Tag(BlockTag::Latest), address)
+            .get_nonce(BlockId::Tag(BlockTag::Latest), address)
             .await?;
 
         println!("{}", nonce);

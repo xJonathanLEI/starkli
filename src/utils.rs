@@ -4,11 +4,8 @@ use anyhow::Result;
 use colored::Colorize;
 use regex::Regex;
 use starknet::{
-    core::types::{FieldElement, TransactionStatus},
-    providers::{
-        jsonrpc::models::{BlockId, BlockTag},
-        Provider,
-    },
+    core::types::{BlockId, BlockTag, FieldElement, StarknetError},
+    providers::{Provider, ProviderError},
 };
 
 pub async fn watch_tx<P>(provider: P, transaction_hash: FieldElement) -> Result<()>
@@ -20,27 +17,22 @@ where
         // TODO: check with sequencer gateway if it's not confirmed after an extended period of
         // time, as full nodes don't have access to failed transactions and would report them
         // as `NotReceived`.
-        let tx_status = provider.get_transaction_status(transaction_hash).await?;
+        match provider.get_transaction_receipt(transaction_hash).await {
+            Ok(_) => {
+                // With JSON-RPC, once we get a receipt, the transaction must have been confirmed.
+                // Rejected transactions simply aren't available. This needs to be changed once we
+                // implement the sequencer fallback.
 
-        match tx_status.status {
-            TransactionStatus::NotReceived | TransactionStatus::Received => {
-                eprintln!("Transaction not confirmed yet...");
-            }
-            TransactionStatus::Pending
-            | TransactionStatus::AcceptedOnL2
-            | TransactionStatus::AcceptedOnL1 => {
                 eprintln!(
                     "Transaction {} confirmed",
                     format!("{:#064x}", transaction_hash).bright_yellow()
                 );
                 return Ok(());
             }
-            TransactionStatus::Rejected => {
-                anyhow::bail!(
-                    "transaction rejected with error: {:?}",
-                    tx_status.transaction_failure_reason
-                );
+            Err(ProviderError::StarknetError(StarknetError::TransactionHashNotFound)) => {
+                eprintln!("Transaction not confirmed yet...");
             }
+            Err(err) => return Err(err.into()),
         }
 
         tokio::time::sleep(Duration::from_secs(10)).await;

@@ -2,7 +2,10 @@ use anyhow::Result;
 use clap::Parser;
 use starknet::{
     core::utils::parse_cairo_short_string,
-    providers::jsonrpc::{HttpTransport, JsonRpcClient},
+    providers::{
+        jsonrpc::{HttpTransport, JsonRpcClient},
+        Provider,
+    },
 };
 
 use crate::JsonRpcArgs;

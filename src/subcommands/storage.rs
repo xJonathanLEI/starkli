@@ -1,10 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
 use starknet::{
-    core::types::FieldElement,
-    providers::jsonrpc::{
-        models::{BlockId, BlockTag},
-        HttpTransport, JsonRpcClient,
+    core::types::{BlockId, BlockTag, FieldElement},
+    providers::{
+        jsonrpc::{HttpTransport, JsonRpcClient},
+        Provider,
     },
 };
 
@@ -28,7 +28,7 @@ impl Storage {
 
         // TODO: allow custom block
         let value = jsonrpc_client
-            .get_storage_at(address, key, &BlockId::Tag(BlockTag::Latest))
+            .get_storage_at(address, key, BlockId::Tag(BlockTag::Latest))
             .await?;
 
         println!("{:#064x}", value);

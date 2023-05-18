@@ -9,7 +9,7 @@ use starknet::{
     core::{chain_id, types::FieldElement},
     providers::{
         jsonrpc::{HttpTransport, JsonRpcClient},
-        SequencerGatewayProvider,
+        Provider, SequencerGatewayProvider,
     },
     signers::{LocalWallet, SigningKey},
 };

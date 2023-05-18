@@ -2,10 +2,10 @@ use anyhow::Result;
 use clap::Parser;
 use colored_json::{ColorMode, Output};
 use starknet::{
-    core::types::FieldElement,
-    providers::jsonrpc::{
-        models::{BlockId, BlockTag},
-        HttpTransport, JsonRpcClient,
+    core::types::{BlockId, BlockTag, FieldElement},
+    providers::{
+        jsonrpc::{HttpTransport, JsonRpcClient},
+        Provider,
     },
 };
 
@@ -26,7 +26,7 @@ impl ClassAt {
 
         // TODO: allow custom block
         let class = jsonrpc_client
-            .get_class_at(&BlockId::Tag(BlockTag::Latest), address)
+            .get_class_at(BlockId::Tag(BlockTag::Latest), address)
             .await?;
 
         let class_json = serde_json::to_value(class)?;
