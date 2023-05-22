@@ -25,6 +25,11 @@ pub struct Deploy {
     not_unique: bool,
     #[clap(long, help = "Path to keystore JSON file")]
     keystore: PathBuf,
+    #[clap(
+        long,
+        help = "Supply keystore password from command line option instead of prompt"
+    )]
+    keystore_password: Option<String>,
     #[clap(long, help = "Path to account config JSON file")]
     account: PathBuf,
     #[clap(long, help = "Wait for the transaction to confirm")]
@@ -37,6 +42,15 @@ pub struct Deploy {
 
 impl Deploy {
     pub async fn run(self) -> Result<()> {
+        if self.keystore_password.is_some() {
+            eprintln!(
+                "{}",
+                "WARNING: setting keystore passwords via --password is generally considered \
+                insecure, as they will be stored in your shell history or other log files."
+                    .bright_magenta()
+            );
+        }
+
         let provider = Arc::new(self.provider.into_provider());
 
         if !self.keystore.exists() {
@@ -67,7 +81,12 @@ impl Deploy {
             DeploymentStatus::Deployed(inner) => inner.address,
         };
 
-        let password = rpassword::prompt_password("Enter keystore password: ")?;
+        let password = if let Some(password) = self.keystore_password {
+            password
+        } else {
+            rpassword::prompt_password("Enter keystore password: ")?
+        };
+
         let key = SigningKey::from_keystore(self.keystore, &password)?;
 
         let chain_id = provider.chain_id().await?;

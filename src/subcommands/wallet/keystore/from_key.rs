@@ -2,6 +2,7 @@ use std::{io::Read, path::PathBuf};
 
 use anyhow::Result;
 use clap::Parser;
+use colored::Colorize;
 use starknet::{core::types::FieldElement, signers::SigningKey};
 
 #[derive(Debug, Parser)]
@@ -10,12 +11,26 @@ pub struct FromKey {
     force: bool,
     #[clap(long, help = "Take the private key from stdin instead of prompt")]
     private_key_stdin: bool,
+    #[clap(
+        long,
+        help = "Supply password from command line option instead of prompt"
+    )]
+    password: Option<String>,
     #[clap(help = "Path to save the JSON keystore")]
     file: PathBuf,
 }
 
 impl FromKey {
     pub fn run(self) -> Result<()> {
+        if self.password.is_some() {
+            eprintln!(
+                "{}",
+                "WARNING: setting passwords via --password is generally considered insecure, \
+                as they will be stored in your shell history or other log files."
+                    .bright_magenta()
+            );
+        }
+
         if self.file.exists() && !self.force {
             anyhow::bail!("keystore file already exists");
         }
@@ -30,7 +45,11 @@ impl FromKey {
         };
         let private_key = FieldElement::from_hex_be(private_key.trim())?;
 
-        let password = rpassword::prompt_password("Enter password: ")?;
+        let password = if let Some(password) = self.password {
+            password
+        } else {
+            rpassword::prompt_password("Enter password: ")?
+        };
 
         let key = SigningKey::from_secret_scalar(private_key);
         key.save_as_keystore(&self.file, &password)?;

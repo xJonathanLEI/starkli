@@ -20,6 +20,11 @@ pub struct Init {
     keystore: PathBuf,
     #[clap(
         long,
+        help = "Supply keystore password from command line option instead of prompt"
+    )]
+    keystore_password: Option<String>,
+    #[clap(
+        long,
         short,
         help = "Overwrite the account config file if it already exists"
     )]
@@ -30,6 +35,15 @@ pub struct Init {
 
 impl Init {
     pub fn run(self) -> Result<()> {
+        if self.keystore_password.is_some() {
+            eprintln!(
+                "{}",
+                "WARNING: setting keystore passwords via --password is generally considered \
+                insecure, as they will be stored in your shell history or other log files."
+                    .bright_magenta()
+            );
+        }
+
         if self.output.exists() && !self.force {
             anyhow::bail!("account config file already exists");
         }
@@ -38,7 +52,12 @@ impl Init {
             anyhow::bail!("keystore file not found");
         }
 
-        let password = rpassword::prompt_password("Enter keystore password: ")?;
+        let password = if let Some(password) = self.keystore_password {
+            password
+        } else {
+            rpassword::prompt_password("Enter keystore password: ")?
+        };
+
         let key = SigningKey::from_keystore(self.keystore, &password)?;
 
         // Too lazy to write random salt generation
