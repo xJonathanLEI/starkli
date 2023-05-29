@@ -15,7 +15,7 @@ const OZ_ACCOUNT_CLASS_HASH: FieldElement =
 
 #[derive(Debug, Parser)]
 pub struct Init {
-    // TODO: allow manually specifying public key without using a wallet
+    // TODO: allow manually specifying public key without using a signer
     #[clap(long, help = "Path to keystore JSON file for reading the public key")]
     keystore: PathBuf,
     #[clap(

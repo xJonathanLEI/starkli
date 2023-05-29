@@ -8,7 +8,7 @@ mod gen_keypair;
 use gen_keypair::GenKeypair;
 
 #[derive(Debug, Parser)]
-pub struct Wallet {
+pub struct Signer {
     #[clap(subcommand)]
     command: Subcommands,
 }
@@ -21,7 +21,7 @@ enum Subcommands {
     GenKeypair(GenKeypair),
 }
 
-impl Wallet {
+impl Signer {
     pub fn run(self) -> Result<()> {
         match self.command {
             Subcommands::Keystore(cmd) => cmd.run(),

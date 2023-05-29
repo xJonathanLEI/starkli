@@ -71,7 +71,7 @@ impl Deploy {
         // TODO: add option for manually setting salt
         let salt = SigningKey::from_random().secret_scalar();
 
-        // TODO: refactor account & wallet loading
+        // TODO: refactor account & signer loading
 
         let account_config: AccountConfig =
             serde_json::from_reader(&mut std::fs::File::open(&self.account)?)?;

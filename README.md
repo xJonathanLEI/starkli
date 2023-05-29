@@ -42,7 +42,7 @@ Commands:
   class-by-hash        Get contract class by hash
   class-at             Get contract class deployed at a certain address
   syncing              Get node syncing status
-  wallet               Wallet management commands
+  signer               Signer management commands
   account              Account management commands
   deploy               Deploy contract via the Universal Deployer Contract
   completions          Generate shell completions script

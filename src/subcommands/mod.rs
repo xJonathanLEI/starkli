@@ -58,8 +58,8 @@ pub use storage::Storage;
 mod state_update;
 pub use state_update::StateUpdate;
 
-mod wallet;
-pub use wallet::Wallet;
+mod signer;
+pub use signer::Signer;
 
 mod account;
 pub use account::Account;
