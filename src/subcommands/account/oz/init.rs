@@ -93,7 +93,7 @@ impl Init {
         eprintln!();
         eprintln!(
             "Deploy this account by running:\n    {}",
-            format!("starkli account oz deploy {}", self.output.display()).bright_yellow()
+            format!("starkli account deploy {}", self.output.display()).bright_yellow()
         );
 
         Ok(())
