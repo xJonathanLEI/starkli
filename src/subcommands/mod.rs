@@ -66,3 +66,6 @@ pub use account::Account;
 
 mod deploy;
 pub use deploy::Deploy;
+
+mod declare;
+pub use declare::Declare;
