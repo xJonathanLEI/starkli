@@ -8,7 +8,7 @@ description = "Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for Starknet 
 
 [dependencies]
 anyhow = "1.0.71"
-cairo-lang-starknet = { git = "https://github.com/starkware-libs/cairo", rev = "v1.1.0" }
+cairo-lang-starknet = "1.1.0"
 chrono = "0.4.24"
 clap = { version = "4.2.7", features = ["derive", "env"] }
 clap_complete = "4.2.2"
@@ -19,6 +19,6 @@ rpassword = "7.2.0"
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = { version = "1.0.96", features = ["preserve_order"] }
 serde_with = "2.3.2"
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs" }
+starknet = "0.3.0"
 tokio = { version = "1.28.1", default-features = false, features = ["macros", "rt-multi-thread"] }
 url = "2.3.1"
