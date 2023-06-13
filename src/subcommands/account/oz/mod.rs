@@ -19,7 +19,7 @@ enum Subcommands {
 impl Oz {
     pub async fn run(self) -> Result<()> {
         match self.command {
-            Subcommands::Init(cmd) => cmd.run(),
+            Subcommands::Init(cmd) => cmd.run().await,
         }
     }
 }

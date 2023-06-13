@@ -2525,6 +2525,7 @@ name = "starkli"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "cairo-lang-starknet",
  "chrono",
  "clap",
@@ -2537,6 +2538,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "starknet",
+ "thiserror",
  "tokio",
  "url",
 ]
@@ -2687,11 +2689,12 @@ dependencies = [
 
 [[package]]
 name = "starknet-signers"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39394badd0c80e73b09202c934e9f087c276721bc4068aaf0d7d351cc5c49165"
+checksum = "5ae038900600da634402ebfe17e13eebf6f1e3d0b57a4e94d21ce67005935742"
 dependencies = [
  "async-trait",
+ "auto_impl",
  "crypto-bigint",
  "eth-keystore",
  "rand",

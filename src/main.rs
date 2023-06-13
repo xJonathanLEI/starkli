@@ -6,6 +6,7 @@ use crate::{provider::ProviderArgs, subcommands::*};
 
 mod account;
 mod provider;
+mod signer;
 mod subcommands;
 mod utils;
 

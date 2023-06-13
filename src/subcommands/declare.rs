@@ -7,11 +7,11 @@ use starknet::{
     accounts::{Account, SingleOwnerAccount},
     core::types::contract::{legacy::LegacyContractClass, CompiledClass, SierraClass},
     providers::Provider,
-    signers::{LocalWallet, SigningKey},
 };
 
 use crate::{
     account::{AccountConfig, DeploymentStatus},
+    signer::SignerArgs,
     utils::watch_tx,
     ProviderArgs,
 };
@@ -20,13 +20,8 @@ use crate::{
 pub struct Declare {
     #[clap(flatten)]
     provider: ProviderArgs,
-    #[clap(long, help = "Path to keystore JSON file")]
-    keystore: PathBuf,
-    #[clap(
-        long,
-        help = "Supply keystore password from command line option instead of prompt"
-    )]
-    keystore_password: Option<String>,
+    #[clap(flatten)]
+    signer: SignerArgs,
     #[clap(long, help = "Path to account config JSON file")]
     account: PathBuf,
     #[clap(long, help = "Wait for the transaction to confirm")]
@@ -37,20 +32,8 @@ pub struct Declare {
 
 impl Declare {
     pub async fn run(self) -> Result<()> {
-        if self.keystore_password.is_some() {
-            eprintln!(
-                "{}",
-                "WARNING: setting keystore passwords via --password is generally considered \
-                insecure, as they will be stored in your shell history or other log files."
-                    .bright_magenta()
-            );
-        }
-
         let provider = Arc::new(self.provider.into_provider());
-
-        if !self.keystore.exists() {
-            anyhow::bail!("keystore file not found");
-        }
+        let signer = self.signer.into_signer()?;
 
         if !self.account.exists() {
             anyhow::bail!("account config file not found");
@@ -64,22 +47,9 @@ impl Declare {
             DeploymentStatus::Deployed(inner) => inner.address,
         };
 
-        let password = if let Some(password) = self.keystore_password {
-            password
-        } else {
-            rpassword::prompt_password("Enter keystore password: ")?
-        };
-
-        let key = SigningKey::from_keystore(self.keystore, &password)?;
-
         let chain_id = provider.chain_id().await?;
 
-        let account = SingleOwnerAccount::new(
-            provider.clone(),
-            LocalWallet::from_signing_key(key.clone()),
-            account_address,
-            chain_id,
-        );
+        let account = SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
 
         // TODO: check if class has already been declared
 

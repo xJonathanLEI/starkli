@@ -8,11 +8,12 @@ use starknet::{
     contract::ContractFactory,
     core::{chain_id, types::FieldElement},
     providers::{Provider, SequencerGatewayProvider},
-    signers::{LocalWallet, SigningKey},
+    signers::SigningKey,
 };
 
 use crate::{
     account::{AccountConfig, DeploymentStatus},
+    signer::SignerArgs,
     utils::watch_tx,
     ProviderArgs,
 };
@@ -21,15 +22,10 @@ use crate::{
 pub struct Deploy {
     #[clap(flatten)]
     provider: ProviderArgs,
+    #[clap(flatten)]
+    signer: SignerArgs,
     #[clap(long, help = "Do not derive contract address from deployer address")]
     not_unique: bool,
-    #[clap(long, help = "Path to keystore JSON file")]
-    keystore: PathBuf,
-    #[clap(
-        long,
-        help = "Supply keystore password from command line option instead of prompt"
-    )]
-    keystore_password: Option<String>,
     #[clap(long, help = "Path to account config JSON file")]
     account: PathBuf,
     #[clap(long, help = "Wait for the transaction to confirm")]
@@ -42,20 +38,8 @@ pub struct Deploy {
 
 impl Deploy {
     pub async fn run(self) -> Result<()> {
-        if self.keystore_password.is_some() {
-            eprintln!(
-                "{}",
-                "WARNING: setting keystore passwords via --password is generally considered \
-                insecure, as they will be stored in your shell history or other log files."
-                    .bright_magenta()
-            );
-        }
-
         let provider = Arc::new(self.provider.into_provider());
-
-        if !self.keystore.exists() {
-            anyhow::bail!("keystore file not found");
-        }
+        let signer = Arc::new(self.signer.into_signer()?);
 
         if !self.account.exists() {
             anyhow::bail!("account config file not found");
@@ -81,22 +65,10 @@ impl Deploy {
             DeploymentStatus::Deployed(inner) => inner.address,
         };
 
-        let password = if let Some(password) = self.keystore_password {
-            password
-        } else {
-            rpassword::prompt_password("Enter keystore password: ")?
-        };
-
-        let key = SigningKey::from_keystore(self.keystore, &password)?;
-
         let chain_id = provider.chain_id().await?;
 
-        let account = SingleOwnerAccount::new(
-            provider.clone(),
-            LocalWallet::from_signing_key(key.clone()),
-            account_address,
-            chain_id,
-        );
+        let account =
+            SingleOwnerAccount::new(provider.clone(), signer.clone(), account_address, chain_id);
 
         // TODO: allow custom UDC
         let factory = ContractFactory::new(class_hash, account);
@@ -124,7 +96,7 @@ impl Deploy {
                 Some(sequencer_provider) => {
                     let estimate_account = SingleOwnerAccount::new(
                         sequencer_provider,
-                        LocalWallet::from_signing_key(key),
+                        signer,
                         account_address,
                         chain_id,
                     );

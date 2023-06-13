@@ -7,11 +7,12 @@ use starknet::{
     accounts::{AccountFactory, OpenZeppelinAccountFactory},
     core::{chain_id, types::FieldElement},
     providers::{Provider, SequencerGatewayProvider},
-    signers::{LocalWallet, SigningKey},
+    signers::Signer,
 };
 
 use crate::{
     account::{AccountConfig, AccountVariant, DeployedStatus, DeploymentStatus},
+    signer::SignerArgs,
     utils::watch_tx,
     ProviderArgs,
 };
@@ -20,29 +21,16 @@ use crate::{
 pub struct Deploy {
     #[clap(flatten)]
     provider: ProviderArgs,
-    #[clap(long, help = "Path to keystore JSON file")]
-    keystore: PathBuf,
-    #[clap(
-        long,
-        help = "Supply keystore password from command line option instead of prompt"
-    )]
-    keystore_password: Option<String>,
+    #[clap(flatten)]
+    signer: SignerArgs,
     #[clap(help = "Path to the account config file")]
     file: PathBuf,
 }
 
 impl Deploy {
     pub async fn run(self) -> Result<()> {
-        if self.keystore_password.is_some() {
-            eprintln!(
-                "{}",
-                "WARNING: setting keystore passwords via --password is generally considered \
-                insecure, as they will be stored in your shell history or other log files."
-                    .bright_magenta()
-            );
-        }
-
         let provider = Arc::new(self.provider.into_provider());
+        let signer = Arc::new(self.signer.into_signer()?);
 
         if !self.file.exists() {
             anyhow::bail!("account config file not found");
@@ -63,24 +51,13 @@ impl Deploy {
             }
         };
 
-        if !self.keystore.exists() {
-            anyhow::bail!("keystore file not found");
-        }
-
-        let password = if let Some(password) = self.keystore_password {
-            password
-        } else {
-            rpassword::prompt_password("Enter keystore password: ")?
-        };
-
-        let key = SigningKey::from_keystore(self.keystore, &password)?;
-
         // Makes sure we're using the right key
-        if key.verifying_key().scalar() != oz_config.public_key {
+        let signer_public_key = signer.get_public_key().await?.scalar();
+        if signer_public_key != oz_config.public_key {
             anyhow::bail!(
                 "public key mismatch. Expected: {:#064x}; actual: {:#064x}.",
                 oz_config.public_key,
-                key.verifying_key().scalar()
+                signer_public_key
             );
         }
 
@@ -89,7 +66,7 @@ impl Deploy {
         let factory = OpenZeppelinAccountFactory::new(
             undeployed_status.class_hash,
             chain_id,
-            LocalWallet::from_signing_key(key.clone()),
+            signer.clone(),
             provider.clone(),
         )
         .await?;
@@ -123,7 +100,7 @@ impl Deploy {
                     let estimate_factory = OpenZeppelinAccountFactory::new(
                         undeployed_status.class_hash,
                         chain_id,
-                        LocalWallet::from_signing_key(key),
+                        signer,
                         sequencer_provider,
                     )
                     .await?;

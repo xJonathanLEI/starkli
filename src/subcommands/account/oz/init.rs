@@ -3,10 +3,15 @@ use std::{io::Write, path::PathBuf};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
-use starknet::{core::types::FieldElement, macros::felt, signers::SigningKey};
+use starknet::{
+    core::types::FieldElement,
+    macros::felt,
+    signers::{Signer, SigningKey},
+};
 
-use crate::account::{
-    AccountConfig, AccountVariant, DeploymentStatus, OzAccountConfig, UndeployedStatus,
+use crate::{
+    account::{AccountConfig, AccountVariant, DeploymentStatus, OzAccountConfig, UndeployedStatus},
+    signer::SignerArgs,
 };
 
 /// OpenZeppelin account contract v0.6.1 compiled with cairo-lang v0.11.0.2
@@ -16,13 +21,8 @@ const OZ_ACCOUNT_CLASS_HASH: FieldElement =
 #[derive(Debug, Parser)]
 pub struct Init {
     // TODO: allow manually specifying public key without using a signer
-    #[clap(long, help = "Path to keystore JSON file for reading the public key")]
-    keystore: PathBuf,
-    #[clap(
-        long,
-        help = "Supply keystore password from command line option instead of prompt"
-    )]
-    keystore_password: Option<String>,
+    #[clap(flatten)]
+    signer: SignerArgs,
     #[clap(
         long,
         short,
@@ -34,31 +34,12 @@ pub struct Init {
 }
 
 impl Init {
-    pub fn run(self) -> Result<()> {
-        if self.keystore_password.is_some() {
-            eprintln!(
-                "{}",
-                "WARNING: setting keystore passwords via --password is generally considered \
-                insecure, as they will be stored in your shell history or other log files."
-                    .bright_magenta()
-            );
-        }
-
+    pub async fn run(self) -> Result<()> {
         if self.output.exists() && !self.force {
             anyhow::bail!("account config file already exists");
         }
 
-        if !self.keystore.exists() {
-            anyhow::bail!("keystore file not found");
-        }
-
-        let password = if let Some(password) = self.keystore_password {
-            password
-        } else {
-            rpassword::prompt_password("Enter keystore password: ")?
-        };
-
-        let key = SigningKey::from_keystore(self.keystore, &password)?;
+        let signer = self.signer.into_signer()?;
 
         // Too lazy to write random salt generation
         let salt = SigningKey::from_random().secret_scalar();
@@ -67,7 +48,7 @@ impl Init {
             version: 1,
             variant: AccountVariant::OpenZeppelin(OzAccountConfig {
                 version: 1,
-                public_key: key.verifying_key().scalar(),
+                public_key: signer.get_public_key().await?.scalar(),
             }),
             deployment: DeploymentStatus::Undeployed(UndeployedStatus {
                 class_hash: OZ_ACCOUNT_CLASS_HASH,
