@@ -5,6 +5,9 @@ use colored::Colorize;
 use crate::{provider::ProviderArgs, subcommands::*};
 
 mod account;
+mod address_book;
+mod chain_id;
+mod decode;
 mod provider;
 mod signer;
 mod subcommands;
