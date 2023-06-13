@@ -5,7 +5,10 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
-    core::types::contract::{legacy::LegacyContractClass, CompiledClass, SierraClass},
+    core::types::{
+        contract::{legacy::LegacyContractClass, CompiledClass, SierraClass},
+        FieldElement,
+    },
     providers::Provider,
 };
 
@@ -24,6 +27,11 @@ pub struct Declare {
     signer: SignerArgs,
     #[clap(long, help = "Path to account config JSON file")]
     account: PathBuf,
+    #[clap(
+        long,
+        help = "Only estimate transaction fee without sending transaction"
+    )]
+    estimate_only: bool,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(help = "Path to contract artifact file")]
@@ -63,11 +71,13 @@ impl Declare {
             // Declaring Cairo 1 class
             let class_hash = class.class_hash()?;
 
-            eprintln!(
-                "Declaring Cairo 1 class: {}",
-                format!("{:#064x}", class_hash).bright_yellow()
-            );
-            eprintln!("Compiling Sierra class to CASM with compiler version v1.1.0...");
+            if !self.estimate_only {
+                eprintln!(
+                    "Declaring Cairo 1 class: {}",
+                    format!("{:#064x}", class_hash).bright_yellow()
+                );
+                eprintln!("Compiling Sierra class to CASM with compiler version v1.1.0...");
+            }
 
             // Code adapted from the `starknet-sierra-compile` CLI
 
@@ -92,15 +102,31 @@ impl Declare {
 
             let casm_class_hash = casm_class.class_hash()?;
 
-            eprintln!(
-                "CASM class hash: {}",
-                format!("{:#064x}", casm_class_hash).bright_yellow()
-            );
+            if !self.estimate_only {
+                eprintln!(
+                    "CASM class hash: {}",
+                    format!("{:#064x}", casm_class_hash).bright_yellow()
+                );
+            }
 
             // TODO: make buffer configurable
             let declaration = account
                 .declare(Arc::new(class.flatten()?), casm_class_hash)
                 .fee_estimate_multiplier(1.5f64);
+
+            if self.estimate_only {
+                let estimated_fee = declaration.estimate_fee().await?.overall_fee;
+
+                println!(
+                    "{} ETH",
+                    format!(
+                        "{}",
+                        <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
+                    )
+                    .bright_yellow(),
+                );
+                return Ok(());
+            }
 
             (class_hash, declaration.send().await?.transaction_hash)
         } else if let Ok(_) =
@@ -114,15 +140,31 @@ impl Declare {
             // Declaring Cairo 0 class
             let class_hash = class.class_hash()?;
 
-            eprintln!(
-                "Declaring Cairo 0 (deprecated) class: {}",
-                format!("{:#064x}", class_hash).bright_yellow()
-            );
+            if !self.estimate_only {
+                eprintln!(
+                    "Declaring Cairo 0 (deprecated) class: {}",
+                    format!("{:#064x}", class_hash).bright_yellow()
+                );
+            }
 
             // TODO: make buffer configurable
             let declaration = account
                 .declare_legacy(Arc::new(class))
                 .fee_estimate_multiplier(1.5f64);
+
+            if self.estimate_only {
+                let estimated_fee = declaration.estimate_fee().await?.overall_fee;
+
+                println!(
+                    "{} ETH",
+                    format!(
+                        "{}",
+                        <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
+                    )
+                    .bright_yellow(),
+                );
+                return Ok(());
+            }
 
             (class_hash, declaration.send().await?.transaction_hash)
         } else {

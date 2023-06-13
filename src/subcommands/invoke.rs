@@ -5,7 +5,7 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::{
     accounts::{Account, Call, SingleOwnerAccount},
-    core::utils::get_selector_from_name,
+    core::{types::FieldElement, utils::get_selector_from_name},
     providers::Provider,
 };
 
@@ -26,6 +26,11 @@ pub struct Invoke {
     signer: SignerArgs,
     #[clap(long, help = "Path to account config JSON file")]
     account: PathBuf,
+    #[clap(
+        long,
+        help = "Only estimate transaction fee without sending transaction"
+    )]
+    estimate_only: bool,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(help = "One or more contract calls. See documentation for more details")]
@@ -94,7 +99,24 @@ impl Invoke {
 
         let account = SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
 
-        let invoke_tx = account.execute(calls).send().await?.transaction_hash;
+        let execution = account.execute(calls).fee_estimate_multiplier(1.5f64);
+
+        if self.estimate_only {
+            let estimated_fee = execution.estimate_fee().await?.overall_fee;
+
+            println!(
+                "{} ETH",
+                format!(
+                    "{}",
+                    <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
+                )
+                .bright_yellow(),
+            );
+            return Ok(());
+        }
+
+        // TODO: make buffer configurable
+        let invoke_tx = execution.send().await?.transaction_hash;
         eprintln!(
             "Invoke transaction: {}",
             format!("{:#064x}", invoke_tx).bright_yellow()

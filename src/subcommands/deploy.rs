@@ -27,6 +27,11 @@ pub struct Deploy {
     not_unique: bool,
     #[clap(long, help = "Path to account config JSON file")]
     account: PathBuf,
+    #[clap(
+        long,
+        help = "Only estimate transaction fee without sending transaction"
+    )]
+    estimate_only: bool,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(help = "Class hash")]
@@ -78,6 +83,17 @@ impl Deploy {
 
         // TODO: add option for manually specifying fees
         let estimated_fee = contract_deployment.estimate_fee().await?.overall_fee;
+        if self.estimate_only {
+            println!(
+                "{} ETH",
+                format!(
+                    "{}",
+                    <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
+                )
+                .bright_yellow(),
+            );
+            return Ok(());
+        }
 
         // TODO: make buffer configurable
         let estimated_fee_with_buffer = estimated_fee * 3 / 2;

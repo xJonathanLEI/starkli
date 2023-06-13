@@ -23,6 +23,11 @@ pub struct Deploy {
     provider: ProviderArgs,
     #[clap(flatten)]
     signer: SignerArgs,
+    #[clap(
+        long,
+        help = "Only estimate transaction fee without sending transaction"
+    )]
+    estimate_only: bool,
     #[clap(help = "Path to the account config file")]
     file: PathBuf,
 }
@@ -87,6 +92,14 @@ impl Deploy {
         let estimated_fee_with_buffer = estimated_fee * 3 / 2;
 
         let estimated_fee: FieldElement = estimated_fee.into();
+        if self.estimate_only {
+            println!(
+                "{} ETH",
+                format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+            );
+            return Ok(());
+        }
+
         let estimated_fee_with_buffer: FieldElement = estimated_fee_with_buffer.into();
 
         eprintln!(
