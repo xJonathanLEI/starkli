@@ -45,6 +45,7 @@ Commands:
   syncing              Get node syncing status
   signer               Signer management commands
   account              Account management commands
+  invoke               Send an invoke transaction from an account contract
   declare              Declare a contract class
   deploy               Deploy contract via the Universal Deployer Contract
   completions          Generate shell completions script

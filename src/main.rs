@@ -78,6 +78,8 @@ enum Subcommands {
     //
     // Sending out transactions
     //
+    #[clap(about = "Send an invoke transaction from an account contract")]
+    Invoke(Invoke),
     #[clap(about = "Declare a contract class")]
     Declare(Declare),
     #[clap(about = "Deploy contract via the Universal Deployer Contract")]
@@ -121,6 +123,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::Syncing(cmd) => cmd.run().await,
         Subcommands::Signer(cmd) => cmd.run(),
         Subcommands::Account(cmd) => cmd.run().await,
+        Subcommands::Invoke(cmd) => cmd.run().await,
         Subcommands::Declare(cmd) => cmd.run().await,
         Subcommands::Deploy(cmd) => cmd.run().await,
         Subcommands::Completions(cmd) => cmd.run(),
