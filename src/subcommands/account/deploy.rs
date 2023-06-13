@@ -5,8 +5,8 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::{
     accounts::{AccountFactory, OpenZeppelinAccountFactory},
-    core::{chain_id, types::FieldElement},
-    providers::{Provider, SequencerGatewayProvider},
+    core::types::FieldElement,
+    providers::Provider,
     signers::Signer,
 };
 
@@ -81,39 +81,7 @@ impl Deploy {
         }
 
         // TODO: add option for manually specifying fees
-        let estimated_fee = {
-            // Extremely hacky workaround for a `pathfinder` bug:
-            //   https://github.com/eqlabs/pathfinder/issues/1082
-
-            let sequencer_fallback = if chain_id == chain_id::MAINNET {
-                Some(SequencerGatewayProvider::starknet_alpha_mainnet())
-            } else if chain_id == chain_id::TESTNET {
-                Some(SequencerGatewayProvider::starknet_alpha_goerli())
-            } else if chain_id == chain_id::TESTNET2 {
-                Some(SequencerGatewayProvider::starknet_alpha_goerli_2())
-            } else {
-                None
-            };
-
-            match sequencer_fallback {
-                Some(sequencer_provider) => {
-                    let estimate_factory = OpenZeppelinAccountFactory::new(
-                        undeployed_status.class_hash,
-                        chain_id,
-                        signer,
-                        sequencer_provider,
-                    )
-                    .await?;
-
-                    estimate_factory
-                        .deploy(undeployed_status.salt)
-                        .estimate_fee()
-                        .await?
-                        .overall_fee
-                }
-                None => account_deployment.estimate_fee().await?.overall_fee,
-            }
-        };
+        let estimated_fee = account_deployment.estimate_fee().await?.overall_fee;
 
         // TODO: make buffer configurable
         let estimated_fee_with_buffer = estimated_fee * 3 / 2;

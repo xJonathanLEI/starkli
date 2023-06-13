@@ -4,11 +4,8 @@ use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    accounts::SingleOwnerAccount,
-    contract::ContractFactory,
-    core::{chain_id, types::FieldElement},
-    providers::{Provider, SequencerGatewayProvider},
-    signers::SigningKey,
+    accounts::SingleOwnerAccount, contract::ContractFactory, core::types::FieldElement,
+    providers::Provider, signers::SigningKey,
 };
 
 use crate::{
@@ -80,40 +77,7 @@ impl Deploy {
         let contract_deployment = factory.deploy(&ctor_args, salt, !self.not_unique);
 
         // TODO: add option for manually specifying fees
-        let estimated_fee = {
-            // Extremely hacky workaround for a `pathfinder` bug:
-            //   https://github.com/eqlabs/pathfinder/issues/1082
-
-            let sequencer_fallback = if chain_id == chain_id::MAINNET {
-                Some(SequencerGatewayProvider::starknet_alpha_mainnet())
-            } else if chain_id == chain_id::TESTNET {
-                Some(SequencerGatewayProvider::starknet_alpha_goerli())
-            } else if chain_id == chain_id::TESTNET2 {
-                Some(SequencerGatewayProvider::starknet_alpha_goerli_2())
-            } else {
-                None
-            };
-
-            match sequencer_fallback {
-                Some(sequencer_provider) => {
-                    let estimate_account = SingleOwnerAccount::new(
-                        sequencer_provider,
-                        signer,
-                        account_address,
-                        chain_id,
-                    );
-
-                    let estimate_factory = ContractFactory::new(class_hash, estimate_account);
-
-                    estimate_factory
-                        .deploy(&ctor_args, salt, !self.not_unique)
-                        .estimate_fee()
-                        .await?
-                        .overall_fee
-                }
-                None => contract_deployment.estimate_fee().await?.overall_fee,
-            }
-        };
+        let estimated_fee = contract_deployment.estimate_fee().await?.overall_fee;
 
         // TODO: make buffer configurable
         let estimated_fee_with_buffer = estimated_fee * 3 / 2;
