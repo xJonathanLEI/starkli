@@ -5,12 +5,14 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::{
     accounts::{Account, Call, SingleOwnerAccount},
-    core::{types::FieldElement, utils::get_selector_from_name},
+    core::utils::get_selector_from_name,
     providers::Provider,
 };
 
 use crate::{
     account::{AccountConfig, DeploymentStatus},
+    address_book::AddressBookResolver,
+    decode::FeltDecoder,
     signer::SignerArgs,
     utils::watch_tx,
     ProviderArgs,
@@ -33,6 +35,7 @@ pub struct Invoke {
 impl Invoke {
     pub async fn run(self) -> Result<()> {
         let provider = Arc::new(self.provider.into_provider());
+        let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
         let signer = Arc::new(self.signer.into_signer()?);
 
         if !self.account.exists() {
@@ -49,7 +52,7 @@ impl Invoke {
             let mut arg_iter = self.calls.into_iter();
 
             while let Some(first_arg) = arg_iter.next() {
-                let contract_address = first_arg.parse::<FieldElement>()?;
+                let contract_address = felt_decoder.decode(&first_arg).await?;
 
                 let next_arg = arg_iter.next().ok_or_else(unexpected_end_of_args)?;
                 let selector = get_selector_from_name(&next_arg)?;
@@ -58,7 +61,7 @@ impl Invoke {
                 for arg in &mut arg_iter {
                     let arg = match arg.as_str() {
                         "/" | "-" | "\\" => break,
-                        _ => arg.parse::<FieldElement>()?,
+                        _ => felt_decoder.decode(&arg).await?,
                     };
                     calldata.push(arg);
                 }
