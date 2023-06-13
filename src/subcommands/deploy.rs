@@ -13,6 +13,8 @@ use starknet::{
 
 use crate::{
     account::{AccountConfig, DeploymentStatus},
+    address_book::AddressBookResolver,
+    decode::FeltDecoder,
     signer::SignerArgs,
     utils::watch_tx,
     ProviderArgs,
@@ -39,6 +41,7 @@ pub struct Deploy {
 impl Deploy {
     pub async fn run(self) -> Result<()> {
         let provider = Arc::new(self.provider.into_provider());
+        let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
         let signer = Arc::new(self.signer.into_signer()?);
 
         if !self.account.exists() {
@@ -46,11 +49,10 @@ impl Deploy {
         }
 
         let class_hash = FieldElement::from_hex_be(&self.class_hash)?;
-        let ctor_args = self
-            .ctor_args
-            .iter()
-            .map(|item| item.parse())
-            .collect::<Result<Vec<FieldElement>, _>>()?;
+        let mut ctor_args = vec![];
+        for element in self.ctor_args.iter() {
+            ctor_args.push(felt_decoder.decode(element).await?);
+        }
 
         // TODO: add option for manually setting salt
         let salt = SigningKey::from_random().secret_scalar();
