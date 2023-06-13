@@ -25,7 +25,11 @@ pub struct Deploy {
     signer: SignerArgs,
     #[clap(long, help = "Do not derive contract address from deployer address")]
     not_unique: bool,
-    #[clap(long, help = "Path to account config JSON file")]
+    #[clap(
+        long,
+        env = "STARKNET_ACCOUNT",
+        help = "Path to account config JSON file"
+    )]
     account: PathBuf,
     #[clap(
         long,

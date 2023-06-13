@@ -25,7 +25,11 @@ pub struct Declare {
     provider: ProviderArgs,
     #[clap(flatten)]
     signer: SignerArgs,
-    #[clap(long, help = "Path to account config JSON file")]
+    #[clap(
+        long,
+        env = "STARKNET_ACCOUNT",
+        help = "Path to account config JSON file"
+    )]
     account: PathBuf,
     #[clap(
         long,
