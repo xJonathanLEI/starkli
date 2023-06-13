@@ -35,6 +35,8 @@ pub struct SignerArgs {
         help = "Supply keystore password from command line option instead of prompt"
     )]
     keystore_password: Option<String>,
+    #[clap(long, help = "Private key in hex in plain text")]
+    private_key: Option<String>,
 }
 
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
@@ -62,8 +64,8 @@ impl Signer for AnySigner {
 
 impl SignerArgs {
     pub fn into_signer(self) -> Result<AnySigner> {
-        match (self.keystore, self.keystore_password) {
-            (Some(keystore), keystore_password) => {
+        match (self.keystore, self.keystore_password, self.private_key) {
+            (Some(keystore), keystore_password, None) => {
                 if keystore_password.is_some() {
                     eprintln!(
                         "{}",
@@ -85,6 +87,20 @@ impl SignerArgs {
                 };
 
                 let key = SigningKey::from_keystore(keystore, &password)?;
+
+                Ok(AnySigner::LocalWallet(LocalWallet::from_signing_key(key)))
+            }
+            (None, None, Some(private_key)) => {
+                // TODO: change to recommend hardware wallets when they become available
+                eprintln!(
+                    "{}",
+                    "WARNING: using private key in plain text is highly insecure, and you should \
+                    ONLY do this for development. Consider using an encrypted keystore instead."
+                        .bright_magenta()
+                );
+
+                let private_key = FieldElement::from_hex_be(&private_key)?;
+                let key = SigningKey::from_secret_scalar(private_key);
 
                 Ok(AnySigner::LocalWallet(LocalWallet::from_signing_key(key)))
             }
