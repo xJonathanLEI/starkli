@@ -35,6 +35,8 @@ enum Subcommands {
     //
     // JSON-RPC query client
     //
+    #[clap(about = "Call contract functions without sending transactions")]
+    Call(Call),
     #[clap(alias = "tx", about = "Get Starknet transaction by hash")]
     Transaction(Transaction),
     #[clap(about = "Get latest block number")]
@@ -102,6 +104,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::ToCairoString(cmd) => cmd.run(),
         Subcommands::ParseCairoString(cmd) => cmd.run(),
         Subcommands::Mont(cmd) => cmd.run(),
+        Subcommands::Call(cmd) => cmd.run().await,
         Subcommands::Transaction(cmd) => cmd.run().await,
         Subcommands::BlockNumber(cmd) => cmd.run().await,
         Subcommands::BlockHash(cmd) => cmd.run().await,

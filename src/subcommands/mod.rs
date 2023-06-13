@@ -69,3 +69,6 @@ pub use deploy::Deploy;
 
 mod declare;
 pub use declare::Declare;
+
+mod call;
+pub use call::Call;
