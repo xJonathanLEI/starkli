@@ -2587,9 +2587,9 @@ dependencies = [
 
 [[package]]
 name = "starknet-core"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a68232cec9e44efce6a308ef89a0d3a77099aeb24385d0c27a5f110d70d38345"
+checksum = "4cbb3cf1ba3b3a3fc487c35145da7b6143f067eea0785276ac023d83f758856b"
 dependencies = [
  "base64 0.21.2",
  "ethereum-types",
