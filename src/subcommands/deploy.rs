@@ -57,7 +57,7 @@ impl Deploy {
         let class_hash = FieldElement::from_hex_be(&self.class_hash)?;
         let mut ctor_args = vec![];
         for element in self.ctor_args.iter() {
-            ctor_args.push(felt_decoder.decode(element).await?);
+            ctor_args.append(&mut felt_decoder.decode(element).await?);
         }
 
         // TODO: add option for manually setting salt

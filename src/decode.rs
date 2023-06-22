@@ -19,17 +19,30 @@ impl<S> FeltDecoder<S>
 where
     S: ChainIdSource,
 {
-    pub async fn decode(&self, raw: &str) -> Result<FieldElement> {
+    pub async fn decode_single(&self, raw: &str) -> Result<FieldElement> {
+        let decoded = self.decode(raw).await?;
+
+        if decoded.len() == 1 {
+            Ok(decoded[0])
+        } else {
+            Err(anyhow::anyhow!(
+                "expected 1 element but found {}",
+                decoded.len()
+            ))
+        }
+    }
+
+    pub async fn decode(&self, raw: &str) -> Result<Vec<FieldElement>> {
         if let Some(addr_name) = raw.strip_prefix("addr:") {
-            Ok(self
+            Ok(vec![self
                 .address_book_resolver
                 .resolve_name(addr_name)
                 .await?
                 .ok_or_else(|| {
                     anyhow::anyhow!("address book entry not found for \"{}\"", addr_name)
-                })?)
+                })?])
         } else {
-            Ok(raw.parse::<FieldElement>()?)
+            Ok(vec![raw.parse::<FieldElement>()?])
         }
     }
 }
