@@ -80,6 +80,25 @@ where
             let low = FieldElement::from_byte_slice_be(&low.to_bytes_be()).unwrap();
 
             Ok(vec![low, high])
+        } else if let Some(const_name) = raw.strip_prefix("const:") {
+            match const_name.to_lowercase().as_str() {
+                // `u256_max` is canonical and all others should be considered aliases.
+                "u256_max" | "u256-max" | "u256max" | "u256::max" | "uint256_max"
+                | "uint256-max" | "uint256max" | "uint256::max" => Ok(vec![
+                    FieldElement::from_byte_slice_be(&hex_literal::hex!(
+                        "ffffffffffffffffffffffffffffffff"
+                    ))
+                    .unwrap(),
+                    FieldElement::from_byte_slice_be(&hex_literal::hex!(
+                        "ffffffffffffffffffffffffffffffff"
+                    ))
+                    .unwrap(),
+                ]),
+                // `felt_max` is canonical and all others should be considered aliases.
+                "felt_max" | "felt-max" | "felt::max" | "felt252_max" | "felt252-max"
+                | "felt252::max" => Ok(vec![FieldElement::MAX]),
+                _ => Err(anyhow::anyhow!("unknown constant: {}", const_name)),
+            }
         } else {
             Ok(vec![raw.parse::<FieldElement>()?])
         }
