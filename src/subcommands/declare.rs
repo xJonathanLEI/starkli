@@ -45,7 +45,6 @@ pub struct Declare {
 impl Declare {
     pub async fn run(self) -> Result<()> {
         let provider = Arc::new(self.provider.into_provider());
-        let signer = self.signer.into_signer()?;
 
         if !self.account.exists() {
             anyhow::bail!("account config file not found");
@@ -61,6 +60,7 @@ impl Declare {
 
         let chain_id = provider.chain_id().await?;
 
+        let signer = self.signer.into_signer()?;
         let account = SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
 
         // TODO: check if class has already been declared

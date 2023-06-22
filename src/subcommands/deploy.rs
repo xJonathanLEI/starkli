@@ -48,7 +48,6 @@ impl Deploy {
     pub async fn run(self) -> Result<()> {
         let provider = Arc::new(self.provider.into_provider());
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
-        let signer = Arc::new(self.signer.into_signer()?);
 
         if !self.account.exists() {
             anyhow::bail!("account config file not found");
@@ -75,6 +74,7 @@ impl Deploy {
 
         let chain_id = provider.chain_id().await?;
 
+        let signer = Arc::new(self.signer.into_signer()?);
         let account =
             SingleOwnerAccount::new(provider.clone(), signer.clone(), account_address, chain_id);
 
