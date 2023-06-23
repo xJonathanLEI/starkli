@@ -3,8 +3,9 @@ use std::str::FromStr;
 use anyhow::Result;
 use clap::{builder::PossibleValue, Parser, ValueEnum};
 use colored::Colorize;
-use starknet::providers::{
-    jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, SequencerGatewayProvider,
+use starknet::{
+    core::chain_id,
+    providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, SequencerGatewayProvider},
 };
 use url::Url;
 
@@ -25,6 +26,7 @@ pub enum Network {
     Mainnet,
     Goerli1,
     Goerli2,
+    Integration,
 }
 
 impl ProviderArgs {
@@ -56,6 +58,15 @@ impl ProviderArgs {
                     Network::Mainnet => SequencerGatewayProvider::starknet_alpha_mainnet(),
                     Network::Goerli1 => SequencerGatewayProvider::starknet_alpha_goerli(),
                     Network::Goerli2 => SequencerGatewayProvider::starknet_alpha_goerli_2(),
+                    Network::Integration => SequencerGatewayProvider::new(
+                        Url::parse("https://external.integration.starknet.io/gateway").unwrap(),
+                        Url::parse("https://external.integration.starknet.io/feeder_gateway")
+                            .unwrap(),
+                        // Unfortunately the integration environment has the same chain ID as
+                        // goerli-1, which will cause issues whenever we try to identify networks by
+                        // chain ID. We ignore this issue since it's not a live network.
+                        chain_id::TESTNET,
+                    ),
                 })
             }
             (None, None) => {
@@ -75,7 +86,12 @@ impl ProviderArgs {
 
 impl ValueEnum for Network {
     fn value_variants<'a>() -> &'a [Self] {
-        &[Self::Mainnet, Self::Goerli1, Self::Goerli2]
+        &[
+            Self::Mainnet,
+            Self::Goerli1,
+            Self::Goerli2,
+            Self::Integration,
+        ]
     }
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
@@ -83,6 +99,7 @@ impl ValueEnum for Network {
             Network::Mainnet => Some(PossibleValue::new("mainnet")),
             Network::Goerli1 => Some(PossibleValue::new("goerli-1")),
             Network::Goerli2 => Some(PossibleValue::new("goerli-2")),
+            Network::Integration => Some(PossibleValue::new("integration")),
         }
     }
 }
@@ -96,6 +113,7 @@ impl FromStr for Network {
             "goerli" | "goerli1" | "goerli-1" | "alpha-goerli" | "alpha-goerli1"
             | "alpha-goerli-1" => Ok(Self::Goerli1),
             "goerli2" | "goerli-2" | "alpha-goerli2" | "alpha-goerli-2" => Ok(Self::Goerli2),
+            "integration" => Ok(Self::Integration),
             _ => Err(anyhow::anyhow!("unknown network: {}", s)),
         }
     }
