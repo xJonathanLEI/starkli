@@ -4,8 +4,14 @@ use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    accounts::SingleOwnerAccount, contract::ContractFactory, core::types::FieldElement,
-    providers::Provider, signers::SigningKey,
+    accounts::SingleOwnerAccount,
+    contract::ContractFactory,
+    core::{
+        types::FieldElement,
+        utils::{get_udc_deployed_address, UdcUniqueSettings, UdcUniqueness},
+    },
+    providers::Provider,
+    signers::SigningKey,
 };
 
 use crate::{
@@ -16,6 +22,14 @@ use crate::{
     utils::watch_tx,
     ProviderArgs,
 };
+
+/// The default UDC address: 0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf.
+const DEFAULT_UDC_ADDRESS: FieldElement = FieldElement::from_mont([
+    15144800532519055890,
+    15685625669053253235,
+    9333317513348225193,
+    121672436446604875,
+]);
 
 #[derive(Debug, Parser)]
 pub struct Deploy {
@@ -72,6 +86,20 @@ impl Deploy {
             DeploymentStatus::Deployed(inner) => inner.address,
         };
 
+        let deployed_address = get_udc_deployed_address(
+            salt,
+            class_hash,
+            &if self.not_unique {
+                UdcUniqueness::NotUnique
+            } else {
+                UdcUniqueness::Unique(UdcUniqueSettings {
+                    deployer_address: account_address,
+                    udc_contract_address: DEFAULT_UDC_ADDRESS,
+                })
+            },
+            &ctor_args,
+        );
+
         let chain_id = provider.chain_id().await?;
 
         let signer = Arc::new(self.signer.into_signer()?);
@@ -79,7 +107,7 @@ impl Deploy {
             SingleOwnerAccount::new(provider.clone(), signer.clone(), account_address, chain_id);
 
         // TODO: allow custom UDC
-        let factory = ContractFactory::new(class_hash, account);
+        let factory = ContractFactory::new_with_udc(class_hash, account, DEFAULT_UDC_ADDRESS);
 
         // TODO: pre-compute and show target deployment address
 
@@ -106,6 +134,10 @@ impl Deploy {
             "Deploying class {} with salt {}...",
             format!("{:#064x}", class_hash).bright_yellow(),
             format!("{:#064x}", salt).bright_yellow()
+        );
+        eprintln!(
+            "The contract will be deployed at address {}",
+            format!("{:#064x}", deployed_address).bright_yellow()
         );
 
         let deployment_tx = contract_deployment
