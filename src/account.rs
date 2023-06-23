@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
@@ -11,6 +13,7 @@ use starknet::{
 pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 1] = [KnownAccountClass {
     class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
     variant: AccountVariantType::OpenZeppelin,
+    description: "OpenZeppelin account contract v0.6.1 compiled with cairo-lang v0.11.0.2",
 }];
 
 #[derive(Serialize, Deserialize)]
@@ -36,6 +39,7 @@ pub enum DeploymentStatus {
 pub struct KnownAccountClass {
     pub class_hash: FieldElement,
     pub variant: AccountVariantType,
+    pub description: &'static str,
 }
 
 pub enum AccountVariantType {
@@ -84,6 +88,14 @@ impl AccountConfig {
                 &[oz.public_key],
                 FieldElement::ZERO,
             )),
+        }
+    }
+}
+
+impl Display for AccountVariantType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AccountVariantType::OpenZeppelin => write!(f, "OpenZeppelin"),
         }
     }
 }

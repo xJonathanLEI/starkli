@@ -24,14 +24,23 @@ pub struct Fetch {
     #[clap(long, help = "Overwrite the file if it already exists")]
     force: bool,
     #[clap(long, help = "Path to save the account config file")]
-    output: PathBuf,
+    output: Option<PathBuf>,
     #[clap(help = "Contract address")]
     address: String,
 }
 
 impl Fetch {
     pub async fn run(self) -> Result<()> {
-        if self.output.exists() && !self.force {
+        // We allow not saving the config to just identify the account contract
+        if self.output.is_none() {
+            eprintln!(
+                "{}",
+                "NOTE: --output is not supplied and the account config won't be persisted."
+                    .bright_magenta()
+            );
+        }
+
+        if self.output.as_ref().is_some_and(|output| output.exists()) && !self.force {
             anyhow::bail!("account config file already exists");
         }
 
@@ -56,6 +65,18 @@ impl Fetch {
                 eprintln!("    https://github.com/xJonathanLEI/starkli");
                 anyhow::bail!("unknown class hash: {:#064x}", class_hash);
             }
+        };
+
+        eprintln!(
+            "Account contract type identified as: {}",
+            format!("{}", known_class.variant).bright_yellow()
+        );
+        eprintln!("Description: {}", known_class.description.bright_yellow());
+
+        // No need to proceed if the user doesn't even want to save the config
+        let output = match self.output {
+            Some(output) => output,
+            None => return Ok(()),
         };
 
         let account = match known_class.variant {
@@ -85,13 +106,13 @@ impl Fetch {
             }
         };
 
-        let mut file = std::fs::File::create(&self.output)?;
+        let mut file = std::fs::File::create(&output)?;
         serde_json::to_writer_pretty(&mut file, &account)?;
         file.write_all(b"\n")?;
 
         eprintln!(
             "Downloaded new account config file: {}",
-            std::fs::canonicalize(&self.output)?.display()
+            std::fs::canonicalize(&output)?.display()
         );
 
         Ok(())
