@@ -22,7 +22,7 @@ impl ClassHashAt {
 
         // TODO: allow custom block
         let class_hash = provider
-            .get_class_hash_at(BlockId::Tag(BlockTag::Latest), address)
+            .get_class_hash_at(BlockId::Tag(BlockTag::Pending), address)
             .await?;
 
         println!("{:#064x}", class_hash);

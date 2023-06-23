@@ -23,7 +23,7 @@ impl ClassByHash {
 
         // TODO: allow custom block
         let class = provider
-            .get_class(BlockId::Tag(BlockTag::Latest), class_hash)
+            .get_class(BlockId::Tag(BlockTag::Pending), class_hash)
             .await?;
 
         let class_json = serde_json::to_value(class)?;

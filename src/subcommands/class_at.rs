@@ -23,7 +23,7 @@ impl ClassAt {
 
         // TODO: allow custom block
         let class = provider
-            .get_class_at(BlockId::Tag(BlockTag::Latest), address)
+            .get_class_at(BlockId::Tag(BlockTag::Pending), address)
             .await?;
 
         let class_json = serde_json::to_value(class)?;

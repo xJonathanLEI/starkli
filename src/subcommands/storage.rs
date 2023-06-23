@@ -25,7 +25,7 @@ impl Storage {
 
         // TODO: allow custom block
         let value = provider
-            .get_storage_at(address, key, BlockId::Tag(BlockTag::Latest))
+            .get_storage_at(address, key, BlockId::Tag(BlockTag::Pending))
             .await?;
 
         println!("{:#064x}", value);

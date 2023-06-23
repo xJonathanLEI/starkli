@@ -46,7 +46,7 @@ impl Call {
                     entry_point_selector: selector,
                     calldata,
                 },
-                BlockId::Tag(BlockTag::Latest),
+                BlockId::Tag(BlockTag::Pending),
             )
             .await?;
 

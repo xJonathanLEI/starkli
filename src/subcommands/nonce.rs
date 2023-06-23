@@ -22,7 +22,7 @@ impl Nonce {
 
         // TODO: allow custom block
         let nonce = provider
-            .get_nonce(BlockId::Tag(BlockTag::Latest), address)
+            .get_nonce(BlockId::Tag(BlockTag::Pending), address)
             .await?;
 
         println!("{}", nonce);
