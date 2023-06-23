@@ -1,6 +1,6 @@
 use anyhow::Result;
 use num_bigint::BigUint;
-use starknet::core::types::FieldElement;
+use starknet::core::{types::FieldElement, utils::cairo_short_string_to_felt};
 
 use crate::{address_book::AddressBookResolver, chain_id::ChainIdSource};
 
@@ -99,6 +99,8 @@ where
                 | "felt252::max" => Ok(vec![FieldElement::MAX]),
                 _ => Err(anyhow::anyhow!("unknown constant: {}", const_name)),
             }
+        } else if let Some(short_string) = raw.strip_prefix("str:") {
+            Ok(vec![cairo_short_string_to_felt(short_string)?])
         } else {
             Ok(vec![raw.parse::<FieldElement>()?])
         }
