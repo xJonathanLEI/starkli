@@ -29,7 +29,9 @@ impl Call {
         let provider = Arc::new(self.provider.into_provider());
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
 
-        let contract_address = felt_decoder.decode_single(&self.contract_address).await?;
+        let contract_address = felt_decoder
+            .decode_single_with_addr_fallback(&self.contract_address)
+            .await?;
         let selector = get_selector_from_name(&self.selector)?;
 
         let mut calldata = vec![];

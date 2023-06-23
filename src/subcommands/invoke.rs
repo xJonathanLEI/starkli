@@ -60,7 +60,9 @@ impl Invoke {
             let mut arg_iter = self.calls.into_iter();
 
             while let Some(first_arg) = arg_iter.next() {
-                let contract_address = felt_decoder.decode_single(&first_arg).await?;
+                let contract_address = felt_decoder
+                    .decode_single_with_addr_fallback(&first_arg)
+                    .await?;
 
                 let next_arg = arg_iter.next().ok_or_else(unexpected_end_of_args)?;
                 let selector = get_selector_from_name(&next_arg)?;

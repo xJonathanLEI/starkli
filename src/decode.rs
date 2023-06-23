@@ -20,8 +20,8 @@ impl<S> FeltDecoder<S>
 where
     S: ChainIdSource,
 {
-    pub async fn decode_single(&self, raw: &str) -> Result<FieldElement> {
-        let decoded = self.decode(raw).await?;
+    pub async fn decode_single_with_addr_fallback(&self, raw: &str) -> Result<FieldElement> {
+        let decoded = self.decode_inner(raw, true).await?;
 
         if decoded.len() == 1 {
             Ok(decoded[0])
@@ -34,14 +34,12 @@ where
     }
 
     pub async fn decode(&self, raw: &str) -> Result<Vec<FieldElement>> {
+        self.decode_inner(raw, false).await
+    }
+
+    async fn decode_inner(&self, raw: &str, addr_fallback: bool) -> Result<Vec<FieldElement>> {
         if let Some(addr_name) = raw.strip_prefix("addr:") {
-            Ok(vec![self
-                .address_book_resolver
-                .resolve_name(addr_name)
-                .await?
-                .ok_or_else(|| {
-                    anyhow::anyhow!("address book entry not found for \"{}\"", addr_name)
-                })?])
+            Ok(vec![self.resolve_addr(addr_name).await?])
         } else if let Some(u256_str) = raw.strip_prefix("u256:") {
             let bigint = if let Some(hex_str) = u256_str.strip_prefix("0x") {
                 let unsigned_bytes = if hex_str.len() % 2 == 0 {
@@ -102,7 +100,26 @@ where
         } else if let Some(short_string) = raw.strip_prefix("str:") {
             Ok(vec![cairo_short_string_to_felt(short_string)?])
         } else {
-            Ok(vec![raw.parse::<FieldElement>()?])
+            match raw.parse::<FieldElement>() {
+                Ok(value) => Ok(vec![value]),
+                Err(err) => {
+                    if addr_fallback {
+                        match self.resolve_addr(raw).await {
+                            Ok(value) => Ok(vec![value]),
+                            Err(_) => Err(err.into()),
+                        }
+                    } else {
+                        Err(err.into())
+                    }
+                }
+            }
         }
+    }
+
+    async fn resolve_addr(&self, name: &str) -> Result<FieldElement> {
+        self.address_book_resolver
+            .resolve_name(name)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("address book entry not found for \"{}\"", name))
     }
 }
