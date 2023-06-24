@@ -14,8 +14,10 @@ mod signer;
 mod subcommands;
 mod utils;
 
+const VERSION_STRING: &str = concat!(env!("CARGO_PKG_VERSION"), " (", env!("VERGEN_GIT_SHA"), ")");
+
 #[derive(Debug, Parser)]
-#[clap(author, version, about)]
+#[clap(author, version, about, version = VERSION_STRING)]
 struct Cli {
     #[clap(subcommand)]
     command: Subcommands,

@@ -28,3 +28,6 @@ starknet = "0.3.0"
 thiserror = "1.0.40"
 tokio = { version = "1.28.2", default-features = false, features = ["macros", "rt-multi-thread"] }
 url = "2.4.0"
+
+[build-dependencies]
+vergen = { version = "8.2.1", features = ["build", "git", "git2"] }
