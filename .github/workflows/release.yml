@@ -1,0 +1,186 @@
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+name: "Release"
+
+jobs:
+  crate-version-check:
+    name: "Check crate version"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v3"
+
+      - name: "Derive version from Git tag"
+        run: |
+          version_line="${{ github.ref }}"
+          regex="^refs\/tags\/v(.*)$"
+          [[ $version_line =~ $regex ]];
+          echo "VERSION=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+
+      - name: "Check against Cargo.toml"
+        run: |
+          GREP_OUTPUT=$(cat Cargo.toml | grep "^version = \"${VERSION}\"$")
+
+          if [ -z "$GREP_OUTPUT" ]; then
+            echo "Crate version mismatch"
+            exit 1
+          fi
+
+  release-non-apple:
+    name: "Build for ${{ matrix.target }}"
+    runs-on: "${{ matrix.os }}"
+    needs: ["crate-version-check"]
+
+    strategy:
+      matrix:
+        include:
+          - os: "ubuntu-latest"
+            target: "x86_64-unknown-linux-gnu"
+            exe: "starkli"
+          - os: "ubuntu-latest"
+            target: "x86_64-unknown-linux-musl"
+            exe: "starkli"
+          - os: "ubuntu-latest"
+            target: "aarch64-unknown-linux-gnu"
+            exe: "starkli"
+          - os: "ubuntu-latest"
+            target: "aarch64-unknown-linux-musl"
+            exe: "starkli"
+
+          - os: "windows-latest"
+            target: "x86_64-pc-windows-msvc"
+            exe: "starkli.exe"
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v3"
+
+      - name: "Setup stable toolchain"
+        uses: "actions-rs/toolchain@v1"
+        with:
+          toolchain: "stable"
+          profile: "minimal"
+          override: true
+
+      - name: "Install cross"
+        run: |
+          cargo install --locked --version 0.2.5 cross
+
+      - name: "Build release"
+        run: |
+          cross build --release --target ${{ matrix.target }}
+
+      - name: "Upload artifacts"
+        uses: "actions/upload-artifact@v3"
+        with:
+          name: "starkli-${{ matrix.target }}"
+          path: "target/${{ matrix.target }}/release/${{ matrix.exe }}"
+
+      - name: "Tar release"
+        if: matrix.os != 'windows-latest'
+        run: |
+          cd target/${{ matrix.target }}/release/
+          tar zcvf ./starkli-${{ matrix.target }}.tar.gz ./${{ matrix.exe }}
+
+      - name: "Zip release"
+        uses: "TheDoctor0/zip-release@0.7.1"
+        if: matrix.os == 'windows-latest'
+        with:
+          type: "zip"
+          filename: "starkli-${{ matrix.target }}.zip"
+          directory: "target/${{ matrix.target }}/release/"
+          path: "${{ matrix.exe }}"
+
+      - name: "Publish tar"
+        uses: "softprops/action-gh-release@v1"
+        if: matrix.os != 'windows-latest'
+        with:
+          files: "target/${{ matrix.target }}/release/starkli-${{ matrix.target }}.tar.gz"
+          generate_release_notes: true
+          draft: true
+
+      - name: "Publish zip"
+        uses: "softprops/action-gh-release@v1"
+        if: matrix.os == 'windows-latest'
+        with:
+          files: "target/${{ matrix.target }}/release/starkli-${{ matrix.target }}.zip"
+          generate_release_notes: true
+          draft: true
+
+  release-apple:
+    name: "Build for ${{ matrix.target }}"
+    runs-on: "${{ matrix.os }}"
+    needs: ["crate-version-check"]
+
+    strategy:
+      matrix:
+        include:
+          - os: "macos-latest"
+            target: "x86_64-apple-darwin"
+            exe: "starkli"
+          - os: "macos-latest"
+            target: "aarch64-apple-darwin"
+            exe: "starkli"
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v3"
+
+      - name: "Setup stable toolchain"
+        uses: "actions-rs/toolchain@v1"
+        with:
+          toolchain: "stable"
+          profile: "minimal"
+          target: "${{ matrix.target }}"
+          override: true
+
+      - name: "Apple M1 setup"
+        if: ${{ matrix.target == 'aarch64-apple-darwin' }}
+        run: |
+          echo "SDKROOT=$(xcrun -sdk macosx --show-sdk-path)" >> $GITHUB_ENV
+          echo "MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx --show-sdk-platform-version)" >> $GITHUB_ENV
+
+      - name: "Build release"
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: "Upload artifacts"
+        uses: "actions/upload-artifact@v3"
+        with:
+          name: "starkli-${{ matrix.target }}"
+          path: "target/${{ matrix.target }}/release/${{ matrix.exe }}"
+
+      - name: "Tar release"
+        run: |
+          cd target/${{ matrix.target }}/release/
+          tar zcvf ./starkli-${{ matrix.target }}.tar.gz ./${{ matrix.exe }}
+
+      - name: "Publish tar"
+        uses: "softprops/action-gh-release@v1"
+        with:
+          files: "target/${{ matrix.target }}/release/starkli-${{ matrix.target }}.tar.gz"
+          generate_release_notes: true
+          draft: true
+
+  crates-io-release:
+    name: "Release to crates.io"
+    runs-on: "ubuntu-latest"
+
+    # We don't want to publish something that wouldn't even build to crates.io
+    needs: ["release-non-apple", "release-apple"]
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v3"
+
+      - name: "Login to crates.io"
+        run: |
+          cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
+
+      - name: "Public crate"
+        run: |
+          cargo publish
