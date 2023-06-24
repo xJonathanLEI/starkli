@@ -7,6 +7,7 @@ use crate::{provider::ProviderArgs, subcommands::*};
 mod account;
 mod address_book;
 mod chain_id;
+mod compiler;
 mod decode;
 mod provider;
 mod signer;
