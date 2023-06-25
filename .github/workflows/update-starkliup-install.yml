@@ -1,0 +1,24 @@
+on:
+  push:
+    branches:
+      - "master"
+
+name: "Update starkliup install script"
+
+jobs:
+  update:
+    name: "Update script"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v3"
+
+      - name: "Post script to worker"
+        run: |
+          cat ./starkliup/install \
+            | curl \
+              --fail \
+              "https://get.starkli.sh/admin/script" \
+              -X POST \
+              -H "Authorization: Bearer ${{ secrets.WORKER_STARKLIUP_INSTALL_ADMIN_TOKEN }}" \
+              --data-binary @-
