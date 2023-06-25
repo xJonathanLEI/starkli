@@ -6,10 +6,34 @@
 
 ## Installation
 
-The package will be published to crates.io when it's more feature-complete. For now, install from GitHub directly for the latest features and bug fixes:
+### Linux/macOS/WSL
 
-```sh
-$ cargo install --locked --git https://github.com/xJonathanLEI/starkli
+If you're on a supported platform, the easiest way to install and update `starkli` is to use `starkliup`, which can be installed by running:
+
+```console
+curl https://get.starkli.sh | sh
+```
+
+Once `starkliup` is installed, you can then install or update `starkli` simply by running the `starkliup` command without arguments:
+
+```console
+starkliup
+```
+
+Behind the scene, `starkliup` downloads prebuilt binaries (built from GitHub Actions) so you don't need a Rust installation to use it.
+
+### Windows
+
+If you're on Windows, it's recommended that you use `starkli` under WSL, and thus follow the _Linux/macOS/WSL_ instructions above for installation.
+
+However, it's also possible to use `starkli` natively on Windows. `starkliup` does not support Windows at the moment, but prebuilt binaries are still available for download from [GitHub releases](https://github.com/xJonathanLEI/starkli/releases).
+
+### Cargo
+
+If you have Rust installed, it's also possible to directly install from source:
+
+```console
+cargo install --locked starkli
 ```
 
 ## Commands

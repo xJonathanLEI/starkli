@@ -4,4 +4,4 @@ set -e
 
 echo "This is a useless placeholder script. To update \`starkliup\` itself, run the install command again:"
 echo
-echo "curl https://get.starkli.sh | bash"
+echo "curl https://get.starkli.sh | sh"
