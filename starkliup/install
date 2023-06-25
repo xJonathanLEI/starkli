@@ -26,9 +26,7 @@ ENV_PATH="$STARKLI_DIR/env"
 mkdir -p $STARKLI_BIN_DIR
 mkdir -p $STARKLI_MAN_DIR
 
-# TODO: restore this line after debugging is done
-# curl -# -L $BIN_URL -o $BIN_PATH
-cp ~/repos/personal/starkli/starkliup/starkliup $BIN_PATH
+curl -# -L $BIN_URL -o $BIN_PATH
 chmod +x $BIN_PATH
 
 # Generates the env file on the fly
