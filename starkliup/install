@@ -1,3 +1,77 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-echo "This is a placeholder script. Come back later."
+set -e
+
+insert_env_line() {
+    if [ -f "$1" ]; then
+        if [ -z "$(cat "$1" | grep "${ENV_LINE}")" ]; then
+            echo "${ENV_LINE}" >> "$1"
+        fi
+    fi
+}
+
+echo "Installing starkliup..."
+
+BASE_DIR=${XDG_CONFIG_HOME:-$HOME}
+STARKLI_DIR=${STARKLI_DIR-"$BASE_DIR/.starkli"}
+STARKLI_BIN_DIR="$STARKLI_DIR/bin"
+STARKLI_MAN_DIR="$STARKLI_DIR/share/man/man1"
+
+BIN_URL="https://raw.githubusercontent.com/xJonathanLEI/starkli/master/starkliup/starkliup"
+BIN_PATH="$STARKLI_BIN_DIR/starkliup"
+
+ENV_PATH="$STARKLI_DIR/env"
+
+
+mkdir -p $STARKLI_BIN_DIR
+mkdir -p $STARKLI_MAN_DIR
+
+# TODO: restore this line after debugging is done
+# curl -# -L $BIN_URL -o $BIN_PATH
+cp ~/repos/personal/starkli/starkliup/starkliup $BIN_PATH
+chmod +x $BIN_PATH
+
+# Generates the env file on the fly
+echo '#!/bin/sh' > $ENV_PATH
+echo '' >> $ENV_PATH
+echo 'case ":${PATH}:" in' >> $ENV_PATH
+echo '  *:"'${STARKLI_BIN_DIR}'":*)' >> $ENV_PATH
+echo '    ;;' >> $ENV_PATH
+echo '  *)' >> $ENV_PATH
+echo '    export PATH="'${STARKLI_BIN_DIR}':$PATH"' >> $ENV_PATH
+echo '    ;;' >> $ENV_PATH
+echo 'esac' >> $ENV_PATH
+
+# This detection here is just for showing the help message at the end.
+IS_SUPPORTED_SHELL=""
+case $SHELL in
+*/zsh)
+    IS_SUPPORTED_SHELL="1"
+    ;;
+*/bash)
+    IS_SUPPORTED_SHELL="1"
+    ;;
+*/fish)
+    IS_SUPPORTED_SHELL="1"
+    ;;
+*/ash)
+    IS_SUPPORTED_SHELL="1"
+    ;;
+esac
+
+# Inserts this line into whatever shell profile we find, regardless of what the active shell is.
+ENV_LINE=". \"${ENV_PATH}\""
+insert_env_line "$HOME/.profile"
+insert_env_line "$HOME/.bashrc"
+insert_env_line "$HOME/.bash_profile"
+insert_env_line "${ZDOTDIR-"$HOME"}/.zshenv"
+insert_env_line "$HOME/.config/fish/config.fish"
+
+echo
+
+if [ -n "$IS_SUPPORTED_SHELL" ]; then
+    echo "Run '. ${ENV_PATH}' or start a new terminal session to use starkliup."
+    echo "Then, simply run 'starkliup' to install starkli."
+else
+    echo "starkliup: could not detect shell. Add '. ${ENV_PATH}' to your shell profile, or manually add '${STARKLI_BIN_DIR}' to your PATH environment variable."
+fi
