@@ -1,7 +1,167 @@
 #!/bin/sh
 
-set -e
+set -eE
 
-echo "This is a useless placeholder script. To update \`starkliup\` itself, run the install command again:"
-echo
-echo "curl https://get.starkli.sh | sh"
+BASE_DIR=${XDG_CONFIG_HOME:-$HOME}
+STARKLI_DIR=${STARKLI_DIR-"$BASE_DIR/.starkli"}
+STARKLI_BIN_DIR="$STARKLI_DIR/bin"
+STARKLI_MAN_DIR="$STARKLI_DIR/share/man/man1"
+
+STARKLI_BASH_COMPLETIONS_DIR="$STARKLI_DIR/share/bash-completions"
+STARKLI_ZSH_COMPLETIONS_DIR="$STARKLI_DIR/share/zsh-completions"
+
+STARKLI_BIN_PATH="${STARKLI_BIN_DIR}/starkli"
+
+# This MUST be updated whenever this file is changed.
+# TODO: add CI check to ensure this.
+STARKLIUP_VERSION="2023-06-25"
+
+# Fancy color setup:
+#   https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors
+if test -t 1; then
+    ncolors=$(tput colors)
+    if test -n "$ncolors" && test $ncolors -ge 8; then
+        bold="$(tput bold)"
+        underline="$(tput smul)"
+        standout="$(tput smso)"
+        normal="$(tput sgr0)"
+        black="$(tput setaf 0)"
+        red="$(tput setaf 1)"
+        green="$(tput setaf 2)"
+        yellow="$(tput setaf 3)"
+        blue="$(tput setaf 4)"
+        magenta="$(tput setaf 5)"
+        cyan="$(tput setaf 6)"
+        white="$(tput setaf 7)"
+    fi
+fi
+
+main() {
+    if [ -z "$1" ]; then
+        install
+        echo
+        completions
+
+        echo
+        echo "Installation successfully completed."
+    else
+        case $1 in
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                echo "${red}Unknown option: $1${normal}" 1>&2
+                echo "Run ${yellow}starkliup --help${normal} to see usage." 1>&2
+                exit 1
+        esac
+    fi
+}
+
+install() {
+    echo "Installing the latest version of starkli..."
+
+    echo "Fetching the latest release from GitHub..."
+    LATEST_TAG="$(curl -# "https://api.github.com/repos/xJonathanLEI/starkli/releases/latest" | grep "tag_name" | cut -d \" -f 4)"
+    echo "Latest release found: ${yellow}${LATEST_TAG}${normal}"
+
+    detect_host_triple
+    if [ -z "$TRIPLE" ]; then
+        echo "${red}Unable to detect platform.${normal} Please install starkli from source." 1>&2
+        exit 1
+    fi
+
+    echo "Detected host triple: ${cyan}${TRIPLE}${normal}"
+    echo "Downloading latest release from GitHub..."
+
+    FILE_NAME="starkli-${TRIPLE}.tar.gz"
+    FILE_URL="https://github.com/xJonathanLEI/starkli/releases/download/${LATEST_TAG}/${FILE_NAME}"
+
+    TEMP_DIR="$(mktemp -d)"
+    TEMP_FILE_NAME="${TEMP_DIR}/${FILE_NAME}"
+
+    # TODO: support wget if curl is not found
+    curl -# -L $FILE_URL -o $TEMP_FILE_NAME
+    tar zxf $TEMP_FILE_NAME -C $TEMP_DIR
+
+    mv "${TEMP_DIR}/starkli" "${STARKLI_BIN_PATH}"
+
+    rm -rf $TEMP_DIR
+
+    echo "Successfully installed starkli ${yellow}${LATEST_TAG}${normal}"
+}
+
+completions() {
+    echo "Generating shell completion files..."
+
+    printf -- "- Bash ..."
+    $STARKLI_BIN_PATH completions bash > "${STARKLI_BASH_COMPLETIONS_DIR}/starkli"
+    echo " ${cyan}Done${normal}"
+
+    printf -- "- Zsh ..."
+    $STARKLI_BIN_PATH completions zsh > "${STARKLI_ZSH_COMPLETIONS_DIR}/_starkli"
+    echo " ${cyan}Done${normal}"
+
+    echo "${cyan}Note that shell completions might not work until you start a new session.${normal}"
+}
+
+detect_host_triple() {
+    PLATFORM="$(uname -s)"
+    ARCHITECTURE="$(uname -m)"
+
+    case $PLATFORM in
+        Linux)
+            # Likely very unreliable way to check musl
+            if [ -n "$(ls /lib | grep "libc.musl-")" ]; then
+                case $ARCHITECTURE in
+                    x86_64)
+                        TRIPLE="x86_64-unknown-linux-musl"
+                        ;;
+                    aarch64|arm64)
+                        TRIPLE="aarch64-unknown-linux-musl"
+                        ;;
+                esac
+            else
+                case $ARCHITECTURE in
+                    x86_64)
+                        TRIPLE="x86_64-unknown-linux-gnu"
+                        ;;
+                    aarch64|arm64)
+                        TRIPLE="aarch64-unknown-linux-gnu"
+                        ;;
+                esac
+            fi
+            ;;
+        Darwin)
+            case $ARCHITECTURE in
+                x86_64)
+                    TRIPLE="x86_64-apple-darwin"
+                    ;;
+                aarch64|arm64)
+                    TRIPLE="aarch64-apple-darwin"
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+usage() {
+    cat 1>&2 <<EOF
+starkliup ${cyan}(${STARKLIUP_VERSION})${normal}
+The installer for starkli.
+
+Install the latest version of starkli by running without any options.
+
+More installation options will be implemented. To update starkliup itself, run the installation command again:
+
+    curl https://get.starkli.sh | sh
+
+USAGE:
+    starkliup <OPTIONS>
+
+OPTIONS:
+    -h, --help      Print this message
+EOF
+}
+
+main "$@"

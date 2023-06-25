@@ -37,6 +37,9 @@ STARKLI_DIR=${STARKLI_DIR-"$BASE_DIR/.starkli"}
 STARKLI_BIN_DIR="$STARKLI_DIR/bin"
 STARKLI_MAN_DIR="$STARKLI_DIR/share/man/man1"
 
+STARKLI_BASH_COMPLETIONS_DIR="$STARKLI_DIR/share/bash-completions"
+STARKLI_ZSH_COMPLETIONS_DIR="$STARKLI_DIR/share/zsh-completions"
+
 BIN_URL="https://raw.githubusercontent.com/xJonathanLEI/starkli/master/starkliup/starkliup"
 BIN_PATH="$STARKLI_BIN_DIR/starkliup"
 
@@ -45,36 +48,57 @@ ENV_PATH="$STARKLI_DIR/env"
 
 mkdir -p $STARKLI_BIN_DIR
 mkdir -p $STARKLI_MAN_DIR
+mkdir -p $STARKLI_BASH_COMPLETIONS_DIR
+mkdir -p $STARKLI_ZSH_COMPLETIONS_DIR
 
 curl -# -L $BIN_URL -o $BIN_PATH
 chmod +x $BIN_PATH
 
 # Generates the env file on the fly
-echo '#!/bin/sh' > $ENV_PATH
-echo '' >> $ENV_PATH
-echo 'case ":${PATH}:" in' >> $ENV_PATH
-echo '  *:"'${STARKLI_BIN_DIR}'":*)' >> $ENV_PATH
-echo '    ;;' >> $ENV_PATH
-echo '  *)' >> $ENV_PATH
-echo '    export PATH="'${STARKLI_BIN_DIR}':$PATH"' >> $ENV_PATH
-echo '    ;;' >> $ENV_PATH
-echo 'esac' >> $ENV_PATH
+cat > $ENV_PATH <<EOF
+#!/bin/sh
+
+# Adds binary directory to PATH
+case ":\${PATH}:" in
+  *:${STARKLI_BIN_DIR}:*)
+    ;;
+  *)
+    export PATH="${STARKLI_BIN_DIR}:\$PATH"
+    ;;
+esac
+
+# Loads completions based on shell
+if [ -n "\$ZSH_NAME" ]; then
+    fpath=(${STARKLI_ZSH_COMPLETIONS_DIR} \$fpath)
+    autoload -U compinit
+    compinit
+else
+    case \$SHELL in
+        */bash)
+            if [ -f "${STARKLI_BASH_COMPLETIONS_DIR}/starkli" ]; then
+                . ${STARKLI_BASH_COMPLETIONS_DIR}/starkli
+            fi
+            ;;
+    esac
+fi
+EOF
+chmod +x $ENV_PATH
 
 # This detection here is just for showing the help message at the end.
 IS_SUPPORTED_SHELL=""
+if [ -n "$ZSH_NAME" ]; then
+    IS_SUPPORTED_SHELL="1"
+fi    
 case $SHELL in
-*/zsh)
-    IS_SUPPORTED_SHELL="1"
-    ;;
-*/bash)
-    IS_SUPPORTED_SHELL="1"
-    ;;
-*/fish)
-    IS_SUPPORTED_SHELL="1"
-    ;;
-*/ash)
-    IS_SUPPORTED_SHELL="1"
-    ;;
+    */bash)
+        IS_SUPPORTED_SHELL="1"
+        ;;
+    */fish)
+        IS_SUPPORTED_SHELL="1"
+        ;;
+    */ash)
+        IS_SUPPORTED_SHELL="1"
+        ;;
 esac
 
 # Inserts this line into whatever shell profile we find, regardless of what the active shell is.
