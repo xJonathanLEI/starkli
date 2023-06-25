@@ -2,6 +2,26 @@
 
 set -e
 
+# Fancy color setup:
+#   https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors
+if test -t 1; then
+    ncolors=$(tput colors)
+    if test -n "$ncolors" && test $ncolors -ge 8; then
+        bold="$(tput bold)"
+        underline="$(tput smul)"
+        standout="$(tput smso)"
+        normal="$(tput sgr0)"
+        black="$(tput setaf 0)"
+        red="$(tput setaf 1)"
+        green="$(tput setaf 2)"
+        yellow="$(tput setaf 3)"
+        blue="$(tput setaf 4)"
+        magenta="$(tput setaf 5)"
+        cyan="$(tput setaf 6)"
+        white="$(tput setaf 7)"
+    fi
+fi
+
 insert_env_line() {
     if [ -f "$1" ]; then
         if [ -z "$(cat "$1" | grep "${ENV_LINE}")" ]; then
@@ -10,7 +30,7 @@ insert_env_line() {
     fi
 }
 
-echo "Installing starkliup..."
+echo "Installing ${yellow}starkliup${normal}..."
 
 BASE_DIR=${XDG_CONFIG_HOME:-$HOME}
 STARKLI_DIR=${STARKLI_DIR-"$BASE_DIR/.starkli"}
@@ -68,8 +88,8 @@ insert_env_line "$HOME/.config/fish/config.fish"
 echo
 
 if [ -n "$IS_SUPPORTED_SHELL" ]; then
-    echo "Run '. ${ENV_PATH}' or start a new terminal session to use starkliup."
-    echo "Then, simply run 'starkliup' to install starkli."
+    echo "Run '${yellow}. ${ENV_PATH}${normal}' or start a new terminal session to use starkliup."
+    echo "Then, simply run ${yellow}starkliup${normal} to install starkli."
 else
-    echo "starkliup: could not detect shell. Add '. ${ENV_PATH}' to your shell profile, or manually add '${STARKLI_BIN_DIR}' to your PATH environment variable."
+    echo "starkliup: could not detect shell. Add '${yellow}. ${ENV_PATH}${normal}' to your shell profile, or manually add '${yellow}${STARKLI_BIN_DIR}${normal}' to your PATH environment variable."
 fi
