@@ -28,7 +28,7 @@ pub enum AnySignerSignError {
 
 #[derive(Debug, Clone, Parser)]
 pub struct SignerArgs {
-    #[clap(long, help = "Path to keystore JSON file")]
+    #[clap(long, help = "Path to keystore JSON file [env: STARKNET_KEYSTORE=]")]
     keystore: Option<String>,
     #[clap(
         long,
