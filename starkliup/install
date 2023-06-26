@@ -101,6 +101,12 @@ case $SHELL in
         ;;
 esac
 
+# Shell
+echo
+echo "${cyan}Shell detection variables (for debugging use):${normal}"
+echo "${cyan}- ZSH_NAME = $ZSH_NAME${normal}"
+echo "${cyan}- SHELL = $SHELL${normal}"
+
 # Inserts this line into whatever shell profile we find, regardless of what the active shell is.
 ENV_LINE=". \"${ENV_PATH}\""
 insert_env_line "$HOME/.profile"
