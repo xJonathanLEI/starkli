@@ -7,7 +7,7 @@ use starknet::{
     accounts::SingleOwnerAccount,
     contract::ContractFactory,
     core::{
-        types::FieldElement,
+        types::{BlockId, BlockTag, FieldElement},
         utils::{get_udc_deployed_address, UdcUniqueSettings, UdcUniqueness},
     },
     providers::Provider,
@@ -103,8 +103,9 @@ impl Deploy {
         let chain_id = provider.chain_id().await?;
 
         let signer = Arc::new(self.signer.into_signer()?);
-        let account =
+        let mut account =
             SingleOwnerAccount::new(provider.clone(), signer.clone(), account_address, chain_id);
+        account.set_block_id(BlockId::Tag(BlockTag::Pending));
 
         // TODO: allow custom UDC
         let factory = ContractFactory::new_with_udc(class_hash, account, DEFAULT_UDC_ADDRESS);

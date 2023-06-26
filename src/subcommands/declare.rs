@@ -7,7 +7,7 @@ use starknet::{
     accounts::{Account, SingleOwnerAccount},
     core::types::{
         contract::{legacy::LegacyContractClass, CompiledClass, SierraClass},
-        FieldElement,
+        BlockId, BlockTag, FieldElement,
     },
     providers::Provider,
 };
@@ -64,7 +64,9 @@ impl Declare {
         let chain_id = provider.chain_id().await?;
 
         let signer = self.signer.into_signer()?;
-        let account = SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
+        let mut account =
+            SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
+        account.set_block_id(BlockId::Tag(BlockTag::Pending));
 
         // TODO: check if class has already been declared
 
