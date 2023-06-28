@@ -5,7 +5,10 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::{
     accounts::{Account, Call, SingleOwnerAccount},
-    core::{types::FieldElement, utils::get_selector_from_name},
+    core::{
+        types::{BlockId, BlockTag, FieldElement},
+        utils::get_selector_from_name,
+    },
     providers::Provider,
 };
 
@@ -103,7 +106,9 @@ impl Invoke {
         let chain_id = provider.chain_id().await?;
 
         let signer = Arc::new(self.signer.into_signer()?);
-        let account = SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
+        let mut account =
+            SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
+        account.set_block_id(BlockId::Tag(BlockTag::Pending));
 
         let execution = account.execute(calls).fee_estimate_multiplier(1.5f64);
 
