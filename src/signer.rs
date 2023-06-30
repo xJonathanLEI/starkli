@@ -64,18 +64,30 @@ impl Signer for AnySigner {
 
 impl SignerArgs {
     pub fn into_signer(self) -> Result<AnySigner> {
-        match (self.keystore, self.keystore_password, self.private_key) {
-            // From keystore file + password (if any).
-            (Some(keystore), keystore_password, None) => {
+        // The keystore is the only signer argument being available as an environment
+        // variable. As the arguments given from command line (CLI) takes precedence,
+        // we do want to ensure the following conditions are met:
+        // 1. keystore from CLI and private key from CLI are exclusive.
+        // 2. keystore password from CLI and private key from CLI are exclusive.
+        // 3. private key from CLI takes precedence on keystore from env vars.
+
+        let is_keystore_from_env = match std::env::var("STARKNET_KEYSTORE") {
+            Ok(value) => value.len() > 0 && Some(value) == self.keystore,
+            Err(_) => false
+        };
+
+        match (self.keystore, self.keystore_password, self.private_key, is_keystore_from_env) {
+            // Keystore signer option.
+            (Some(keystore), keystore_password, None, _) => {
                 Self::resolve_keystore(keystore, keystore_password)
             }
-            // From private key only.
-            (None, None, Some(private_key)) => Self::resolve_private_key(private_key),
-            // Private key takes precedence on keystore.
-            (Some(_), None, Some(private_key)) => {
+            // Private key signer option.
+            (None, None, Some(private_key), _) => Self::resolve_private_key(private_key),
+            // keystore + private key, only valid if keystore if from the environment.
+            // Warning: this will pass if --keystore is provided with the exact same value as the env variable.
+            (Some(_), None, Some(private_key), true) => {
                 Self::resolve_private_key(private_key)
             }
-            // User refers to the doc to understand what a valid signer option is.
             _ => Err(anyhow::anyhow!("no valid signer option provided")),
         }
     }
