@@ -35,9 +35,19 @@ impl ValueEnum for Network {
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         match self {
-            Network::Mainnet => Some(PossibleValue::new("mainnet")),
-            Network::Goerli1 => Some(PossibleValue::new("goerli-1")),
-            Network::Goerli2 => Some(PossibleValue::new("goerli-2")),
+            Network::Mainnet => Some(PossibleValue::new("mainnet").aliases(["alpha-mainnet"])),
+            Network::Goerli1 => Some(PossibleValue::new("goerli-1").aliases([
+                "goerli",
+                "goerli1",
+                "alpha-goerli",
+                "alpha-goerli1",
+                "alpha-goerli-1",
+            ])),
+            Network::Goerli2 => Some(PossibleValue::new("goerli-2").aliases([
+                "goerli2",
+                "alpha-goerli2",
+                "alpha-goerli-2",
+            ])),
             Network::Integration => Some(PossibleValue::new("integration")),
         }
     }
