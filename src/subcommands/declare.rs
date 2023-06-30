@@ -80,7 +80,7 @@ impl Declare {
             // Declaring Cairo 1 class
             let class_hash = class.class_hash()?;
 
-            let compiler = self.compiler.into_compiler();
+            let compiler = self.compiler.into_compiler(&provider).await?;
 
             if !self.estimate_only {
                 eprintln!(

@@ -10,10 +10,13 @@ use cairo_starknet_2_0_0_rc6::{
     contract_class::ContractClass as Cairo200rc6Class,
 };
 use clap::{builder::PossibleValue, Parser, ValueEnum};
+use colored::Colorize;
 use starknet::core::types::{
     contract::{CompiledClass, SierraClass},
     FieldElement,
 };
+
+use crate::network::{Network, NetworkSource};
 
 #[derive(Debug, Clone, Parser)]
 pub struct CompilerArgs {
@@ -34,8 +37,53 @@ pub enum CompilerVersion {
 }
 
 impl CompilerArgs {
-    pub fn into_compiler(self) -> Compiler {
-        Compiler::BuiltIn(self.compiler_version.unwrap_or(CompilerVersion::V1_1_0))
+    pub async fn into_compiler<N>(self, network_source: N) -> Result<Compiler>
+    where
+        N: NetworkSource,
+    {
+        match self.compiler_version {
+            // Always use the version directly if manually specified
+            Some(version) => Ok(Compiler::BuiltIn(version)),
+            None => {
+                eprintln!(
+                    "Sierra compiler version not specified. \
+                    Attempting to automatically decide version to use..."
+                );
+
+                let network = network_source.get_network().await?;
+                match network {
+                    Some(network) => {
+                        let auto_version = match network {
+                            Network::Mainnet | Network::Goerli1 | Network::Goerli2 => {
+                                CompilerVersion::V1_1_0
+                            }
+                            Network::Integration => CompilerVersion::V2_0_0Rc6,
+                        };
+
+                        eprintln!(
+                            "Network detected: {}. \
+                            Using the default compiler version for this network: {}. \
+                            Use the --compiler-version flag to choose a different version.",
+                            format!("{}", network).bright_yellow(),
+                            format!("{}", auto_version).bright_yellow()
+                        );
+
+                        Ok(Compiler::BuiltIn(auto_version))
+                    }
+                    None => {
+                        let default_version: CompilerVersion = Default::default();
+
+                        eprintln!(
+                            "Unknown network. Falling back to the default compiler version {}. \
+                            Use the --compiler-version flag to choose a different version.",
+                            format!("{}", default_version).bright_yellow()
+                        );
+
+                        Ok(Compiler::BuiltIn(default_version))
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -83,6 +131,12 @@ impl Compiler {
         let casm_class_hash = casm_class.class_hash()?;
 
         Ok(casm_class_hash)
+    }
+}
+
+impl Default for CompilerVersion {
+    fn default() -> Self {
+        Self::V1_1_0
     }
 }
 

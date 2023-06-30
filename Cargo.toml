@@ -9,6 +9,7 @@ description = "Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for Starknet 
 [dependencies]
 anyhow = "1.0.71"
 async-trait = "0.1.68"
+auto_impl = "1.1.0"
 cairo-starknet-1-1-0 = { package = "cairo-lang-starknet", version = "=1.1.0" }
 cairo-starknet-2-0-0-rc6 = { package = "cairo-lang-starknet", version = "=2.0.0-rc6" }
 chrono = "0.4.26"

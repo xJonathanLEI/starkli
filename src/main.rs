@@ -9,6 +9,7 @@ mod address_book;
 mod chain_id;
 mod compiler;
 mod decode;
+mod network;
 mod provider;
 mod signer;
 mod subcommands;
