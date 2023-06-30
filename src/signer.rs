@@ -28,7 +28,7 @@ pub enum AnySignerSignError {
 
 #[derive(Debug, Clone, Parser)]
 pub struct SignerArgs {
-    #[clap(long, help = "Path to keystore JSON file")]
+    #[clap(long, env = "STARKNET_KEYSTORE", help = "Path to keystore JSON file")]
     keystore: Option<String>,
     #[clap(
         long,
@@ -37,11 +37,6 @@ pub struct SignerArgs {
     keystore_password: Option<String>,
     #[clap(long, help = "Private key in hex in plain text")]
     private_key: Option<String>,
-}
-
-enum StringValue {
-    FromCommandLine(String),
-    FromEnvVar(String),
 }
 
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
@@ -69,30 +64,29 @@ impl Signer for AnySigner {
 
 impl SignerArgs {
     pub fn into_signer(self) -> Result<AnySigner> {
-        // We're not using the `env` derive from `clap` because we need to distinguish between
-        // whether the value is supplied from the command line or the environment variable.
-        //
-        // This distinction is important because we would not yell at the user for having option
-        // conflicts from env vars. This allows us to reject conflicts on options provided from the
-        // command line while ignoring those from env vars.
-        let keystore = match self.keystore {
-            Some(value) => Some(StringValue::FromCommandLine(value)),
-            None => match std::env::var("STARKNET_KEYSTORE") {
-                Ok(value) => Some(StringValue::FromEnvVar(value)),
-                Err(_) => None,
-            },
+        // The keystore is the only signer argument being available as an environment
+        // variable. As the arguments given from command line (CLI) takes precedence,
+        // we do want to ensure the following conditions are met:
+        // 1. keystore from CLI and private key from CLI are exclusive.
+        // 2. keystore password from CLI and private key from CLI are exclusive.
+        // 3. private key from CLI takes precedence on keystore from env vars.
+
+        let is_keystore_from_env = match std::env::var("STARKNET_KEYSTORE") {
+            Ok(value) => value.len() > 0 && Some(value) == self.keystore,
+            Err(_) => false
         };
 
-        match (keystore, self.keystore_password, self.private_key) {
-            (Some(StringValue::FromCommandLine(keystore)), keystore_password, None) => {
+        match (self.keystore, self.keystore_password, self.private_key, is_keystore_from_env) {
+            // Keystore signer option.
+            (Some(keystore), keystore_password, None, _) => {
                 Self::resolve_keystore(keystore, keystore_password)
             }
-            (None, None, Some(private_key)) => Self::resolve_private_key(private_key),
-            (Some(StringValue::FromEnvVar(_)), None, Some(private_key)) => {
+            // Private key signer option.
+            (None, None, Some(private_key), _) => Self::resolve_private_key(private_key),
+            // keystore + private key, only valid if keystore if from the environment.
+            // TODO: will pass if --keystore is provided with the same value as the env variable...
+            (Some(_), None, Some(private_key), true) => {
                 Self::resolve_private_key(private_key)
-            }
-            (Some(StringValue::FromEnvVar(keystore)), keystore_password, None) => {
-                Self::resolve_keystore(keystore, keystore_password)
             }
             _ => Err(anyhow::anyhow!("no valid signer option provided")),
         }
