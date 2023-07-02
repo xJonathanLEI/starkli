@@ -5,9 +5,9 @@ use cairo_starknet_1_1_0::{
     casm_contract_class::CasmContractClass as Cairo110CasmClass,
     contract_class::ContractClass as Cairo110Class,
 };
-use cairo_starknet_2_0_0_rc6::{
-    casm_contract_class::CasmContractClass as Cairo200rc6CasmClass,
-    contract_class::ContractClass as Cairo200rc6Class,
+use cairo_starknet_2_0_0::{
+    casm_contract_class::CasmContractClass as Cairo200CasmClass,
+    contract_class::ContractClass as Cairo200Class,
 };
 use clap::{builder::PossibleValue, Parser, ValueEnum};
 use colored::Colorize;
@@ -33,7 +33,7 @@ pub enum Compiler {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompilerVersion {
     V1_1_0,
-    V2_0_0Rc6,
+    V2_0_0,
 }
 
 impl CompilerArgs {
@@ -57,7 +57,7 @@ impl CompilerArgs {
                             Network::Mainnet | Network::Goerli1 | Network::Goerli2 => {
                                 CompilerVersion::V1_1_0
                             }
-                            Network::Integration => CompilerVersion::V2_0_0Rc6,
+                            Network::Integration => CompilerVersion::V2_0_0,
                         };
 
                         eprintln!(
@@ -110,15 +110,14 @@ impl Compiler {
 
                     serde_json::to_string(&casm_contract)?
                 }
-                CompilerVersion::V2_0_0Rc6 => {
+                CompilerVersion::V2_0_0 => {
                     // TODO: directly convert type without going through JSON
-                    let contract_class: Cairo200rc6Class =
-                        serde_json::from_str(&sierra_class_json)?;
+                    let contract_class: Cairo200Class = serde_json::from_str(&sierra_class_json)?;
 
                     // TODO: implement the `validate_compatible_sierra_version` call
 
                     let casm_contract =
-                        Cairo200rc6CasmClass::from_contract_class(contract_class, false)?;
+                        Cairo200CasmClass::from_contract_class(contract_class, false)?;
 
                     serde_json::to_string(&casm_contract)?
                 }
@@ -142,13 +141,13 @@ impl Default for CompilerVersion {
 
 impl ValueEnum for CompilerVersion {
     fn value_variants<'a>() -> &'a [Self] {
-        &[Self::V1_1_0, Self::V2_0_0Rc6]
+        &[Self::V1_1_0, Self::V2_0_0]
     }
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         match self {
             Self::V1_1_0 => Some(PossibleValue::new("1.1.0").alias("v1.1.0")),
-            Self::V2_0_0Rc6 => Some(PossibleValue::new("2.0.0-rc6").alias("v2.0.0-rc6")),
+            Self::V2_0_0 => Some(PossibleValue::new("2.0.0").alias("v2.0.0")),
         }
     }
 }
@@ -159,7 +158,7 @@ impl FromStr for CompilerVersion {
     fn from_str(s: &str) -> Result<Self> {
         match s {
             "1.1.0" | "v1.1.0" => Ok(Self::V1_1_0),
-            "2.0.0-rc6" | "v2.0.0-rc6" => Ok(Self::V2_0_0Rc6),
+            "2.0.0" | "v2.0.0" => Ok(Self::V2_0_0),
             _ => Err(anyhow::anyhow!("unknown version: {}", s)),
         }
     }
@@ -169,7 +168,7 @@ impl Display for CompilerVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             CompilerVersion::V1_1_0 => write!(f, "1.1.0"),
-            CompilerVersion::V2_0_0Rc6 => write!(f, "2.0.0-rc6"),
+            CompilerVersion::V2_0_0 => write!(f, "2.0.0"),
         }
     }
 }
