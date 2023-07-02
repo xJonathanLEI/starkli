@@ -95,6 +95,12 @@ impl Compiler {
     }
 
     pub fn compile(&self, class: &SierraClass) -> Result<FieldElement> {
+        // We do this because the Sierra doesn't need ABI anyways. Feeding it with the ABI could
+        // actually cause unnecessary deserialization errors due to ABI structure changes between
+        // compiler versions.
+        let mut class = class.clone();
+        class.abi.clear();
+
         let sierra_class_json = serde_json::to_string(&class)?;
 
         let casm_class_json = match self {
