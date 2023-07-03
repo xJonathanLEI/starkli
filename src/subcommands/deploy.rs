@@ -51,6 +51,8 @@ pub struct Deploy {
     )]
     estimate_only: bool,
     #[clap(long, help = "Wait for the transaction to confirm")]
+    salt: Option<String>,
+    #[clap(long, help = "Use the given salt to pre-compute contract deploy address")]
     watch: bool,
     #[clap(help = "Class hash")]
     class_hash: String,
@@ -73,8 +75,11 @@ impl Deploy {
             ctor_args.append(&mut felt_decoder.decode(element).await?);
         }
 
-        // TODO: add option for manually setting salt
-        let salt = SigningKey::from_random().secret_scalar();
+        let salt = if let Some(s) = self.salt {
+            FieldElement::from_hex_be(&s)?
+        } else {
+            SigningKey::from_random().secret_scalar()
+        };
 
         // TODO: refactor account & signer loading
 
