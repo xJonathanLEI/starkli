@@ -54,7 +54,7 @@ pub struct Deploy {
     salt: Option<String>,
     #[clap(
         long,
-        help = "Use the given salt to pre-compute contract deploy address"
+        help = "Use the given salt to compute contract deploy address"
     )]
     watch: bool,
     #[clap(help = "Class hash")]
