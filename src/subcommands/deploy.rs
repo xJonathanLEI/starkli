@@ -52,10 +52,7 @@ pub struct Deploy {
     estimate_only: bool,
     #[clap(long, help = "Wait for the transaction to confirm")]
     salt: Option<String>,
-    #[clap(
-        long,
-        help = "Use the given salt to compute contract deploy address"
-    )]
+    #[clap(long, help = "Use the given salt to compute contract deploy address")]
     watch: bool,
     #[clap(help = "Class hash")]
     class_hash: String,
