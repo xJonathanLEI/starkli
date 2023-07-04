@@ -50,9 +50,9 @@ pub struct Deploy {
         help = "Only estimate transaction fee without sending transaction"
     )]
     estimate_only: bool,
-    #[clap(long, help = "Wait for the transaction to confirm")]
-    salt: Option<String>,
     #[clap(long, help = "Use the given salt to compute contract deploy address")]
+    salt: Option<String>,
+    #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(help = "Class hash")]
     class_hash: String,
