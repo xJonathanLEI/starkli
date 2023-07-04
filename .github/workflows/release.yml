@@ -20,7 +20,7 @@ jobs:
           REGEX="^refs\/tags\/v(.*)$"
           [[ $FULL_REF =~ $REGEX ]];
 
-          echo "version=${BASH_REMATCH[2]}" >> $GITHUB_OUTPUT
+          echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
 
   # Just in case we accidentally release something not on master.
   commit-branch-check:
