@@ -14,7 +14,7 @@ use starknet::{
 
 use crate::{
     account::{AccountConfig, DeploymentStatus},
-    compiler::CompilerArgs,
+    casm::{CasmArgs, CasmHashSource},
     signer::SignerArgs,
     utils::watch_tx,
     ProviderArgs,
@@ -27,7 +27,7 @@ pub struct Declare {
     #[clap(flatten)]
     signer: SignerArgs,
     #[clap(flatten)]
-    compiler: CompilerArgs,
+    casm: CasmArgs,
     #[clap(
         long,
         env = "STARKNET_ACCOUNT",
@@ -80,20 +80,31 @@ impl Declare {
             // Declaring Cairo 1 class
             let class_hash = class.class_hash()?;
 
-            let compiler = self.compiler.into_compiler(&provider).await?;
+            let casm_source = self.casm.into_casm_hash_source(&provider).await?;
 
             if !self.estimate_only {
                 eprintln!(
                     "Declaring Cairo 1 class: {}",
                     format!("{:#064x}", class_hash).bright_yellow()
                 );
-                eprintln!(
-                    "Compiling Sierra class to CASM with compiler version {}...",
-                    format!("{}", compiler.version()).bright_yellow()
-                );
+
+                match &casm_source {
+                    CasmHashSource::BuiltInCompiler(compiler) => {
+                        eprintln!(
+                            "Compiling Sierra class to CASM with compiler version {}...",
+                            format!("{}", compiler.version()).bright_yellow()
+                        );
+                    }
+                    CasmHashSource::Hash(hash) => {
+                        eprintln!(
+                            "Using the provided CASM hash: {}...",
+                            format!("{:#064x}", hash).bright_yellow()
+                        );
+                    }
+                }
             }
 
-            let casm_class_hash = compiler.compile(&class)?;
+            let casm_class_hash = casm_source.get_casm_hash(&class)?;
 
             if !self.estimate_only {
                 eprintln!(
