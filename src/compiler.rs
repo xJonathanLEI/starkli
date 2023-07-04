@@ -54,10 +54,10 @@ impl CompilerArgs {
                 match network {
                     Some(network) => {
                         let auto_version = match network {
-                            Network::Mainnet | Network::Goerli1 | Network::Goerli2 => {
-                                CompilerVersion::V1_1_0
+                            Network::Mainnet => CompilerVersion::V1_1_0,
+                            Network::Goerli1 | Network::Goerli2 | Network::Integration => {
+                                CompilerVersion::V2_0_0
                             }
-                            Network::Integration => CompilerVersion::V2_0_0,
                         };
 
                         eprintln!(
