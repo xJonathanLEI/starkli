@@ -23,10 +23,7 @@ pub struct Deploy {
     provider: ProviderArgs,
     #[clap(flatten)]
     signer: SignerArgs,
-    #[clap(
-        long,
-        help = "Maximum fee to pay for the transaction"
-    )]
+    #[clap(long, help = "Maximum fee to pay for the transaction")]
     max_fee: Option<FieldElement>,
     #[clap(
         long,

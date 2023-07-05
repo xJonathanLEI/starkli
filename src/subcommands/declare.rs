@@ -28,10 +28,7 @@ pub struct Declare {
     signer: SignerArgs,
     #[clap(flatten)]
     casm: CasmArgs,
-    #[clap(
-        long,
-        help = "Maximum fee to pay for the transaction"
-    )]
+    #[clap(long, help = "Maximum fee to pay for the transaction")]
     max_fee: Option<FieldElement>,
     #[clap(
         long,
@@ -164,9 +161,7 @@ impl Declare {
 
             // TODO: make buffer configurable
             let declaration = if let Some(max_fee) = self.max_fee {
-                account
-                    .declare_legacy(Arc::new(class))
-                    .max_fee(max_fee)
+                account.declare_legacy(Arc::new(class)).max_fee(max_fee)
             } else {
                 account
                     .declare_legacy(Arc::new(class))
