@@ -37,33 +37,54 @@ if test -t 1; then
 fi
 
 main() {
-    if [ -z "$1" ]; then
-        install
-        echo
-        completions
+    RELEASE_TAG=latest
 
-        echo
-        echo "Installation successfully completed."
-    else
-        case $1 in
+    while [ $# -gt 0 ]; do
+        case "$1" in
             -h|--help)
                 usage
                 exit 0
+                ;;
+
+            -v|--version)
+                if [ $# -gt 1 ]; then
+                    RELEASE_TAG="$2"
+                    shift
+                else
+                    echo "${red}Version tag is missing${normal}" 1>&2
+                    exit 1
+                fi
                 ;;
             *)
                 echo "${red}Unknown option: $1${normal}" 1>&2
                 echo "Run ${yellow}starkliup --help${normal} to see usage." 1>&2
                 exit 1
+                ;;
         esac
-    fi
+        shift
+    done
+
+    install
+    echo
+    completions
+
+    echo
+    echo "Installation successfully completed."
 }
 
 install() {
-    echo "Installing the latest version of starkli..."
+    local release_path
 
-    echo "Fetching the latest release from GitHub..."
-    LATEST_TAG="$(curl -# "https://api.github.com/repos/xJonathanLEI/starkli/releases/latest" | grep "tag_name" | cut -d \" -f 4)"
-    echo "Latest release found: ${yellow}${LATEST_TAG}${normal}"
+    if [[ $RELEASE_TAG == *"latest"* ]]; then
+        echo "Installing the latest version of starkli..."
+        echo "Fetching the latest release from GitHub..."
+        RELEASE_TAG="$(curl -# "https://api.github.com/repos/xJonathanLEI/starkli/releases/latest" | grep "tag_name" | cut -d \" -f 4)"
+        release_path="latest"
+    else
+        echo "Installing version ${RELEASE_TAG}"
+        echo "Fetching release ${RELEASE_TAG} from GitHub..."
+        release_path="tags/${RELEASE_TAG}"
+    fi
 
     detect_host_triple
     if [ -z "$TRIPLE" ]; then
@@ -72,16 +93,16 @@ install() {
     fi
 
     echo "Detected host triple: ${cyan}${TRIPLE}${normal}"
-    echo "Downloading latest release from GitHub..."
+    echo "Downloading release file from GitHub..."
 
     FILE_NAME="starkli-${TRIPLE}.tar.gz"
-    FILE_URL="https://github.com/xJonathanLEI/starkli/releases/download/${LATEST_TAG}/${FILE_NAME}"
+    FILE_URL="https://github.com/xJonathanLEI/starkli/releases/download/${RELEASE_TAG}/${FILE_NAME}"
 
     TEMP_DIR="$(mktemp -d)"
     TEMP_FILE_NAME="${TEMP_DIR}/${FILE_NAME}"
 
-    # TODO: support wget if curl is not found
-    curl -# -L $FILE_URL -o $TEMP_FILE_NAME
+    download_release_file
+
     tar zxf $TEMP_FILE_NAME -C $TEMP_DIR
 
     mv "${TEMP_DIR}/starkli" "${STARKLI_BIN_PATH}"
@@ -89,6 +110,25 @@ install() {
     rm -rf $TEMP_DIR
 
     echo "Successfully installed starkli ${yellow}${LATEST_TAG}${normal}"
+}
+
+download_release_file() {
+    if command -v curl >/dev/null 2>&1; then
+        http_code="$(curl -# -L "$FILE_URL" -o "$TEMP_FILE_NAME" --write-out "%{http_code}")"
+        if [ "$http_code" -ne 200 ]; then
+            echo "${red}Couldn't download release file for tag '${RELEASE_TAG}' from GitHub [${http_code}].${normal}"
+            exit 1
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q --show-progress -O "$TEMP_FILE_NAME" "$FILE_URL"
+        if [ "$?" -ne 0 ]; then
+            echo "${red}Couldn't download release file for tag '${RELEASE_TAG}' from GitHub.${normal}"
+            exit 1
+        fi
+    else
+        echo "${red}Command 'curl' or 'wget' is required.${normal}"
+        exit 1
+    fi
 }
 
 completions() {
