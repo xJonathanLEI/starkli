@@ -92,7 +92,6 @@ install() {
     fi
 
     echo "Detected host triple: ${cyan}${TRIPLE}${normal}"
-    echo "Downloading release file from GitHub..."
 
     FILE_NAME="starkli-${TRIPLE}.tar.gz"
     FILE_URL="https://github.com/xJonathanLEI/starkli/releases/download/${RELEASE_TAG}/${FILE_NAME}"
@@ -112,6 +111,7 @@ install() {
 }
 
 download_release_file() {
+    echo "Downloading release file from GitHub..."
     if command -v curl >/dev/null 2>&1; then
         http_code="$(curl -# -L "$FILE_URL" -o "$TEMP_FILE_NAME" --write-out "%{http_code}")"
         if [ "$http_code" -ne 200 ]; then
@@ -119,8 +119,7 @@ download_release_file() {
             exit 1
         fi
     elif command -v wget >/dev/null 2>&1; then
-        wget -q --show-progress -O "$TEMP_FILE_NAME" "$FILE_URL"
-        if [ "$?" -ne 0 ]; then
+        if ! wget -q --show-progress -O "$TEMP_FILE_NAME" "$FILE_URL"; then
             echo "${red}Couldn't download release file for tag '${RELEASE_TAG}' from GitHub.${normal}"
             exit 1
         fi
