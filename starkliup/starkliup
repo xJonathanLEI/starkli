@@ -199,6 +199,7 @@ USAGE:
 
 OPTIONS:
     -h, --help      Print this message
+    -v, --version   The version of starkli to install
 EOF
 }
 
