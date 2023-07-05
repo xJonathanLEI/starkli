@@ -29,6 +29,11 @@ pub struct Invoke {
     signer: SignerArgs,
     #[clap(
         long,
+        help = "Maximum fee to pay for the transaction"
+    )]
+    max_fee: Option<FieldElement>,
+    #[clap(
+        long,
         env = "STARKNET_ACCOUNT",
         help = "Path to account config JSON file"
     )]
@@ -110,7 +115,11 @@ impl Invoke {
             SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
         account.set_block_id(BlockId::Tag(BlockTag::Pending));
 
-        let execution = account.execute(calls).fee_estimate_multiplier(1.5f64);
+        let execution = if let Some(max_fee) = self.max_fee {
+            account.execute(calls).max_fee(max_fee)
+        } else {
+            account.execute(calls).fee_estimate_multiplier(1.5f64)
+        };
 
         if self.estimate_only {
             let estimated_fee = execution.estimate_fee().await?.overall_fee;

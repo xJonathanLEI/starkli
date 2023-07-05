@@ -25,6 +25,11 @@ pub struct Deploy {
     signer: SignerArgs,
     #[clap(
         long,
+        help = "Maximum fee to pay for the transaction"
+    )]
+    max_fee: Option<FieldElement>,
+    #[clap(
+        long,
         help = "Only estimate transaction fee without sending transaction"
     )]
     estimate_only: bool,
@@ -117,9 +122,15 @@ impl Deploy {
         eprint!("Press [ENTER] once you've funded the address.");
         std::io::stdin().read_line(&mut String::new())?;
 
+        let max_fee = if let Some(max_fee) = self.max_fee {
+            max_fee
+        } else {
+            estimated_fee_with_buffer
+        };
+
         // TODO: add option to check ETH balance before sending out tx
         let account_deployment_tx = account_deployment
-            .max_fee(estimated_fee_with_buffer)
+            .max_fee(max_fee)
             .send()
             .await?
             .transaction_hash;

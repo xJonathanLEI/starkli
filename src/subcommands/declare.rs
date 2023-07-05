@@ -30,6 +30,11 @@ pub struct Declare {
     casm: CasmArgs,
     #[clap(
         long,
+        help = "Maximum fee to pay for the transaction"
+    )]
+    max_fee: Option<FieldElement>,
+    #[clap(
+        long,
         env = "STARKNET_ACCOUNT",
         help = "Path to account config JSON file"
     )]
@@ -114,9 +119,15 @@ impl Declare {
             }
 
             // TODO: make buffer configurable
-            let declaration = account
-                .declare(Arc::new(class.flatten()?), casm_class_hash)
-                .fee_estimate_multiplier(1.5f64);
+            let declaration = if let Some(max_fee) = self.max_fee {
+                account
+                    .declare(Arc::new(class.flatten()?), casm_class_hash)
+                    .max_fee(max_fee)
+            } else {
+                account
+                    .declare(Arc::new(class.flatten()?), casm_class_hash)
+                    .fee_estimate_multiplier(1.5f64)
+            };
 
             if self.estimate_only {
                 let estimated_fee = declaration.estimate_fee().await?.overall_fee;
@@ -152,9 +163,15 @@ impl Declare {
             }
 
             // TODO: make buffer configurable
-            let declaration = account
-                .declare_legacy(Arc::new(class))
-                .fee_estimate_multiplier(1.5f64);
+            let declaration = if let Some(max_fee) = self.max_fee {
+                account
+                    .declare_legacy(Arc::new(class))
+                    .max_fee(max_fee)
+            } else {
+                account
+                    .declare_legacy(Arc::new(class))
+                    .fee_estimate_multiplier(1.5f64)
+            };
 
             if self.estimate_only {
                 let estimated_fee = declaration.estimate_fee().await?.overall_fee;
