@@ -14,6 +14,7 @@ use crate::{
         AccountConfig, AccountVariant, AccountVariantType, DeployedStatus, DeploymentStatus,
         OzAccountConfig, KNOWN_ACCOUNT_CLASSES,
     },
+    provider::ExtendedProvider,
     ProviderArgs,
 };
 
@@ -81,20 +82,26 @@ impl Fetch {
 
         let account = match known_class.variant {
             AccountVariantType::OpenZeppelin => {
-                let public_key = provider
-                    .call(
-                        FunctionCall {
-                            contract_address: address,
-                            entry_point_selector: selector!("getPublicKey"),
-                            calldata: vec![],
-                        },
-                        BlockId::Tag(BlockTag::Pending),
-                    )
-                    .await?[0];
+                let public_key = Self::fetch_oz_public_key(&provider, address).await?;
 
                 AccountConfig {
                     version: 1,
                     variant: AccountVariant::OpenZeppelin(OzAccountConfig {
+                        version: 1,
+                        public_key,
+                    }),
+                    deployment: DeploymentStatus::Deployed(DeployedStatus {
+                        class_hash,
+                        address,
+                    }),
+                }
+            }
+            AccountVariantType::Braavos => {
+                let public_key = Self::fetch_oz_public_key(&provider, address).await?;
+
+                AccountConfig {
+                    version: 1,
+                    variant: AccountVariant::Braavos(OzAccountConfig {
                         version: 1,
                         public_key,
                     }),
@@ -116,5 +123,28 @@ impl Fetch {
         );
 
         Ok(())
+    }
+
+    /// Fetches the public key at the given address.
+    /// For OpenZeppelin compliant accounts.
+    ///
+    /// # Arguments
+    ///
+    /// * `provider` - Provider to execute the call.
+    /// * `address` - Account contract address.
+    async fn fetch_oz_public_key(
+        provider: &ExtendedProvider,
+        address: FieldElement,
+    ) -> Result<FieldElement> {
+        Ok(provider
+            .call(
+                FunctionCall {
+                    contract_address: address,
+                    entry_point_selector: selector!("getPublicKey"),
+                    calldata: vec![],
+                },
+                BlockId::Tag(BlockTag::Pending),
+            )
+            .await?[0])
     }
 }

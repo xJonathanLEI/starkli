@@ -47,6 +47,7 @@ impl Deploy {
         #[allow(clippy::infallible_destructuring_match)]
         let oz_config = match &account.variant {
             AccountVariant::OpenZeppelin(inner) => inner,
+            AccountVariant::Braavos(inner) => inner,
         };
 
         let undeployed_status = match &account.deployment {

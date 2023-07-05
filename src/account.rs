@@ -10,11 +10,18 @@ use starknet::{
     macros::felt,
 };
 
-pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 1] = [KnownAccountClass {
-    class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
-    variant: AccountVariantType::OpenZeppelin,
-    description: "OpenZeppelin account contract v0.6.1 compiled with cairo-lang v0.11.0.2",
-}];
+pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 2] = [
+    KnownAccountClass {
+        class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
+        variant: AccountVariantType::OpenZeppelin,
+        description: "OpenZeppelin account contract v0.6.1 compiled with cairo-lang v0.11.0.2",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x03131fa018d520a037686ce3efddeab8f28895662f019ca3ca18a626650f7d1e"),
+        variant: AccountVariantType::Braavos,
+        description: "Braavos proxy compiled with v0.10.3",
+    },
+];
 
 #[derive(Serialize, Deserialize)]
 pub struct AccountConfig {
@@ -27,6 +34,7 @@ pub struct AccountConfig {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum AccountVariant {
     OpenZeppelin(OzAccountConfig),
+    Braavos(OzAccountConfig),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -44,6 +52,7 @@ pub struct KnownAccountClass {
 
 pub enum AccountVariantType {
     OpenZeppelin,
+    Braavos,
 }
 
 #[serde_as]
@@ -82,12 +91,14 @@ impl AccountConfig {
         };
 
         match &self.variant {
-            AccountVariant::OpenZeppelin(oz) => Ok(get_contract_address(
-                undeployed_status.salt,
-                undeployed_status.class_hash,
-                &[oz.public_key],
-                FieldElement::ZERO,
-            )),
+            AccountVariant::OpenZeppelin(oz) | AccountVariant::Braavos(oz) => {
+                Ok(get_contract_address(
+                    undeployed_status.salt,
+                    undeployed_status.class_hash,
+                    &[oz.public_key],
+                    FieldElement::ZERO,
+                ))
+            }
         }
     }
 }
@@ -96,6 +107,7 @@ impl Display for AccountVariantType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AccountVariantType::OpenZeppelin => write!(f, "OpenZeppelin"),
+            AccountVariantType::Braavos => write!(f, "Braavos"),
         }
     }
 }
