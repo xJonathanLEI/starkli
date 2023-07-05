@@ -77,12 +77,11 @@ install() {
 
     if [[ $RELEASE_TAG == *"latest"* ]]; then
         echo "Installing the latest version of starkli..."
-        echo "Fetching the latest release from GitHub..."
-        RELEASE_TAG="$(curl -# "https://api.github.com/repos/xJonathanLEI/starkli/releases/latest" | grep "tag_name" | cut -d \" -f 4)"
+        echo "Fetching the latest release tag from GitHub..."
+        RELEASE_TAG="$(curl -s "https://api.github.com/repos/xJonathanLEI/starkli/releases/latest" | grep "tag_name" | cut -d \" -f 4)"
         release_path="latest"
     else
         echo "Installing version ${RELEASE_TAG}"
-        echo "Fetching release ${RELEASE_TAG} from GitHub..."
         release_path="tags/${RELEASE_TAG}"
     fi
 
