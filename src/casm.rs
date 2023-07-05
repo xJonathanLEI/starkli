@@ -72,7 +72,10 @@ impl CasmArgs {
                     }
                 }
             }
-            _ => Err(anyhow::anyhow!("invalid casm hash options")),
+            _ => Err(anyhow::anyhow!(
+                "invalid casm hash options. \
+                Use either --compiler-version or --casm-hash but not at the same time"
+            )),
         }
     }
 }
