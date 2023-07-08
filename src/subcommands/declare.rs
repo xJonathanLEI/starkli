@@ -7,9 +7,9 @@ use starknet::{
     accounts::{Account, SingleOwnerAccount},
     core::types::{
         contract::{legacy::LegacyContractClass, CompiledClass, SierraClass},
-        BlockId, BlockTag, FieldElement,
+        BlockId, BlockTag, FieldElement, StarknetError,
     },
-    providers::Provider,
+    providers::{Provider, ProviderError},
 };
 
 use crate::{
@@ -68,8 +68,6 @@ impl Declare {
             SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
         account.set_block_id(BlockId::Tag(BlockTag::Pending));
 
-        // TODO: check if class has already been declared
-
         // Working around a deserialization bug in `starknet-rs`:
         //   https://github.com/xJonathanLEI/starknet-rs/issues/392
 
@@ -79,6 +77,11 @@ impl Declare {
         {
             // Declaring Cairo 1 class
             let class_hash = class.class_hash()?;
+
+            // TODO: add option to skip checking
+            if Self::check_already_declared(&provider, class_hash).await? {
+                return Ok(());
+            }
 
             let casm_source = self.casm.into_casm_hash_source(&provider).await?;
 
@@ -144,6 +147,11 @@ impl Declare {
             // Declaring Cairo 0 class
             let class_hash = class.class_hash()?;
 
+            // TODO: add option to skip checking
+            if Self::check_already_declared(&provider, class_hash).await? {
+                return Ok(());
+            }
+
             if !self.estimate_only {
                 eprintln!(
                     "Declaring Cairo 0 (deprecated) class: {}",
@@ -194,5 +202,25 @@ impl Declare {
         println!("{}", format!("{:#064x}", class_hash).bright_yellow());
 
         Ok(())
+    }
+
+    async fn check_already_declared<P>(provider: P, class_hash: FieldElement) -> Result<bool>
+    where
+        P: Provider,
+        P::Error: 'static,
+    {
+        match provider
+            .get_class(BlockId::Tag(BlockTag::Pending), class_hash)
+            .await
+        {
+            Ok(_) => {
+                eprintln!("Not declaring class as it's already declared. Class hash:");
+                println!("{}", format!("{:#064x}", class_hash).bright_yellow());
+
+                Ok(true)
+            }
+            Err(ProviderError::StarknetError(StarknetError::ClassHashNotFound)) => Ok(false),
+            Err(err) => Err(err.into()),
+        }
     }
 }
