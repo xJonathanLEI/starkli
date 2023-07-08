@@ -122,7 +122,7 @@ impl Deploy {
         // TODO: add option for manually specifying fees
         let estimated_fee = contract_deployment.estimate_fee().await?.overall_fee;
         if self.estimate_only {
-            println!(
+            eprintln!(
                 "{} ETH",
                 format!(
                     "{}",
@@ -163,6 +163,11 @@ impl Deploy {
             );
             watch_tx(&provider, deployment_tx).await?;
         }
+
+        eprintln!("Contract deployed:");
+
+        // Only the contract goes to stdout so this can be easily scripted
+        println!("{}", format!("{:#064x}", deployed_address).bright_yellow());
 
         Ok(())
     }
