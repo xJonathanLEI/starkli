@@ -99,6 +99,7 @@ install() {
     TEMP_DIR="$(mktemp -d)"
     TEMP_FILE_NAME="${TEMP_DIR}/${FILE_NAME}"
 
+    # TODO: support wget if curl is not found
     download_release_file
 
     tar zxf $TEMP_FILE_NAME -C $TEMP_DIR
@@ -119,7 +120,7 @@ download_release_file() {
             exit 1
         fi
     else
-        echo "${red}Command 'curl' or 'wget' is required.${normal}"
+        echo "${red}Command 'curl' is required.${normal}"
         exit 1
     fi
 }
