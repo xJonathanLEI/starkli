@@ -118,11 +118,6 @@ download_release_file() {
             echo "${red}Couldn't download release file for tag '${RELEASE_TAG}' from GitHub [${http_code}].${normal}"
             exit 1
         fi
-    elif command -v wget >/dev/null 2>&1; then
-        if ! wget -q --show-progress -O "$TEMP_FILE_NAME" "$FILE_URL"; then
-            echo "${red}Couldn't download release file for tag '${RELEASE_TAG}' from GitHub.${normal}"
-            exit 1
-        fi
     else
         echo "${red}Command 'curl' or 'wget' is required.${normal}"
         exit 1
