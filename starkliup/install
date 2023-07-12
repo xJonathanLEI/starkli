@@ -121,6 +121,7 @@ insert_env_line "$HOME/.profile"
 insert_env_line "$HOME/.bashrc"
 insert_env_line "$HOME/.bash_profile"
 insert_env_line "${ZDOTDIR-"$HOME"}/.zshenv"
+insert_env_line "${ZDOTDIR-"$HOME"}/.zshrc"
 insert_env_line "$HOME/.config/fish/config.fish"
 
 echo
