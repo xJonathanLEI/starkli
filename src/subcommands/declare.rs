@@ -68,6 +68,10 @@ impl Declare {
             SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
         account.set_block_id(BlockId::Tag(BlockTag::Pending));
 
+        // Workaround for issue:
+        //   https://github.com/eqlabs/pathfinder/issues/1208
+        let fee_multiplier = if provider.is_rpc() { 2.5 } else { 1.5 };
+
         // Working around a deserialization bug in `starknet-rs`:
         //   https://github.com/xJonathanLEI/starknet-rs/issues/392
 
@@ -119,7 +123,7 @@ impl Declare {
             // TODO: make buffer configurable
             let declaration = account
                 .declare(Arc::new(class.flatten()?), casm_class_hash)
-                .fee_estimate_multiplier(1.5f64);
+                .fee_estimate_multiplier(fee_multiplier);
 
             if self.estimate_only {
                 let estimated_fee = declaration.estimate_fee().await?.overall_fee;
@@ -162,7 +166,7 @@ impl Declare {
             // TODO: make buffer configurable
             let declaration = account
                 .declare_legacy(Arc::new(class))
-                .fee_estimate_multiplier(1.5f64);
+                .fee_estimate_multiplier(fee_multiplier);
 
             if self.estimate_only {
                 let estimated_fee = declaration.estimate_fee().await?.overall_fee;

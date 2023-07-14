@@ -107,6 +107,10 @@ impl ExtendedProvider {
         }
     }
 
+    pub fn is_rpc(&self) -> bool {
+        matches!(self.provider, AnyProvider::JsonRpcHttp(_))
+    }
+
     pub fn is_integration(&self) -> bool {
         self.is_integration
     }
