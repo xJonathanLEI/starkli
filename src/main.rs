@@ -101,6 +101,8 @@ enum Subcommands {
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     if let Err(err) = run_command(Cli::parse()).await {
         eprintln!("{}", format!("Error: {err}").red());
         std::process::exit(1);

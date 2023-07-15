@@ -16,6 +16,7 @@ clap = { version = "4.3.8", features = ["derive", "env"] }
 clap_complete = "4.3.1"
 colored = "2.0.0"
 colored_json = "3.2.0"
+env_logger = "0.10.0"
 hex = "0.4.3"
 hex-literal = "0.4.1"
 num-bigint = "0.4.3"
