@@ -9,7 +9,7 @@ use starknet::{
         contract::{legacy::LegacyContractClass, CompiledClass, SierraClass},
         BlockId, BlockTag, FieldElement, StarknetError,
     },
-    providers::{Provider, ProviderError},
+    providers::{MaybeUnknownErrorCode, Provider, ProviderError, StarknetErrorWithMessage},
 };
 
 use crate::{
@@ -223,7 +223,10 @@ impl Declare {
 
                 Ok(true)
             }
-            Err(ProviderError::StarknetError(StarknetError::ClassHashNotFound)) => Ok(false),
+            Err(ProviderError::StarknetError(StarknetErrorWithMessage {
+                code: MaybeUnknownErrorCode::Known(StarknetError::ClassHashNotFound),
+                ..
+            })) => Ok(false),
             Err(err) => Err(err.into()),
         }
     }

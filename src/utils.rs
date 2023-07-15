@@ -5,7 +5,7 @@ use colored::Colorize;
 use regex::Regex;
 use starknet::{
     core::types::{BlockId, BlockTag, FieldElement, StarknetError},
-    providers::{Provider, ProviderError},
+    providers::{MaybeUnknownErrorCode, Provider, ProviderError, StarknetErrorWithMessage},
 };
 
 pub async fn watch_tx<P>(provider: P, transaction_hash: FieldElement) -> Result<()>
@@ -29,7 +29,10 @@ where
                 );
                 return Ok(());
             }
-            Err(ProviderError::StarknetError(StarknetError::TransactionHashNotFound)) => {
+            Err(ProviderError::StarknetError(StarknetErrorWithMessage {
+                code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
+                ..
+            })) => {
                 eprintln!("Transaction not confirmed yet...");
             }
             Err(err) => return Err(err.into()),
