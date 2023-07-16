@@ -3,3 +3,8 @@ authors = ["Jonathan Lei"]
 language = "en"
 multilingual = false
 src = "src"
+title = "Starkli Book"
+
+[output.html]
+git-repository-url = "https://github.com/xJonathanLEI/starkli"
+no-section-label = true

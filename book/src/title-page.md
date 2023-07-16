@@ -1,3 +1,0 @@
-# starkli
-
-Docs for starkli.

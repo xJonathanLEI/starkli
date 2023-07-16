@@ -1,3 +1,25 @@
 # Summary
 
-[starkli](./title-page.md)
+[Introduction](./introduction.md)
+
+# Getting started
+
+- [Installation](./installation.md)
+- [Shell completions](./shell-completions.md)
+
+# Core concepts
+
+- [Providers](./providers.md)
+- [Signers](./signers.md)
+- [Accounts](./accounts.md)
+- [Argument resolution](./argument-resolution.md)
+
+# Cookbooks
+
+- [Declaring classes](./declaring-classes.md)
+- [Deploying contracts](./deploying-contracts.md)
+- [Invoking contracts](./invoking-contracts.md)
+
+# Reference
+
+- [Commands](./ref/commands.md)
