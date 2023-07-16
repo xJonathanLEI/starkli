@@ -44,8 +44,9 @@ impl ProviderArgs {
             (Some(rpc), Some(_)) => {
                 eprintln!(
                     "{}",
-                    "WARNING: when using JSON-RPC, the --network flag is ignored. \
-                    There's no need to use --network as network is automatically detected."
+                    "WARNING: when using JSON-RPC, the --network option and the STARKNET_NETWORK \
+                    environment variable are ignored, as those are for using the deprecated \
+                    sequencer gateway. See https://book.starkli.rs/providers for more details."
                         .bright_magenta()
                 );
 
@@ -57,9 +58,9 @@ impl ProviderArgs {
             (None, Some(network)) => {
                 eprintln!(
                     "{}",
-                    "WARNING: you're using --network instead of providing a JSON-RPC endpoint. \
-                    Falling back to using the sequencer gateway now, \
-                    but this is strongly discouraged."
+                    "WARNING: you're using the sequencer gateway instead of providing a JSON-RPC \
+                    endpoint. This is strongly discouraged. See https://book.starkli.rs/providers \
+                    for more details."
                         .bright_magenta()
                 );
 
@@ -85,8 +86,9 @@ impl ProviderArgs {
                 // If nothing is provided we fall back to using sequencer gateway for goerli-1
                 eprintln!(
                     "{}",
-                    "WARNING: no valid provider option found. \
-                    Falling back to using the sequencer gateway for the goerli-1 network."
+                    "WARNING: no valid provider option found. Falling back to using the sequencer \
+                    gateway for the goerli-1 network. Doing this is discouraged. See \
+                    https://book.starkli.rs/providers for more details."
                         .bright_magenta()
                 );
 
