@@ -12,6 +12,7 @@
 - [Providers](./providers.md)
 - [Signers](./signers.md)
 - [Accounts](./accounts.md)
+- [Transaction fees](./transaction-fees.md)
 - [Argument resolution](./argument-resolution.md)
 
 # Cookbooks
