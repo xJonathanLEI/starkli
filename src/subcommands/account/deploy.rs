@@ -14,6 +14,7 @@ use crate::{
     account::{AccountConfig, AccountVariant, DeployedStatus, DeploymentStatus},
     signer::SignerArgs,
     utils::watch_tx,
+    verbosity::VerbosityArgs,
     ProviderArgs,
 };
 
@@ -30,10 +31,14 @@ pub struct Deploy {
     estimate_only: bool,
     #[clap(help = "Path to the account config file")]
     file: PathBuf,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl Deploy {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         let provider = Arc::new(self.provider.into_provider());
         let signer = Arc::new(self.signer.into_signer()?);
 

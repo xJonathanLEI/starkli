@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use starknet::{core::utils::parse_cairo_short_string, providers::Provider};
 
-use crate::ProviderArgs;
+use crate::{verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct ChainId {
@@ -20,10 +20,14 @@ pub struct ChainId {
         help = "Block number, hash, or tag (latest/pending)"
     )]
     block_id: String,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl ChainId {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         let provider = self.provider.into_provider();
 
         let raw_chain_id = provider.chain_id().await?;

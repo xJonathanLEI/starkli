@@ -10,7 +10,9 @@ use starknet::{
     providers::Provider,
 };
 
-use crate::{address_book::AddressBookResolver, decode::FeltDecoder, ProviderArgs};
+use crate::{
+    address_book::AddressBookResolver, decode::FeltDecoder, verbosity::VerbosityArgs, ProviderArgs,
+};
 
 #[derive(Debug, Parser)]
 pub struct Call {
@@ -22,10 +24,14 @@ pub struct Call {
     selector: String,
     #[clap(help = "Raw function call arguments")]
     calldata: Vec<String>,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl Call {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         let provider = Arc::new(self.provider.into_provider());
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
 

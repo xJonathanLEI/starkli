@@ -14,6 +14,7 @@ use crate::{
         AccountConfig, AccountVariant, AccountVariantType, DeployedStatus, DeploymentStatus,
         OzAccountConfig, KNOWN_ACCOUNT_CLASSES,
     },
+    verbosity::VerbosityArgs,
     ProviderArgs,
 };
 
@@ -27,10 +28,14 @@ pub struct Fetch {
     output: Option<PathBuf>,
     #[clap(help = "Contract address")]
     address: String,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl Fetch {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         // We allow not saving the config to just identify the account contract
         if self.output.is_none() {
             eprintln!(

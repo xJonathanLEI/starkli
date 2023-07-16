@@ -18,6 +18,7 @@ use crate::{
     decode::FeltDecoder,
     signer::SignerArgs,
     utils::watch_tx,
+    verbosity::VerbosityArgs,
     ProviderArgs,
 };
 
@@ -42,10 +43,14 @@ pub struct Invoke {
     watch: bool,
     #[clap(help = "One or more contract calls. See documentation for more details")]
     calls: Vec<String>,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl Invoke {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         let provider = Arc::new(self.provider.into_provider());
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
 

@@ -5,7 +5,7 @@ use starknet::{
     providers::Provider,
 };
 
-use crate::ProviderArgs;
+use crate::{verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct Storage {
@@ -15,10 +15,14 @@ pub struct Storage {
     address: String,
     #[clap(help = "Storage key")]
     key: String,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl Storage {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         let provider = self.provider.into_provider();
         let address = FieldElement::from_hex_be(&self.address)?;
         let key = FieldElement::from_hex_be(&self.key)?;

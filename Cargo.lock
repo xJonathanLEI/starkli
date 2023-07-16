@@ -2663,6 +2663,7 @@ dependencies = [
  "env_logger",
  "hex",
  "hex-literal",
+ "log",
  "num-bigint",
  "regex",
  "rpassword",

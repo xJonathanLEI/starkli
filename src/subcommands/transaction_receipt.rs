@@ -3,7 +3,7 @@ use clap::Parser;
 use colored_json::{ColorMode, Output};
 use starknet::{core::types::FieldElement, providers::Provider};
 
-use crate::ProviderArgs;
+use crate::{verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct TransactionReceipt {
@@ -11,10 +11,14 @@ pub struct TransactionReceipt {
     provider: ProviderArgs,
     #[clap(help = "Transaction hash")]
     hash: String,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl TransactionReceipt {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         let provider = self.provider.into_provider();
         let transaction_hash = FieldElement::from_hex_be(&self.hash)?;
 

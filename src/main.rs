@@ -15,6 +15,7 @@ mod provider;
 mod signer;
 mod subcommands;
 mod utils;
+mod verbosity;
 
 const VERSION_STRING: &str = concat!(env!("CARGO_PKG_VERSION"), " (", env!("VERGEN_GIT_SHA"), ")");
 
@@ -101,8 +102,6 @@ enum Subcommands {
 
 #[tokio::main]
 async fn main() {
-    env_logger::init();
-
     if let Err(err) = run_command(Cli::parse()).await {
         eprintln!("{}", format!("Error: {err}").red());
         std::process::exit(1);

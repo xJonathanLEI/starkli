@@ -5,7 +5,7 @@ use starknet::{
     providers::Provider,
 };
 
-use crate::ProviderArgs;
+use crate::{verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct Nonce {
@@ -13,10 +13,14 @@ pub struct Nonce {
     provider: ProviderArgs,
     #[clap(help = "Contract address")]
     address: String,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl Nonce {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         let provider = self.provider.into_provider();
         let address = FieldElement::from_hex_be(&self.address)?;
 

@@ -17,6 +17,7 @@ use crate::{
     casm::{CasmArgs, CasmHashSource},
     signer::SignerArgs,
     utils::watch_tx,
+    verbosity::VerbosityArgs,
     ProviderArgs,
 };
 
@@ -43,10 +44,14 @@ pub struct Declare {
     watch: bool,
     #[clap(help = "Path to contract artifact file")]
     file: PathBuf,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl Declare {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         let provider = Arc::new(self.provider.into_provider());
 
         if !self.account.exists() {

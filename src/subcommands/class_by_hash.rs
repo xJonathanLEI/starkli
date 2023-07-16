@@ -6,7 +6,7 @@ use starknet::{
     providers::Provider,
 };
 
-use crate::ProviderArgs;
+use crate::{verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct ClassByHash {
@@ -14,10 +14,14 @@ pub struct ClassByHash {
     provider: ProviderArgs,
     #[clap(help = "Class hash")]
     hash: String,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl ClassByHash {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         let provider = self.provider.into_provider();
         let class_hash = FieldElement::from_hex_be(&self.hash)?;
 

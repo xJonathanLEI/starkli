@@ -20,6 +20,7 @@ use crate::{
     decode::FeltDecoder,
     signer::SignerArgs,
     utils::watch_tx,
+    verbosity::VerbosityArgs,
     ProviderArgs,
 };
 
@@ -58,10 +59,14 @@ pub struct Deploy {
     class_hash: String,
     #[clap(help = "Raw constructor arguments")]
     ctor_args: Vec<String>,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl Deploy {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         let provider = Arc::new(self.provider.into_provider());
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
 

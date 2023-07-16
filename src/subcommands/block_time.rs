@@ -3,7 +3,7 @@ use chrono::{TimeZone, Utc};
 use clap::Parser;
 use starknet::{core::types::MaybePendingBlockWithTxHashes, providers::Provider};
 
-use crate::{utils::parse_block_id, ProviderArgs};
+use crate::{utils::parse_block_id, verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct BlockTime {
@@ -26,10 +26,14 @@ pub struct BlockTime {
         help = "Block number, hash, or tag (latest/pending)"
     )]
     block_id: String,
+    #[clap(flatten)]
+    verbosity: VerbosityArgs,
 }
 
 impl BlockTime {
     pub async fn run(self) -> Result<()> {
+        self.verbosity.setup_logging();
+
         let provider = self.provider.into_provider();
 
         let block_id = parse_block_id(&self.block_id)?;
