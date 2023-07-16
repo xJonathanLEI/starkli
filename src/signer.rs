@@ -94,7 +94,11 @@ impl SignerArgs {
             (Some(StringValue::FromEnvVar(keystore)), keystore_password, None) => {
                 Self::resolve_keystore(keystore, keystore_password)
             }
-            _ => Err(anyhow::anyhow!("no valid signer option provided")),
+            _ => Err(anyhow::anyhow!(
+                "no valid signer option provided. \
+                Consider using a keystore by providing a --keystore option.\
+                \n\nFor more information, see: https://book.starkli.rs/signers"
+            )),
         }
     }
 
