@@ -10,6 +10,7 @@ mod casm;
 mod chain_id;
 mod compiler;
 mod decode;
+mod fee;
 mod network;
 mod provider;
 mod signer;

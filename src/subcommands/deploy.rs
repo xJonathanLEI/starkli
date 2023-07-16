@@ -18,6 +18,7 @@ use crate::{
     account::{AccountConfig, DeploymentStatus},
     address_book::AddressBookResolver,
     decode::FeltDecoder,
+    fee::{FeeArgs, FeeSetting},
     signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
@@ -46,11 +47,8 @@ pub struct Deploy {
         help = "Path to account config JSON file"
     )]
     account: PathBuf,
-    #[clap(
-        long,
-        help = "Only estimate transaction fee without sending transaction"
-    )]
-    estimate_only: bool,
+    #[clap(flatten)]
+    fee: FeeArgs,
     #[clap(long, help = "Use the given salt to compute contract deploy address")]
     salt: Option<String>,
     #[clap(long, help = "Wait for the transaction to confirm")]
@@ -66,6 +64,8 @@ pub struct Deploy {
 impl Deploy {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
+
+        let fee_setting = self.fee.into_setting()?;
 
         let provider = Arc::new(self.provider.into_provider());
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
@@ -124,22 +124,29 @@ impl Deploy {
 
         let contract_deployment = factory.deploy(&ctor_args, salt, !self.not_unique);
 
-        // TODO: add option for manually specifying fees
-        let estimated_fee = contract_deployment.estimate_fee().await?.overall_fee;
-        if self.estimate_only {
-            eprintln!(
-                "{} ETH",
-                format!(
-                    "{}",
-                    <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
-                )
-                .bright_yellow(),
-            );
-            return Ok(());
-        }
+        let max_fee = match fee_setting {
+            FeeSetting::Manual(fee) => fee,
+            FeeSetting::EstimateOnly | FeeSetting::None => {
+                let estimated_fee = contract_deployment.estimate_fee().await?.overall_fee;
 
-        // TODO: make buffer configurable
-        let estimated_fee_with_buffer = estimated_fee * 3 / 2;
+                if fee_setting.is_estimate_only() {
+                    eprintln!(
+                        "{} ETH",
+                        format!(
+                            "{}",
+                            <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
+                        )
+                        .bright_yellow(),
+                    );
+                    return Ok(());
+                }
+
+                // TODO: make buffer configurable
+                let estimated_fee_with_buffer = estimated_fee * 3 / 2;
+
+                estimated_fee_with_buffer.into()
+            }
+        };
 
         eprintln!(
             "Deploying class {} with salt {}...",
@@ -152,7 +159,7 @@ impl Deploy {
         );
 
         let deployment_tx = contract_deployment
-            .max_fee(estimated_fee_with_buffer.into())
+            .max_fee(max_fee)
             .send()
             .await?
             .transaction_hash;

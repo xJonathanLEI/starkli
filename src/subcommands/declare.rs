@@ -15,6 +15,7 @@ use starknet::{
 use crate::{
     account::{AccountConfig, DeploymentStatus},
     casm::{CasmArgs, CasmHashSource},
+    fee::{FeeArgs, FeeSetting},
     signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
@@ -35,11 +36,8 @@ pub struct Declare {
         help = "Path to account config JSON file"
     )]
     account: PathBuf,
-    #[clap(
-        long,
-        help = "Only estimate transaction fee without sending transaction"
-    )]
-    estimate_only: bool,
+    #[clap(flatten)]
+    fee: FeeArgs,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(help = "Path to contract artifact file")]
@@ -51,6 +49,8 @@ pub struct Declare {
 impl Declare {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
+
+        let fee_setting = self.fee.into_setting()?;
 
         let provider = Arc::new(self.provider.into_provider());
 
@@ -75,7 +75,8 @@ impl Declare {
 
         // Workaround for issue:
         //   https://github.com/eqlabs/pathfinder/issues/1208
-        let fee_multiplier = if provider.is_rpc() { 2.5 } else { 1.5 };
+        let (fee_multiplier_num, fee_multiplier_denom) =
+            if provider.is_rpc() { (5, 2) } else { (3, 2) };
 
         // Working around a deserialization bug in `starknet-rs`:
         //   https://github.com/xJonathanLEI/starknet-rs/issues/392
@@ -94,7 +95,7 @@ impl Declare {
 
             let casm_source = self.casm.into_casm_hash_source(&provider).await?;
 
-            if !self.estimate_only {
+            if !fee_setting.is_estimate_only() {
                 eprintln!(
                     "Declaring Cairo 1 class: {}",
                     format!("{:#064x}", class_hash).bright_yellow()
@@ -118,7 +119,7 @@ impl Declare {
 
             let casm_class_hash = casm_source.get_casm_hash(&class)?;
 
-            if !self.estimate_only {
+            if !fee_setting.is_estimate_only() {
                 eprintln!(
                     "CASM class hash: {}",
                     format!("{:#064x}", casm_class_hash).bright_yellow()
@@ -126,25 +127,37 @@ impl Declare {
             }
 
             // TODO: make buffer configurable
-            let declaration = account
-                .declare(Arc::new(class.flatten()?), casm_class_hash)
-                .fee_estimate_multiplier(fee_multiplier);
+            let declaration = account.declare(Arc::new(class.flatten()?), casm_class_hash);
 
-            if self.estimate_only {
-                let estimated_fee = declaration.estimate_fee().await?.overall_fee;
+            let max_fee = match fee_setting {
+                FeeSetting::Manual(fee) => fee,
+                FeeSetting::EstimateOnly | FeeSetting::None => {
+                    let estimated_fee = declaration.estimate_fee().await?.overall_fee;
 
-                println!(
-                    "{} ETH",
-                    format!(
-                        "{}",
-                        <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
-                    )
-                    .bright_yellow(),
-                );
-                return Ok(());
-            }
+                    if fee_setting.is_estimate_only() {
+                        println!(
+                            "{} ETH",
+                            format!(
+                                "{}",
+                                <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
+                            )
+                            .bright_yellow(),
+                        );
+                        return Ok(());
+                    }
 
-            (class_hash, declaration.send().await?.transaction_hash)
+                    // TODO: make buffer configurable
+                    let estimated_fee_with_buffer =
+                        estimated_fee * fee_multiplier_num / fee_multiplier_denom;
+
+                    estimated_fee_with_buffer.into()
+                }
+            };
+
+            (
+                class_hash,
+                declaration.max_fee(max_fee).send().await?.transaction_hash,
+            )
         } else if let Ok(_) =
             serde_json::from_reader::<_, CompiledClass>(std::fs::File::open(&self.file)?)
         {
@@ -161,7 +174,7 @@ impl Declare {
                 return Ok(());
             }
 
-            if !self.estimate_only {
+            if !fee_setting.is_estimate_only() {
                 eprintln!(
                     "Declaring Cairo 0 (deprecated) class: {}",
                     format!("{:#064x}", class_hash).bright_yellow()
@@ -169,25 +182,37 @@ impl Declare {
             }
 
             // TODO: make buffer configurable
-            let declaration = account
-                .declare_legacy(Arc::new(class))
-                .fee_estimate_multiplier(fee_multiplier);
+            let declaration = account.declare_legacy(Arc::new(class));
 
-            if self.estimate_only {
-                let estimated_fee = declaration.estimate_fee().await?.overall_fee;
+            let max_fee = match fee_setting {
+                FeeSetting::Manual(fee) => fee,
+                FeeSetting::EstimateOnly | FeeSetting::None => {
+                    let estimated_fee = declaration.estimate_fee().await?.overall_fee;
 
-                println!(
-                    "{} ETH",
-                    format!(
-                        "{}",
-                        <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
-                    )
-                    .bright_yellow(),
-                );
-                return Ok(());
-            }
+                    if fee_setting.is_estimate_only() {
+                        println!(
+                            "{} ETH",
+                            format!(
+                                "{}",
+                                <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
+                            )
+                            .bright_yellow(),
+                        );
+                        return Ok(());
+                    }
 
-            (class_hash, declaration.send().await?.transaction_hash)
+                    // TODO: make buffer configurable
+                    let estimated_fee_with_buffer =
+                        estimated_fee * fee_multiplier_num / fee_multiplier_denom;
+
+                    estimated_fee_with_buffer.into()
+                }
+            };
+
+            (
+                class_hash,
+                declaration.max_fee(max_fee).send().await?.transaction_hash,
+            )
         } else {
             anyhow::bail!("failed to parse contract artifact");
         };

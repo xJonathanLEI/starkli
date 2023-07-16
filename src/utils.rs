@@ -1,7 +1,9 @@
 use std::time::Duration;
 
 use anyhow::Result;
+use bigdecimal::{BigDecimal, Zero};
 use colored::Colorize;
+use num_integer::Integer;
 use regex::Regex;
 use starknet::{
     core::types::{BlockId, BlockTag, FieldElement, StarknetError},
@@ -64,4 +66,36 @@ pub fn parse_felt_value(felt: &str) -> Result<FieldElement> {
     } else {
         Ok(FieldElement::from_hex_be(felt)?)
     }
+}
+
+#[allow(clippy::comparison_chain)]
+pub fn bigdecimal_to_felt<D>(dec: &BigDecimal, decimals: D) -> Result<FieldElement>
+where
+    D: Into<i64>,
+{
+    let decimals: i64 = decimals.into();
+
+    // Scale the bigint part up or down
+    let (bigint, exponent) = dec.as_bigint_and_exponent();
+
+    let mut biguint = match bigint.to_biguint() {
+        Some(value) => value,
+        None => anyhow::bail!("too many decimal places"),
+    };
+
+    if exponent < decimals {
+        for _ in 0..(decimals - exponent) {
+            biguint *= 10u32;
+        }
+    } else if exponent > decimals {
+        for _ in 0..(exponent - decimals) {
+            let (quotient, remainder) = biguint.div_rem(&10u32.into());
+            if !remainder.is_zero() {
+                anyhow::bail!("too many decimal places")
+            }
+            biguint = quotient;
+        }
+    }
+
+    Ok(FieldElement::from_byte_slice_be(&biguint.to_bytes_be())?)
 }

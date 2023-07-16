@@ -12,6 +12,7 @@ use starknet::{
 
 use crate::{
     account::{AccountConfig, AccountVariant, DeployedStatus, DeploymentStatus},
+    fee::{FeeArgs, FeeSetting},
     signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
@@ -24,20 +25,29 @@ pub struct Deploy {
     provider: ProviderArgs,
     #[clap(flatten)]
     signer: SignerArgs,
-    #[clap(
-        long,
-        help = "Only estimate transaction fee without sending transaction"
-    )]
-    estimate_only: bool,
+    #[clap(flatten)]
+    fee: FeeArgs,
     #[clap(help = "Path to the account config file")]
     file: PathBuf,
     #[clap(flatten)]
     verbosity: VerbosityArgs,
 }
 
+enum MaxFeeType {
+    Manual {
+        max_fee: FieldElement,
+    },
+    Estimated {
+        estimate: FieldElement,
+        estimate_with_buffer: FieldElement,
+    },
+}
+
 impl Deploy {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
+
+        let fee_setting = self.fee.into_setting()?;
 
         let provider = Arc::new(self.provider.into_provider());
         let signer = Arc::new(self.signer.into_signer()?);
@@ -90,29 +100,53 @@ impl Deploy {
             panic!("Unexpected account deployment address mismatch");
         }
 
-        // TODO: add option for manually specifying fees
-        let estimated_fee = account_deployment.estimate_fee().await?.overall_fee;
+        let max_fee = match fee_setting {
+            FeeSetting::Manual(fee) => MaxFeeType::Manual { max_fee: fee },
+            FeeSetting::EstimateOnly | FeeSetting::None => {
+                let estimated_fee = account_deployment.estimate_fee().await?.overall_fee;
 
-        // TODO: make buffer configurable
-        let estimated_fee_with_buffer = estimated_fee * 3 / 2;
+                // TODO: make buffer configurable
+                let estimated_fee_with_buffer = estimated_fee * 3 / 2;
 
-        let estimated_fee: FieldElement = estimated_fee.into();
-        if self.estimate_only {
-            println!(
-                "{} ETH",
-                format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
-            );
-            return Ok(());
+                let estimated_fee: FieldElement = estimated_fee.into();
+
+                if fee_setting.is_estimate_only() {
+                    println!(
+                        "{} ETH",
+                        format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                    );
+                    return Ok(());
+                }
+
+                MaxFeeType::Estimated {
+                    estimate: estimated_fee,
+                    estimate_with_buffer: estimated_fee_with_buffer.into(),
+                }
+            }
+        };
+
+        match max_fee {
+            MaxFeeType::Manual { max_fee } => {
+                eprintln!(
+                    "You've manually specified the account deployment fee to be {}. \
+                    Therefore, fund at least:\n    {}",
+                    format!("{} ETH", max_fee.to_big_decimal(18)).bright_yellow(),
+                    format!("{} ETH", max_fee.to_big_decimal(18)).bright_yellow(),
+                );
+            }
+            MaxFeeType::Estimated {
+                estimate,
+                estimate_with_buffer,
+            } => {
+                eprintln!(
+                    "The estimated account deployment fee is {}. \
+                    However, to avoid failure, fund at least:\n    {}",
+                    format!("{} ETH", estimate.to_big_decimal(18)).bright_yellow(),
+                    format!("{} ETH", estimate_with_buffer.to_big_decimal(18)).bright_yellow()
+                );
+            }
         }
 
-        let estimated_fee_with_buffer: FieldElement = estimated_fee_with_buffer.into();
-
-        eprintln!(
-            "The estimated account deployment fee is {}. \
-            However, to avoid failure, fund at least:\n    {}",
-            format!("{} ETH", estimated_fee.to_big_decimal(18)).bright_yellow(),
-            format!("{} ETH", estimated_fee_with_buffer.to_big_decimal(18)).bright_yellow()
-        );
         eprintln!(
             "to the following address:\n    {}",
             format!("{:#064x}", target_deployment_address).bright_yellow()
@@ -124,7 +158,7 @@ impl Deploy {
 
         // TODO: add option to check ETH balance before sending out tx
         let account_deployment_tx = account_deployment
-            .max_fee(estimated_fee_with_buffer)
+            .max_fee(max_fee.max_fee())
             .send()
             .await?
             .transaction_hash;
@@ -164,5 +198,17 @@ impl Deploy {
         std::fs::rename(temp_path, self.file)?;
 
         Ok(())
+    }
+}
+
+impl MaxFeeType {
+    pub fn max_fee(&self) -> FieldElement {
+        match self {
+            Self::Manual { max_fee } => *max_fee,
+            Self::Estimated {
+                estimate_with_buffer,
+                ..
+            } => *estimate_with_buffer,
+        }
     }
 }

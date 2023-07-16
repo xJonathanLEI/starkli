@@ -10,6 +10,7 @@ description = "Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for Starknet 
 anyhow = "1.0.71"
 async-trait = "0.1.68"
 auto_impl = "1.1.0"
+bigdecimal = "0.4.1"
 cairo-starknet-2-0-1 = { package = "cairo-lang-starknet", version = "=2.0.1" }
 chrono = "0.4.26"
 clap = { version = "4.3.8", features = ["derive", "env", "string"] }
@@ -21,6 +22,7 @@ hex = "0.4.3"
 hex-literal = "0.4.1"
 log = "0.4.19"
 num-bigint = "0.4.3"
+num-integer = "0.1.45"
 regex = "1.8.4"
 rpassword = "7.2.0"
 serde = { version = "1.0.164", features = ["derive"] }

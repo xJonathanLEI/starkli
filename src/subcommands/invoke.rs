@@ -16,6 +16,7 @@ use crate::{
     account::{AccountConfig, DeploymentStatus},
     address_book::AddressBookResolver,
     decode::FeltDecoder,
+    fee::{FeeArgs, FeeSetting},
     signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
@@ -34,11 +35,8 @@ pub struct Invoke {
         help = "Path to account config JSON file"
     )]
     account: PathBuf,
-    #[clap(
-        long,
-        help = "Only estimate transaction fee without sending transaction"
-    )]
-    estimate_only: bool,
+    #[clap(flatten)]
+    fee: FeeArgs,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(help = "One or more contract calls. See documentation for more details")]
@@ -50,6 +48,8 @@ pub struct Invoke {
 impl Invoke {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
+
+        let fee_setting = self.fee.into_setting()?;
 
         let provider = Arc::new(self.provider.into_provider());
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
@@ -117,22 +117,31 @@ impl Invoke {
 
         let execution = account.execute(calls).fee_estimate_multiplier(1.5f64);
 
-        if self.estimate_only {
-            let estimated_fee = execution.estimate_fee().await?.overall_fee;
+        let max_fee = match fee_setting {
+            FeeSetting::Manual(fee) => fee,
+            FeeSetting::EstimateOnly | FeeSetting::None => {
+                let estimated_fee = execution.estimate_fee().await?.overall_fee;
 
-            println!(
-                "{} ETH",
-                format!(
-                    "{}",
-                    <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
-                )
-                .bright_yellow(),
-            );
-            return Ok(());
-        }
+                if fee_setting.is_estimate_only() {
+                    println!(
+                        "{} ETH",
+                        format!(
+                            "{}",
+                            <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
+                        )
+                        .bright_yellow(),
+                    );
+                    return Ok(());
+                }
 
-        // TODO: make buffer configurable
-        let invoke_tx = execution.send().await?.transaction_hash;
+                // TODO: make buffer configurable
+                let estimated_fee_with_buffer = estimated_fee * 3 / 2;
+
+                estimated_fee_with_buffer.into()
+            }
+        };
+
+        let invoke_tx = execution.max_fee(max_fee).send().await?.transaction_hash;
         eprintln!(
             "Invoke transaction: {}",
             format!("{:#064x}", invoke_tx).bright_yellow()
