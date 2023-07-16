@@ -28,7 +28,7 @@ pub enum AnySignerSignError {
 
 #[derive(Debug, Clone, Parser)]
 pub struct SignerArgs {
-    #[clap(long, help = "Path to keystore JSON file")]
+    #[clap(long, help = keystore_help())]
     keystore: Option<String>,
     #[clap(
         long,
@@ -140,4 +140,11 @@ impl SignerArgs {
 
         Ok(AnySigner::LocalWallet(LocalWallet::from_signing_key(key)))
     }
+}
+
+fn keystore_help() -> String {
+    format!(
+        "Path to keystore JSON file [env: STARKNET_KEYSTORE={}]",
+        std::env::var("STARKNET_KEYSTORE").unwrap_or_default()
+    )
 }
