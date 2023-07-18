@@ -13,6 +13,7 @@ use starknet::{
 use crate::{
     account::{AccountConfig, AccountVariant, DeployedStatus, DeploymentStatus},
     fee::{FeeArgs, FeeSetting},
+    path::ExpandedPathbufParser,
     signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
@@ -27,7 +28,10 @@ pub struct Deploy {
     signer: SignerArgs,
     #[clap(flatten)]
     fee: FeeArgs,
-    #[clap(help = "Path to the account config file")]
+    #[clap(
+        value_parser = ExpandedPathbufParser,
+        help = "Path to the account config file"
+    )]
     file: PathBuf,
     #[clap(flatten)]
     verbosity: VerbosityArgs,

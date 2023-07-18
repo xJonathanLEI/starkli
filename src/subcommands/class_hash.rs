@@ -4,9 +4,14 @@ use anyhow::Result;
 use clap::Parser;
 use starknet::core::types::contract::{legacy::LegacyContractClass, CompiledClass, SierraClass};
 
+use crate::path::ExpandedPathbufParser;
+
 #[derive(Debug, Parser)]
 pub struct ClassHash {
-    #[clap(help = "Path to contract artifact file")]
+    #[clap(
+        value_parser = ExpandedPathbufParser,
+        help = "Path to contract artifact file"
+    )]
     file: PathBuf,
 }
 

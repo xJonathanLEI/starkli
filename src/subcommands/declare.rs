@@ -16,6 +16,7 @@ use crate::{
     account::{AccountConfig, DeploymentStatus},
     casm::{CasmArgs, CasmHashSource},
     fee::{FeeArgs, FeeSetting},
+    path::ExpandedPathbufParser,
     signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
@@ -33,6 +34,7 @@ pub struct Declare {
     #[clap(
         long,
         env = "STARKNET_ACCOUNT",
+        value_parser = ExpandedPathbufParser,
         help = "Path to account config JSON file"
     )]
     account: PathBuf,
@@ -40,7 +42,10 @@ pub struct Declare {
     fee: FeeArgs,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
-    #[clap(help = "Path to contract artifact file")]
+    #[clap(
+        value_parser = ExpandedPathbufParser,
+        help = "Path to contract artifact file"
+    )]
     file: PathBuf,
     #[clap(flatten)]
     verbosity: VerbosityArgs,

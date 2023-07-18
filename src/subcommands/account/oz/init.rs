@@ -11,6 +11,7 @@ use starknet::{
 
 use crate::{
     account::{AccountConfig, AccountVariant, DeploymentStatus, OzAccountConfig, UndeployedStatus},
+    path::ExpandedPathbufParser,
     signer::SignerArgs,
 };
 
@@ -29,7 +30,10 @@ pub struct Init {
         help = "Overwrite the account config file if it already exists"
     )]
     force: bool,
-    #[clap(help = "Path to save the account config file")]
+    #[clap(
+        value_parser = ExpandedPathbufParser,
+        help = "Path to save the account config file"
+    )]
     output: PathBuf,
 }
 

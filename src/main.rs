@@ -12,6 +12,7 @@ mod compiler;
 mod decode;
 mod fee;
 mod network;
+mod path;
 mod provider;
 mod signer;
 mod subcommands;

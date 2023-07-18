@@ -5,6 +5,8 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::signers::SigningKey;
 
+use crate::path::ExpandedPathbufParser;
+
 #[derive(Debug, Parser)]
 pub struct New {
     #[clap(
@@ -14,7 +16,10 @@ pub struct New {
     password: Option<String>,
     #[clap(long, help = "Overwrite the file if it already exists")]
     force: bool,
-    #[clap(help = "Path to save the JSON keystore")]
+    #[clap(
+        value_parser = ExpandedPathbufParser,
+        help = "Path to save the JSON keystore"
+    )]
     file: PathBuf,
 }
 

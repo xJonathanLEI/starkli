@@ -5,6 +5,8 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::signers::SigningKey;
 
+use crate::path::ExpandedPathbufParser;
+
 #[derive(Debug, Parser)]
 pub struct Inspect {
     #[clap(
@@ -14,7 +16,10 @@ pub struct Inspect {
     password: Option<String>,
     #[clap(long, help = "Print the public key only")]
     raw: bool,
-    #[clap(help = "Path to the JSON keystore")]
+    #[clap(
+        value_parser = ExpandedPathbufParser,
+        help = "Path to the JSON keystore"
+    )]
     file: PathBuf,
 }
 

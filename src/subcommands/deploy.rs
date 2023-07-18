@@ -19,6 +19,7 @@ use crate::{
     address_book::AddressBookResolver,
     decode::FeltDecoder,
     fee::{FeeArgs, FeeSetting},
+    path::ExpandedPathbufParser,
     signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
@@ -44,6 +45,7 @@ pub struct Deploy {
     #[clap(
         long,
         env = "STARKNET_ACCOUNT",
+        value_parser = ExpandedPathbufParser,
         help = "Path to account config JSON file"
     )]
     account: PathBuf,
