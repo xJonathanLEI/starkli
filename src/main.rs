@@ -100,6 +100,15 @@ enum Subcommands {
     //
     #[clap(about = "Generate shell completions script")]
     Completions(Completions),
+    //
+    // Experimental
+    //
+    #[clap(
+        about = "Experimental commands for fun and profit",
+        long_about = "Experimental new commands that are shipped with no stability guarantee. \
+            They might break or be removed anytime."
+    )]
+    Lab(Lab),
 }
 
 #[tokio::main]
@@ -138,5 +147,6 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::Declare(cmd) => cmd.run().await,
         Subcommands::Deploy(cmd) => cmd.run().await,
         Subcommands::Completions(cmd) => cmd.run(),
+        Subcommands::Lab(cmd) => cmd.run(),
     }
 }

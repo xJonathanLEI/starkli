@@ -75,3 +75,6 @@ pub use call::Call;
 
 mod invoke;
 pub use invoke::Invoke;
+
+mod lab;
+pub use lab::Lab;
