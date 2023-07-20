@@ -80,7 +80,7 @@ install() {
         RELEASE_TAG="$(curl -s "https://api.github.com/repos/xJonathanLEI/starkli/releases/latest" | grep "tag_name" | cut -d \" -f 4)"
         release_path="latest"
     else
-        echo "Installing version ${RELEASE_TAG}"
+        echo "Installing version ${RELEASE_TAG}..."
         release_path="tags/${RELEASE_TAG}"
     fi
 
@@ -113,6 +113,8 @@ install() {
 download_release_file() {
     echo "Downloading release file from GitHub..."
     if command -v curl >/dev/null 2>&1; then
+        local http_code
+
         http_code="$(curl -# -L "$FILE_URL" -o "$TEMP_FILE_NAME" --write-out "%{http_code}")"
         if [ "$http_code" -ne 200 ]; then
             echo "${red}Couldn't download release file for tag '${RELEASE_TAG}' from GitHub [${http_code}].${normal}"
