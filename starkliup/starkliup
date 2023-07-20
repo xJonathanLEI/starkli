@@ -45,7 +45,6 @@ main() {
                 usage
                 exit 0
                 ;;
-
             -v|--version)
                 if [ $# -gt 1 ]; then
                     RELEASE_TAG="$2"
