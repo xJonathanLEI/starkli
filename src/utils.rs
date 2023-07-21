@@ -40,7 +40,7 @@ where
             Err(err) => return Err(err.into()),
         }
 
-        tokio::time::sleep(Duration::from_secs(10)).await;
+        tokio::time::sleep(Duration::from_secs(5)).await;
     }
 }
 
