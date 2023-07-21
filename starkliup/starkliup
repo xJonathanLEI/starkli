@@ -83,8 +83,9 @@ install() {
         echo "Installing the latest version of starkli..."
         echo "Fetching the latest release tag from GitHub..."
         RELEASE_TAG="$(curl -s "https://api.github.com/repos/xJonathanLEI/starkli/releases/latest" | grep "tag_name" | cut -d \" -f 4)"
+        echo "Latest version found: ${yellow}${RELEASE_TAG}${normal}"
     else
-        echo "Installing version ${RELEASE_TAG}..."
+        echo "Installing version ${yellow}${RELEASE_TAG}${normal}..."
     fi
 
     detect_host_triple
