@@ -14,7 +14,7 @@ STARKLI_BIN_PATH="${STARKLI_BIN_DIR}/starkli"
 
 # This MUST be updated whenever this file is changed.
 # TODO: add CI check to ensure this.
-STARKLIUP_VERSION="2023-06-25"
+STARKLIUP_VERSION="2023-07-21"
 
 # Fancy color setup:
 #   https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors
@@ -47,7 +47,14 @@ main() {
                 ;;
             -v|--version)
                 if [ $# -gt 1 ]; then
-                    RELEASE_TAG="$2"
+                    case $2 in
+                        "v"*)
+                            RELEASE_TAG="$2"
+                        ;;
+                        *)
+                            RELEASE_TAG="v$2"
+                        ;;
+                    esac
                     shift
                 else
                     echo "${red}Version tag is missing${normal}" 1>&2
