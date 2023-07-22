@@ -28,7 +28,7 @@ starkli invoke 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc
 
 You might be able to simplify invoke commands by leveraging [argument resolution](./argument-resolution.md). In this section, we will take the `ETH` transfer command above and try to simplify it.
 
-First, since the `0x021074834d251687180a8d007c5ffc5819e3e68993de9d2d2c32a67d9f3091ff` address is a well-known address available on the built-in address book as the `eth` entry, we can replace it with the use of the [`addr` scheme](./argument-resolution.md#addr):
+First, since the `0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7` address is a well-known address available on the built-in address book as the `eth` entry, we can replace it with the use of the [`addr` scheme](./argument-resolution.md#addr):
 
 ```console
 starkli invoke addr:eth transfer 0x1234 100 0
