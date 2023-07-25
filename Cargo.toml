@@ -5,6 +5,7 @@ authors = ["Jonathan LEI <me@xjonathan.dev>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
 description = "Starkli (/ˈstɑːrklaɪ/), a blazing fast CLI tool for Starknet powered by starknet-rs"
+repository = "https://github.com/xJonathanLEI/starkli/"
 
 [dependencies]
 anyhow = "1.0.71"
