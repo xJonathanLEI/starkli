@@ -197,26 +197,3 @@ jobs:
           files: "target/${{ matrix.target }}/release/starkli-${{ matrix.target }}.tar.gz"
           generate_release_notes: true
           draft: true
-
-  crates-io-release:
-    name: "Release to crates.io"
-    runs-on: "ubuntu-latest"
-
-    needs:
-      - "crate-info"
-      - "commit-branch-check"
-      - "crate-version-check"
-      - "release-non-apple"
-      - "release-apple"
-
-    steps:
-      - name: "Checkout source code"
-        uses: "actions/checkout@v3"
-
-      - name: "Login to crates.io"
-        run: |
-          cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
-
-      - name: "Public crate"
-        run: |
-          cargo publish

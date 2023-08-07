@@ -5,6 +5,10 @@ use cairo_starknet_2_0_1::{
     casm_contract_class::CasmContractClass as Cairo201CasmClass,
     contract_class::ContractClass as Cairo201Class,
 };
+use cairo_starknet_2_1_0::{
+    casm_contract_class::CasmContractClass as Cairo210CasmClass,
+    contract_class::ContractClass as Cairo210Class,
+};
 use clap::{builder::PossibleValue, ValueEnum};
 use starknet::core::types::{
     contract::{CompiledClass, SierraClass},
@@ -20,6 +24,7 @@ pub struct BuiltInCompiler {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompilerVersion {
     V2_0_1,
+    V2_1_0,
 }
 
 impl BuiltInCompiler {
@@ -47,6 +52,16 @@ impl BuiltInCompiler {
 
                 serde_json::to_string(&casm_contract)?
             }
+            CompilerVersion::V2_1_0 => {
+                // TODO: directly convert type without going through JSON
+                let contract_class: Cairo210Class = serde_json::from_str(&sierra_class_json)?;
+
+                // TODO: implement the `validate_compatible_sierra_version` call
+
+                let casm_contract = Cairo210CasmClass::from_contract_class(contract_class, false)?;
+
+                serde_json::to_string(&casm_contract)?
+            }
         };
 
         // TODO: directly convert type without going through JSON
@@ -66,12 +81,13 @@ impl Default for CompilerVersion {
 
 impl ValueEnum for CompilerVersion {
     fn value_variants<'a>() -> &'a [Self] {
-        &[Self::V2_0_1]
+        &[Self::V2_0_1, Self::V2_1_0]
     }
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         match self {
             Self::V2_0_1 => Some(PossibleValue::new("2.0.1").alias("v2.0.1")),
+            Self::V2_1_0 => Some(PossibleValue::new("2.1.0").alias("v2.1.0")),
         }
     }
 }
@@ -91,6 +107,7 @@ impl Display for CompilerVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             CompilerVersion::V2_0_1 => write!(f, "2.0.1"),
+            CompilerVersion::V2_1_0 => write!(f, "2.1.0"),
         }
     }
 }

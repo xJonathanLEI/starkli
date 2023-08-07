@@ -40,14 +40,14 @@ If you have [Rust](https://www.rust-lang.org/) installed, it's also possible to 
 >
 > Shell completions would _not_ be configured when you install `starkli` from source. You need to manually [set up shell completions](./shell-completions.md) for it to work.
 
-To install from source from [crates.io](https://crates.io/crates/starkli):
-
-```console
-cargo install --locked starkli
-```
-
-Alternatively, to install from [GitHub](https://github.com/xJonathanLEI/starkli):
+To install from [GitHub](https://github.com/xJonathanLEI/starkli):
 
 ```console
 cargo install --locked --git https://github.com/xJonathanLEI/starkli
 ```
+
+> ℹ️ **Note**
+>
+> It's not recommended to install Starkli from [crates.io](https://crates.io/), as Starkli is no longer published there there after v0.1.8.
+>
+> This is because Starkli uses Git dependencies due to the need to bundle multiple SemVer-compatible versions of the Sierra compiler.
