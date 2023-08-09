@@ -73,6 +73,10 @@ Press [ENTER] once you've funded the address.
 
 As instructed, you must pre-fund the address with `ETH` to be able to continue. Send enough `ETH` to the address, and then press the Enter key.
 
+> 💡 **Tips**
+>
+> You can use the `starkli balance` command (probably in a separate terminal session) to check whether the destinated account address has been successfully funded.
+
 An account deployment transaction will be sent out. Once the transaction is confirmed, your account will be ready to use.
 
 Again, to avoid having to pass the account file to each command invocation, we can export the `STARKNET_ACCOUNT` variable:
