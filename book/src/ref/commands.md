@@ -16,6 +16,7 @@ Starkli offers the following commands:
 - state-update
 - transaction-receipt
 - chain-id
+- balance
 - nonce
 - storage
 - class-hash-at

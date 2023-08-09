@@ -64,6 +64,8 @@ enum Subcommands {
     TransactionReceipt(TransactionReceipt),
     #[clap(about = "Get Starknet network ID")]
     ChainId(ChainId),
+    #[clap(about = "Get native gas token (currently ETH) balance")]
+    Balance(Balance),
     #[clap(about = "Get nonce for a certain contract")]
     Nonce(Nonce),
     #[clap(about = "Get storage value for a slot at a contract")]
@@ -135,6 +137,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         Subcommands::StateUpdate(cmd) => cmd.run().await,
         Subcommands::TransactionReceipt(cmd) => cmd.run().await,
         Subcommands::ChainId(cmd) => cmd.run().await,
+        Subcommands::Balance(cmd) => cmd.run().await,
         Subcommands::Nonce(cmd) => cmd.run().await,
         Subcommands::Storage(cmd) => cmd.run().await,
         Subcommands::ClassHashAt(cmd) => cmd.run().await,

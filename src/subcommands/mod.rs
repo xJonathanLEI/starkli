@@ -49,6 +49,9 @@ pub use class_at::ClassAt;
 mod class_hash_at;
 pub use class_hash_at::ClassHashAt;
 
+mod balance;
+pub use balance::Balance;
+
 mod nonce;
 pub use nonce::Nonce;
 
