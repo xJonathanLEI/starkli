@@ -8,9 +8,13 @@ use starknet::{
     signers::Signer,
 };
 
+mod braavos;
+pub use braavos::BraavosAccountFactory;
+
 pub enum AnyAccountFactory<S, P> {
     OpenZeppelin(OpenZeppelinAccountFactory<S, P>),
     Argent(ArgentAccountFactory<S, P>),
+    Braavos(BraavosAccountFactory<S, P>),
 }
 
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
@@ -27,6 +31,7 @@ where
         match self {
             AnyAccountFactory::OpenZeppelin(inner) => inner.class_hash(),
             AnyAccountFactory::Argent(inner) => inner.class_hash(),
+            AnyAccountFactory::Braavos(inner) => inner.class_hash(),
         }
     }
 
@@ -34,6 +39,7 @@ where
         match self {
             AnyAccountFactory::OpenZeppelin(inner) => inner.calldata(),
             AnyAccountFactory::Argent(inner) => inner.calldata(),
+            AnyAccountFactory::Braavos(inner) => inner.calldata(),
         }
     }
 
@@ -41,6 +47,7 @@ where
         match self {
             AnyAccountFactory::OpenZeppelin(inner) => inner.chain_id(),
             AnyAccountFactory::Argent(inner) => inner.chain_id(),
+            AnyAccountFactory::Braavos(inner) => inner.chain_id(),
         }
     }
 
@@ -48,6 +55,7 @@ where
         match self {
             AnyAccountFactory::OpenZeppelin(inner) => inner.provider(),
             AnyAccountFactory::Argent(inner) => inner.provider(),
+            AnyAccountFactory::Braavos(inner) => inner.provider(),
         }
     }
 
@@ -58,6 +66,7 @@ where
         match self {
             AnyAccountFactory::OpenZeppelin(inner) => inner.sign_deployment(deployment).await,
             AnyAccountFactory::Argent(inner) => inner.sign_deployment(deployment).await,
+            AnyAccountFactory::Braavos(inner) => inner.sign_deployment(deployment).await,
         }
     }
 }

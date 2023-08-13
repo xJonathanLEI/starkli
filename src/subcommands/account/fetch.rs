@@ -11,8 +11,9 @@ use starknet::{
 
 use crate::{
     account::{
-        AccountConfig, AccountVariant, AccountVariantType, ArgentAccountConfig, DeployedStatus,
-        DeploymentStatus, OzAccountConfig, KNOWN_ACCOUNT_CLASSES,
+        AccountConfig, AccountVariant, AccountVariantType, ArgentAccountConfig,
+        BraavosMultisigConfig, BraavosSigner, DeployedStatus, DeploymentStatus, OzAccountConfig,
+        KNOWN_ACCOUNT_CLASSES,
     },
     verbosity::VerbosityArgs,
     ProviderArgs,
@@ -139,6 +140,74 @@ impl Fetch {
                     implementation,
                     signer,
                     guardian,
+                })
+            }
+            AccountVariantType::Braavos => {
+                let implementation = provider
+                    .call(
+                        FunctionCall {
+                            contract_address: address,
+                            entry_point_selector: selector!("get_implementation"),
+                            calldata: vec![],
+                        },
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await?[0];
+                let signers = provider
+                    .call(
+                        FunctionCall {
+                            contract_address: address,
+                            entry_point_selector: selector!("get_signers"),
+                            calldata: vec![],
+                        },
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await?;
+                let multisig = provider
+                    .call(
+                        FunctionCall {
+                            contract_address: address,
+                            entry_point_selector: selector!("get_multisig"),
+                            calldata: vec![],
+                        },
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await?[0];
+
+                let signers = {
+                    let mut buffer = vec![];
+
+                    let num_signers = TryInto::<u64>::try_into(signers[0])? as usize;
+
+                    for ind_signer in 0..num_signers {
+                        let base_offset = ind_signer * 8 + 1;
+
+                        if Into::<FieldElement>::into(ind_signer as u64) != signers[base_offset] {
+                            anyhow::bail!("unable to decode Braavos signers: index mismatch");
+                        }
+
+                        let signer =
+                            BraavosSigner::decode(&signers[(base_offset + 1)..(base_offset + 8)])?;
+
+                        buffer.push(signer);
+                    }
+
+                    buffer
+                };
+
+                let multisig = if multisig == FieldElement::ZERO {
+                    BraavosMultisigConfig::Off
+                } else {
+                    BraavosMultisigConfig::On {
+                        num_signers: TryInto::<u64>::try_into(multisig)? as usize,
+                    }
+                };
+
+                AccountVariant::Braavos(crate::account::BraavosAccountConfig {
+                    version: 1,
+                    implementation,
+                    multisig,
+                    signers,
                 })
             }
         };

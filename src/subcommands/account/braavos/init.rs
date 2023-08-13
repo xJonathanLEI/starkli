@@ -10,14 +10,22 @@ use starknet::{
 };
 
 use crate::{
-    account::{AccountConfig, AccountVariant, DeploymentStatus, OzAccountConfig, UndeployedStatus},
+    account::{
+        AccountConfig, AccountVariant, BraavosAccountConfig, BraavosDeploymentContext,
+        BraavosMultisigConfig, BraavosSigner, BraavosStarkSigner, DeploymentContext,
+        DeploymentStatus, UndeployedStatus,
+    },
     path::ExpandedPathbufParser,
     signer::SignerArgs,
 };
 
-/// OpenZeppelin account contract v0.6.1 compiled with cairo-lang v0.11.0.2
-const OZ_ACCOUNT_CLASS_HASH: FieldElement =
-    felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292");
+/// Official hashes used as of extension version 3.21.10
+const BRAAVOS_PROXY_CLASS_HASH: FieldElement =
+    felt!("0x03131fa018d520a037686ce3efddeab8f28895662f019ca3ca18a626650f7d1e");
+const BRAAVOS_MOCK_IMPL_CLASS_HASH: FieldElement =
+    felt!("0x05aa23d5bb71ddaa783da7ea79d405315bafa7cf0387a74f4593578c3e9e6570");
+const BRAAVOS_IMPL_CLASS_HASH: FieldElement =
+    felt!("0x02c2b8f559e1221468140ad7b2352b1a5be32660d0bf1a3ae3a054a4ec5254e4");
 
 #[derive(Debug, Parser)]
 pub struct Init {
@@ -50,14 +58,20 @@ impl Init {
 
         let account_config = AccountConfig {
             version: 1,
-            variant: AccountVariant::OpenZeppelin(OzAccountConfig {
+            variant: AccountVariant::Braavos(BraavosAccountConfig {
                 version: 1,
-                public_key: signer.get_public_key().await?.scalar(),
+                implementation: BRAAVOS_IMPL_CLASS_HASH,
+                multisig: BraavosMultisigConfig::Off,
+                signers: vec![BraavosSigner::Stark(BraavosStarkSigner {
+                    public_key: signer.get_public_key().await?.scalar(),
+                })],
             }),
             deployment: DeploymentStatus::Undeployed(UndeployedStatus {
-                class_hash: OZ_ACCOUNT_CLASS_HASH,
+                class_hash: BRAAVOS_PROXY_CLASS_HASH,
                 salt,
-                context: None,
+                context: Some(DeploymentContext::Braavos(BraavosDeploymentContext {
+                    mock_implementation: BRAAVOS_MOCK_IMPL_CLASS_HASH,
+                })),
             }),
         };
 

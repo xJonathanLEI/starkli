@@ -63,6 +63,7 @@ impl Init {
             deployment: DeploymentStatus::Undeployed(UndeployedStatus {
                 class_hash: ARGENT_PROXY_CLASS_HASH,
                 salt,
+                context: None,
             }),
         };
 

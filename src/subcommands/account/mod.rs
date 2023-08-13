@@ -13,6 +13,9 @@ use oz::Oz;
 mod argent;
 use argent::Argent;
 
+mod braavos;
+use braavos::Braavos;
+
 #[derive(Debug, Parser)]
 pub struct Account {
     #[clap(subcommand)]
@@ -29,6 +32,8 @@ enum Subcommands {
     Oz(Oz),
     #[clap(about = "Create and manage Argent X account contracts")]
     Argent(Argent),
+    #[clap(about = "Create and manage Braavos account contracts")]
+    Braavos(Braavos),
 }
 
 impl Account {
@@ -38,6 +43,7 @@ impl Account {
             Subcommands::Deploy(cmd) => cmd.run().await,
             Subcommands::Oz(cmd) => cmd.run().await,
             Subcommands::Argent(cmd) => cmd.run().await,
+            Subcommands::Braavos(cmd) => cmd.run().await,
         }
     }
 }

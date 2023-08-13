@@ -11,8 +11,11 @@ use starknet::{
 };
 
 use crate::{
-    account::{AccountConfig, AccountVariant, DeployedStatus, DeploymentStatus},
-    account_factory::AnyAccountFactory,
+    account::{
+        AccountConfig, AccountVariant, BraavosMultisigConfig, BraavosSigner, DeployedStatus,
+        DeploymentContext, DeploymentStatus,
+    },
+    account_factory::{AnyAccountFactory, BraavosAccountFactory},
     fee::{FeeArgs, FeeSetting},
     path::ExpandedPathbufParser,
     signer::SignerArgs,
@@ -117,6 +120,46 @@ impl Deploy {
                     )
                     .await?,
                 )
+            }
+            AccountVariant::Braavos(braavos_config) => {
+                if !matches!(braavos_config.multisig, BraavosMultisigConfig::Off) {
+                    anyhow::bail!("Braavos accounts cannot be deployed with multisig on");
+                }
+                if braavos_config.signers.len() != 1 {
+                    anyhow::bail!("Braavos accounts can only be deployed with one seed signer");
+                }
+
+                match &undeployed_status.context {
+                    Some(DeploymentContext::Braavos(context)) => {
+                        // Safe to unwrap as we already checked for length
+                        match braavos_config.signers.get(0).unwrap() {
+                            BraavosSigner::Stark(stark_signer) => {
+                                // Makes sure we're using the right key
+                                if signer_public_key != stark_signer.public_key {
+                                    anyhow::bail!(
+                                        "public key mismatch. \
+                                        Expected: {:#064x}; actual: {:#064x}.",
+                                        stark_signer.public_key,
+                                        signer_public_key
+                                    );
+                                }
+
+                                AnyAccountFactory::Braavos(
+                                    BraavosAccountFactory::new(
+                                        undeployed_status.class_hash,
+                                        context.mock_implementation,
+                                        braavos_config.implementation,
+                                        chain_id,
+                                        signer.clone(),
+                                        provider.clone(),
+                                    )
+                                    .await?,
+                                )
+                            } // Reject other variants as we add more types
+                        }
+                    }
+                    _ => anyhow::bail!("missing Braavos deployment context"),
+                }
             }
         };
 
