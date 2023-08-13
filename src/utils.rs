@@ -6,7 +6,7 @@ use colored::Colorize;
 use num_integer::Integer;
 use regex::Regex;
 use starknet::{
-    core::types::{BlockId, BlockTag, FieldElement, StarknetError},
+    core::types::{BlockId, BlockTag, ExecutionResult, FieldElement, StarknetError},
     providers::{MaybeUnknownErrorCode, Provider, ProviderError, StarknetErrorWithMessage},
 };
 
@@ -20,16 +20,24 @@ where
         // time, as full nodes don't have access to failed transactions and would report them
         // as `NotReceived`.
         match provider.get_transaction_receipt(transaction_hash).await {
-            Ok(_) => {
+            Ok(receipt) => {
                 // With JSON-RPC, once we get a receipt, the transaction must have been confirmed.
                 // Rejected transactions simply aren't available. This needs to be changed once we
                 // implement the sequencer fallback.
 
-                eprintln!(
-                    "Transaction {} confirmed",
-                    format!("{:#064x}", transaction_hash).bright_yellow()
-                );
-                return Ok(());
+                match receipt.execution_result() {
+                    ExecutionResult::Succeeded => {
+                        eprintln!(
+                            "Transaction {} confirmed",
+                            format!("{:#064x}", transaction_hash).bright_yellow()
+                        );
+
+                        return Ok(());
+                    }
+                    ExecutionResult::Reverted { reason } => {
+                        return Err(anyhow::anyhow!("transaction reverted: {}", reason));
+                    }
+                }
             }
             Err(ProviderError::StarknetError(StarknetErrorWithMessage {
                 code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),

@@ -275,6 +275,18 @@ impl Provider for ExtendedProvider {
         <AnyProvider as Provider>::estimate_fee(&self.provider, request, block_id).await
     }
 
+    async fn estimate_message_fee<M, B>(
+        &self,
+        message: M,
+        block_id: B,
+    ) -> Result<FeeEstimate, ProviderError<Self::Error>>
+    where
+        M: AsRef<MsgFromL1> + Send + Sync,
+        B: AsRef<BlockId> + Send + Sync,
+    {
+        <AnyProvider as Provider>::estimate_message_fee(&self.provider, message, block_id).await
+    }
+
     async fn block_number(&self) -> Result<u64, ProviderError<Self::Error>> {
         <AnyProvider as Provider>::block_number(&self.provider).await
     }
