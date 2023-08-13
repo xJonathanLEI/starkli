@@ -35,6 +35,14 @@ starkli block-number
 
 which is the same as the running with the `--rpc` option.
 
+> 💡 **Tips**
+>
+> Each Starkli version only works with one specific JSON-RPC specification version. To check the supported JSON-RPC version, run the verbose version output command:
+>
+> ```console
+> starkli -vV
+> ```
+
 ## Sequencer gateway
 
 > ⚠️ **Warning**
