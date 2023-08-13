@@ -26,7 +26,7 @@ const VERSION_STRING_VERBOSE: &str = concat!(
     " (",
     env!("VERGEN_GIT_SHA"),
     ")\n",
-    "JSON-RPC version: 0.3.0"
+    "JSON-RPC version: 0.4.0"
 );
 
 #[derive(Debug, Parser)]
