@@ -10,6 +10,9 @@ use deploy::Deploy;
 mod oz;
 use oz::Oz;
 
+mod argent;
+use argent::Argent;
+
 #[derive(Debug, Parser)]
 pub struct Account {
     #[clap(subcommand)]
@@ -24,6 +27,8 @@ enum Subcommands {
     Deploy(Deploy),
     #[clap(about = "Create and manage OpenZeppelin account contracts")]
     Oz(Oz),
+    #[clap(about = "Create and manage Argent X account contracts")]
+    Argent(Argent),
 }
 
 impl Account {
@@ -32,6 +37,7 @@ impl Account {
             Subcommands::Fetch(cmd) => cmd.run().await,
             Subcommands::Deploy(cmd) => cmd.run().await,
             Subcommands::Oz(cmd) => cmd.run().await,
+            Subcommands::Argent(cmd) => cmd.run().await,
         }
     }
 }

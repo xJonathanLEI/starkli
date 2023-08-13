@@ -11,8 +11,8 @@ use starknet::{
 
 use crate::{
     account::{
-        AccountConfig, AccountVariant, AccountVariantType, DeployedStatus, DeploymentStatus,
-        OzAccountConfig, KNOWN_ACCOUNT_CLASSES,
+        AccountConfig, AccountVariant, AccountVariantType, ArgentAccountConfig, DeployedStatus,
+        DeploymentStatus, OzAccountConfig, KNOWN_ACCOUNT_CLASSES,
     },
     verbosity::VerbosityArgs,
     ProviderArgs,
@@ -84,7 +84,7 @@ impl Fetch {
             None => return Ok(()),
         };
 
-        let account = match known_class.variant {
+        let variant = match known_class.variant {
             AccountVariantType::OpenZeppelin => {
                 let public_key = provider
                     .call(
@@ -97,18 +97,59 @@ impl Fetch {
                     )
                     .await?[0];
 
-                AccountConfig {
+                AccountVariant::OpenZeppelin(OzAccountConfig {
                     version: 1,
-                    variant: AccountVariant::OpenZeppelin(OzAccountConfig {
-                        version: 1,
-                        public_key,
-                    }),
-                    deployment: DeploymentStatus::Deployed(DeployedStatus {
-                        class_hash,
-                        address,
-                    }),
-                }
+                    public_key,
+                })
             }
+            AccountVariantType::Argent => {
+                let implementation = provider
+                    .call(
+                        FunctionCall {
+                            contract_address: address,
+                            entry_point_selector: selector!("get_implementation"),
+                            calldata: vec![],
+                        },
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await?[0];
+                let signer = provider
+                    .call(
+                        FunctionCall {
+                            contract_address: address,
+                            entry_point_selector: selector!("getSigner"),
+                            calldata: vec![],
+                        },
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await?[0];
+                let guardian = provider
+                    .call(
+                        FunctionCall {
+                            contract_address: address,
+                            entry_point_selector: selector!("getGuardian"),
+                            calldata: vec![],
+                        },
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await?[0];
+
+                AccountVariant::Argent(ArgentAccountConfig {
+                    version: 1,
+                    implementation,
+                    signer,
+                    guardian,
+                })
+            }
+        };
+
+        let account = AccountConfig {
+            version: 1,
+            variant,
+            deployment: DeploymentStatus::Deployed(DeployedStatus {
+                class_hash,
+                address,
+            }),
         };
 
         let mut file = std::fs::File::create(&output)?;

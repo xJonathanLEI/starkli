@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    accounts::{AccountFactory, OpenZeppelinAccountFactory},
+    accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory},
     core::types::FieldElement,
     providers::Provider,
     signers::Signer,
@@ -12,6 +12,7 @@ use starknet::{
 
 use crate::{
     account::{AccountConfig, AccountVariant, DeployedStatus, DeploymentStatus},
+    account_factory::AnyAccountFactory,
     fee::{FeeArgs, FeeSetting},
     path::ExpandedPathbufParser,
     signer::SignerArgs,
@@ -63,10 +64,7 @@ impl Deploy {
         let mut account: AccountConfig =
             serde_json::from_reader(&mut std::fs::File::open(&self.file)?)?;
 
-        #[allow(clippy::infallible_destructuring_match)]
-        let oz_config = match &account.variant {
-            AccountVariant::OpenZeppelin(inner) => inner,
-        };
+        let signer_public_key = signer.get_public_key().await?.scalar();
 
         let undeployed_status = match &account.deployment {
             DeploymentStatus::Undeployed(inner) => inner,
@@ -75,25 +73,52 @@ impl Deploy {
             }
         };
 
-        // Makes sure we're using the right key
-        let signer_public_key = signer.get_public_key().await?.scalar();
-        if signer_public_key != oz_config.public_key {
-            anyhow::bail!(
-                "public key mismatch. Expected: {:#064x}; actual: {:#064x}.",
-                oz_config.public_key,
-                signer_public_key
-            );
-        }
-
         let chain_id = provider.chain_id().await?;
 
-        let factory = OpenZeppelinAccountFactory::new(
-            undeployed_status.class_hash,
-            chain_id,
-            signer.clone(),
-            provider.clone(),
-        )
-        .await?;
+        let factory = match &account.variant {
+            AccountVariant::OpenZeppelin(oz_config) => {
+                // Makes sure we're using the right key
+                if signer_public_key != oz_config.public_key {
+                    anyhow::bail!(
+                        "public key mismatch. Expected: {:#064x}; actual: {:#064x}.",
+                        oz_config.public_key,
+                        signer_public_key
+                    );
+                }
+
+                AnyAccountFactory::OpenZeppelin(
+                    OpenZeppelinAccountFactory::new(
+                        undeployed_status.class_hash,
+                        chain_id,
+                        signer.clone(),
+                        provider.clone(),
+                    )
+                    .await?,
+                )
+            }
+            AccountVariant::Argent(argent_config) => {
+                // Makes sure we're using the right key
+                if signer_public_key != argent_config.signer {
+                    anyhow::bail!(
+                        "public key mismatch. Expected: {:#064x}; actual: {:#064x}.",
+                        argent_config.signer,
+                        signer_public_key
+                    );
+                }
+
+                AnyAccountFactory::Argent(
+                    ArgentAccountFactory::new(
+                        undeployed_status.class_hash,
+                        argent_config.implementation,
+                        chain_id,
+                        FieldElement::ZERO,
+                        signer.clone(),
+                        provider.clone(),
+                    )
+                    .await?,
+                )
+            }
+        };
 
         let account_deployment = factory.deploy(undeployed_status.salt);
 

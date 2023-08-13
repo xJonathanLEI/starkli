@@ -7,14 +7,21 @@ use starknet::{
     core::{
         serde::unsigned_field_element::UfeHex, types::FieldElement, utils::get_contract_address,
     },
-    macros::felt,
+    macros::{felt, selector},
 };
 
-pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 1] = [KnownAccountClass {
-    class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
-    variant: AccountVariantType::OpenZeppelin,
-    description: "OpenZeppelin account contract v0.6.1 compiled with cairo-lang v0.11.0.2",
-}];
+pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 2] = [
+    KnownAccountClass {
+        class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
+        variant: AccountVariantType::OpenZeppelin,
+        description: "OpenZeppelin account contract v0.6.1 compiled with cairo-lang v0.11.0.2",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x025ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918"),
+        variant: AccountVariantType::Argent,
+        description: "Argent X official proxy account",
+    },
+];
 
 #[derive(Serialize, Deserialize)]
 pub struct AccountConfig {
@@ -27,6 +34,7 @@ pub struct AccountConfig {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum AccountVariant {
     OpenZeppelin(OzAccountConfig),
+    Argent(ArgentAccountConfig),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -44,6 +52,7 @@ pub struct KnownAccountClass {
 
 pub enum AccountVariantType {
     OpenZeppelin,
+    Argent,
 }
 
 #[serde_as]
@@ -52,6 +61,18 @@ pub struct OzAccountConfig {
     pub version: u64,
     #[serde_as(as = "UfeHex")]
     pub public_key: FieldElement,
+}
+
+#[serde_as]
+#[derive(Serialize, Deserialize)]
+pub struct ArgentAccountConfig {
+    pub version: u64,
+    #[serde_as(as = "UfeHex")]
+    pub implementation: FieldElement,
+    #[serde_as(as = "UfeHex")]
+    pub signer: FieldElement,
+    #[serde_as(as = "UfeHex")]
+    pub guardian: FieldElement,
 }
 
 #[serde_as]
@@ -88,6 +109,18 @@ impl AccountConfig {
                 &[oz.public_key],
                 FieldElement::ZERO,
             )),
+            AccountVariant::Argent(argent) => Ok(get_contract_address(
+                undeployed_status.salt,
+                undeployed_status.class_hash,
+                &[
+                    argent.implementation,   // implementation
+                    selector!("initialize"), // selector
+                    FieldElement::TWO,       // calldata_len
+                    argent.signer,           // calldata[0]: signer
+                    argent.guardian,         // calldata[1]: guardian
+                ],
+                FieldElement::ZERO,
+            )),
         }
     }
 }
@@ -96,6 +129,7 @@ impl Display for AccountVariantType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AccountVariantType::OpenZeppelin => write!(f, "OpenZeppelin"),
+            AccountVariantType::Argent => write!(f, "Argent X"),
         }
     }
 }
