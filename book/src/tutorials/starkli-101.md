@@ -60,10 +60,10 @@ $ starkli account deploy /path/to/account.json
 The command would then displays a message similar to this:
 
 ```console
-The estimated account deployment fee is 0.000011483579723913 ETH. However, to avoid failure, fund at least:
-    0.000017225369585869 ETH
+The estimated account deployment fee is 0.000004323000964029 ETH. However, to avoid failure, fund at least:
+    0.000006484501446043 ETH
 to the following address:
-    0x01cf********************************************************853a
+    0x077c********************************************************3f8a
 Press [ENTER] once you've funded the address.
 ```
 
@@ -93,9 +93,7 @@ The next step is to compile a Cairo contract. There are a few options for compil
 
 > ℹ️ **Note**
 >
-> As of this writing, the Starknet testnet does not support Cairo `v2.0.2` or above, which is used in Scarb since `v0.5.2`. Make sure you're using Scarb `v0.5.1` or earlier to be able to follow along.
->
-> This tutorial uses Scarb `v0.5.1`.
+> This tutorial uses Scarb `v0.6.1`.
 
 First, create a Scrab project:
 
@@ -113,7 +111,7 @@ name = "my_contract"
 version = "0.1.0"
 
 [dependencies]
-starknet = "=2.0.1"
+starknet = "=2.1.0"
 
 [[target.starknet-contract]]
 ```
@@ -192,7 +190,7 @@ $ starkli declare --watch ./target/dev/my_contract_my_contract.sierra.json
 
 Starkli will then output the Cairo 1 class hash (which can also be obtained using the `starkli class-hash <FILE.json>` command). You'll need this class hash for deploying the contract.
 
-If you followed the exact same steps with the exact same tooling versions, you should be getting the class hash of `0x06e5c13fdf311e6790af7eae9f43a0aef5387303bd99058f6293fcc7e5e0c039`. It's normal that you arrive at a different hash, so don't worry about that.
+If you followed the exact same steps with the exact same tooling versions, you should be getting the class hash of `0x0756ea65987892072b836b9a56027230bbe8fbed5e0370cff22778d071a0798e`. It's normal that you arrive at a different hash, so don't worry about that.
 
 ## Deploy your contract
 
@@ -214,7 +212,7 @@ $ starkli to-cairo-string starkli
 You can use this value directly as an argument to deploy the contract:
 
 ```console
-$ starkli deploy --watch 0x06e5c13fdf311e6790af7eae9f43a0aef5387303bd99058f6293fcc7e5e0c039 0x737461726b6c69
+$ starkli deploy --watch 0x0756ea65987892072b836b9a56027230bbe8fbed5e0370cff22778d071a0798e 0x737461726b6c69
 ```
 
 > 💡 **Tips**
@@ -222,19 +220,19 @@ $ starkli deploy --watch 0x06e5c13fdf311e6790af7eae9f43a0aef5387303bd99058f6293f
 > You can leverage [argument resolution](../argument-resolution.md) to simplify the argument list:
 >
 > ```console
-> $ starkli deploy --watch 0x06e5c13fdf311e6790af7eae9f43a0aef5387303bd99058f6293fcc7e5e0c039 str:starkli
+> $ starkli deploy --watch 0x0756ea65987892072b836b9a56027230bbe8fbed5e0370cff22778d071a0798e str:starkli
 > ```
 >
 > Note how `0x737461726b6c69` is replaced with `str:starkli`. Learn more about argument resolution [here](../argument-resolution.md).
 
 Starkli prints the deployed contract address in the command output. You can use the address for interacting with the deployed contract.
 
-Here we will use the address `0x040fb4b164c8d76d85286ef844e2bd7c0c392a2559bd7e490542c385e67dc69c`. You _will_ get a different address when you deploy the contract yourself. Simply replace the addresses in the following commands with your own.
+Here we will use the address `0x06d8e1f3ed72fc87aa896639a0f50a4b9e59adb24de8a42b477957e1a7996e1b`. You _will_ get a different address when you deploy the contract yourself. Simply replace the addresses in the following commands with your own.
 
 Let's query the current name set for the contract:
 
 ```console
-$ starkli call 0x040fb4b164c8d76d85286ef844e2bd7c0c392a2559bd7e490542c385e67dc69c name_get
+$ starkli call 0x06d8e1f3ed72fc87aa896639a0f50a4b9e59adb24de8a42b477957e1a7996e1b name_get
 [
     "0x00000000000000000000000000000000000000000000000000737461726b6c69"
 ]
@@ -245,13 +243,13 @@ which is the Cairo short string representation of the text `"starkli"`.
 Let's change it to `"starknet"` instead:
 
 ```console
-$ starkli invoke --watch 0x040fb4b164c8d76d85286ef844e2bd7c0c392a2559bd7e490542c385e67dc69c name_set str:starknet
+$ starkli invoke --watch 0x06d8e1f3ed72fc87aa896639a0f50a4b9e59adb24de8a42b477957e1a7996e1b name_set str:starknet
 ```
 
 Now query the name again:
 
 ```console
-$ starkli call 0x040fb4b164c8d76d85286ef844e2bd7c0c392a2559bd7e490542c385e67dc69c name_get
+$ starkli call 0x06d8e1f3ed72fc87aa896639a0f50a4b9e59adb24de8a42b477957e1a7996e1b name_get
 [
     "0x000000000000000000000000000000000000000000000000737461726b6e6574"
 ]
