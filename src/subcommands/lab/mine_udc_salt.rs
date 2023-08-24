@@ -1,8 +1,15 @@
-use std::time::SystemTime;
+use std::{
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    time::SystemTime,
+};
 
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
+use rayon::prelude::*;
 use starknet::core::{
     crypto::{compute_hash_on_elements, pedersen_hash},
     types::FieldElement,
@@ -41,10 +48,29 @@ pub struct MineUdcSalt {
         help = "Deployer address. Needed if and only if not using --no-unique"
     )]
     deployer_address: Option<FieldElement>,
+    #[clap(long, default_value = "1", help = "The number of parallel jobs to run")]
+    jobs: u32,
     #[clap(help = "Class hash")]
     class_hash: FieldElement,
     #[clap(help = "Raw constructor arguments (argument resolution not supported yet)")]
     ctor_args: Vec<FieldElement>,
+}
+
+struct Miner {
+    udc_uniqueness: UdcUniqueness,
+    class_hash: FieldElement,
+    ctor_hash: FieldElement,
+    bloom: [bool; 252],
+    prefix_length: usize,
+    suffix_length: usize,
+    start_nonce: FieldElement,
+    cancellation_token: Arc<AtomicBool>,
+}
+
+#[derive(Debug)]
+struct MineResult {
+    nonce: FieldElement,
+    deployed_address: FieldElement,
 }
 
 impl MineUdcSalt {
@@ -114,36 +140,31 @@ impl MineUdcSalt {
 
         let ctor_hash = compute_hash_on_elements(&self.ctor_args);
 
-        let mut nonce = FieldElement::ZERO;
-
         let start_time = SystemTime::now();
 
-        // TODO: parallelize with rayon
-        let resulting_address = loop {
-            let (effective_salt, effective_deployer) = match &udc_uniqueness {
-                UdcUniqueness::NotUnique => (nonce, FieldElement::ZERO),
-                UdcUniqueness::Unique(settings) => (
-                    pedersen_hash(&settings.deployer_address, &nonce),
-                    settings.udc_contract_address,
-                ),
-            };
+        let cancellation_token = Arc::new(AtomicBool::new(false));
 
-            let deployed_address = normalize_address(compute_hash_on_elements(&[
-                CONTRACT_ADDRESS_PREFIX,
-                effective_deployer,
-                effective_salt,
-                self.class_hash,
-                ctor_hash,
-            ]));
+        let result = (0..self.jobs)
+            .into_par_iter()
+            .map(|job_id| {
+                let start_nonce =
+                    FieldElement::MAX.floor_div(self.jobs.into()) * FieldElement::from(job_id);
 
-            let address_bits = deployed_address.to_bits_le();
+                let miner = Miner {
+                    udc_uniqueness: udc_uniqueness.clone(),
+                    class_hash: self.class_hash,
+                    ctor_hash,
+                    bloom,
+                    prefix_length: prefix_len,
+                    suffix_length: suffix_len,
+                    start_nonce,
+                    cancellation_token: cancellation_token.clone(),
+                };
 
-            if Self::validate_address(&address_bits[..252], &bloom, prefix_len, suffix_len) {
-                break deployed_address;
-            }
-
-            nonce += FieldElement::ONE;
-        };
+                miner.mine()
+            })
+            .find_map_any(|result| result.ok())
+            .expect("at least one job should return success");
 
         let end_time = SystemTime::now();
 
@@ -154,10 +175,13 @@ impl MineUdcSalt {
             format!("{}s", duration.as_secs()).bright_yellow()
         );
 
-        println!("Salt: {}", format!("{:#064x}", nonce).bright_yellow());
+        println!(
+            "Salt: {}",
+            format!("{:#064x}", result.nonce).bright_yellow()
+        );
         println!(
             "Address: {}",
-            format!("{:#064x}", resulting_address).bright_yellow()
+            format!("{:#064x}", result.deployed_address).bright_yellow()
         );
 
         Ok(())
@@ -185,6 +209,49 @@ impl MineUdcSalt {
         FieldElement::from_byte_slice_be(&bytes)?;
 
         Ok(())
+    }
+}
+
+impl Miner {
+    fn mine(&self) -> Result<MineResult> {
+        let bloom = self.bloom;
+        let prefix_len = self.prefix_length;
+        let suffix_len = self.suffix_length;
+
+        let mut nonce = self.start_nonce;
+
+        while !self.cancellation_token.load(Ordering::Relaxed) {
+            let (effective_salt, effective_deployer) = match &self.udc_uniqueness {
+                UdcUniqueness::NotUnique => (nonce, FieldElement::ZERO),
+                UdcUniqueness::Unique(settings) => (
+                    pedersen_hash(&settings.deployer_address, &nonce),
+                    settings.udc_contract_address,
+                ),
+            };
+
+            let deployed_address = normalize_address(compute_hash_on_elements(&[
+                CONTRACT_ADDRESS_PREFIX,
+                effective_deployer,
+                effective_salt,
+                self.class_hash,
+                self.ctor_hash,
+            ]));
+
+            let address_bits = deployed_address.to_bits_le();
+
+            if Self::validate_address(&address_bits[..252], &bloom, prefix_len, suffix_len) {
+                self.cancellation_token.store(true, Ordering::Relaxed);
+
+                return Ok(MineResult {
+                    nonce,
+                    deployed_address,
+                });
+            }
+
+            nonce += FieldElement::ONE;
+        }
+
+        Err(anyhow::anyhow!("job cancelled"))
     }
 
     #[inline(always)]
