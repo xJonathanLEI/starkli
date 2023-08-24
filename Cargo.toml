@@ -11,7 +11,6 @@ anyhow = "1.0.71"
 async-trait = "0.1.68"
 auto_impl = "1.1.0"
 bigdecimal = "0.4.1"
-cairo-starknet-2-0-1 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v2.0.1" }
 cairo-starknet-2-1-0 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v2.1.0" }
 chrono = "0.4.26"
 clap = { version = "4.3.8", features = ["derive", "env", "string"] }
