@@ -12,7 +12,7 @@ Currently, two providers are supported: [JSON-RPC](#json-rpc) and the [sequencer
 
 Starkli is centric around JSON-RPC, and the JSON-RPC provider is considered canonical. Users are strongly recommended to use JSON-RPC. There are a few options to obtain access to a JSON-RPC endpoint:
 
-- hosting your own node with [`pathfinder`](https://github.com/eqlabs/pathfinder); or
+- hosting your own node with [`pathfinder`](https://github.com/eqlabs/pathfinder) or [`juno`](https://github.com/NethermindEth/juno); or
 - using a third-party JSON-RPC API provider like [Infura](https://www.infura.io/), [Alchemy](https://www.alchemy.com/), or [Chainstack](https://chainstack.com/build-better-with-starknet/).
 
 Once you have a URL to a JSON-RPC endpoint, you can use it via the `--rpc <URL>` option for commands that expect it. For example:
