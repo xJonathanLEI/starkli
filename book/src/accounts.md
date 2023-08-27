@@ -44,7 +44,7 @@ to the following address:
 Press [ENTER] once you've funded the address.
 ```
 
-Once the account deployment transaction is confirmed, the account file will be update to reflect the deployment status. It can then be used for commands where an account is expected.
+Once the account deployment transaction is confirmed, the account file will be update to reflect the deployment status. It can then be used for commands where an account is expected. You can pass the account either with the `--account` parameter, or with the `STARKNET_ACCOUNT` environment variable.
 
 ## Account fetching
 
