@@ -37,3 +37,10 @@ url = "2.4.0"
 
 [build-dependencies]
 vergen = { version = "8.2.1", features = ["build", "git", "git2"] }
+
+# We need https://github.com/roynalnaruto/eth-keystore-rs/pull/15 for Android.
+#
+# Ideally, we should only patch this for Android. However, Cargo does not support target-specific
+# patches. So we have to have unconditionally until a new `eth-keystore` release is made.
+[patch.crates-io]
+eth-keystore = { git = "https://github.com/roynalnaruto/eth-keystore-rs", rev = "85ea8cd5b4dbfcdb3af50e1835540fee83d3b966" }
