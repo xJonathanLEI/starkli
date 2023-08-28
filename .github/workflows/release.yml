@@ -197,3 +197,67 @@ jobs:
           files: "target/${{ matrix.target }}/release/starkli-${{ matrix.target }}.tar.gz"
           generate_release_notes: true
           draft: true
+
+  release-android:
+    name: "Build for aarch64-linux-android"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v3"
+        with:
+          fetch-depth: 0
+
+      - name: "Checkout termux-packages"
+        run: |
+          cd ..
+          git clone https://github.com/termux/termux-packages
+          cd termux-packages
+          git checkout f193e6f6d1f759f8233ba44bb02a3a45e637bc32
+
+      - name: "Setup local repository"
+        run: |
+          REPO=$(pwd)
+          cd ../termux-packages
+          mkdir ./starkli && cd starkli
+          git init --bare
+
+          cd $REPO
+          git remote set-url origin ../termux-packages/starkli
+          git tag v0.0.0
+          git push origin v0.0.0
+
+      - name: "Build for aarch64"
+        run: |
+          cd ../termux-packages
+          mkdir ./packages/starkli
+          cp ../starkli/build/termux.sh ./packages/starkli/build.sh
+          ./scripts/run-docker.sh ./build-package.sh -a aarch64 starkli
+
+      - name: "Extract binary"
+        run: |
+          REPO=$(pwd)
+          mkdir -p target/aarch64-linux-android/release
+
+          cd ../termux-packages/output
+          ar x starkli_0.0.0_aarch64.deb
+          tar Jxvf data.tar.xz
+          mv ./data/data/com.termux/files/usr/bin/starkli $REPO/target/aarch64-linux-android/release
+
+      - name: "Upload artifacts"
+        uses: "actions/upload-artifact@v3"
+        with:
+          name: "starkli-aarch64-linux-android"
+          path: "target/aarch64-linux-android/release/starkli"
+
+      - name: "Tar release"
+        run: |
+          cd target/aarch64-linux-android/release/
+          tar zcvf ./starkli-aarch64-linux-android.tar.gz ./starkli
+
+      - name: "Publish tar"
+        uses: "softprops/action-gh-release@v1"
+        with:
+          files: "target/aarch64-linux-android/release/starkli-aarch64-linux-android.tar.gz"
+          generate_release_notes: true
+          draft: true
