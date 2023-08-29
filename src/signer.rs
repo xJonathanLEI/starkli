@@ -103,7 +103,11 @@ impl SignerArgs {
     }
 
     fn resolve_keystore(keystore: String, keystore_password: Option<String>) -> Result<AnySigner> {
-        let keystore = PathBuf::from(&keystore);
+        if keystore.is_empty() {
+            anyhow::bail!("empty keystore path");
+        }
+
+        let keystore = PathBuf::from(shellexpand::tilde(&keystore).into_owned());
 
         if keystore_password.is_some() {
             eprintln!(
