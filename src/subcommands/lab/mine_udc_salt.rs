@@ -9,6 +9,7 @@ use std::{
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
+use rand::{rngs::StdRng, RngCore, SeedableRng};
 use rayon::prelude::*;
 use starknet::core::{
     crypto::{compute_hash_on_elements, pedersen_hash},
@@ -144,11 +145,20 @@ impl MineUdcSalt {
 
         let cancellation_token = Arc::new(AtomicBool::new(false));
 
+        // Randomizes starting nonces so that the mining process can be horizontally scaled.
+        let mut rng = StdRng::from_entropy();
+        let mut nonce_offset = [0u8; 32];
+        rng.fill_bytes(&mut nonce_offset[1..]);
+
+        // We only filled 31 bytes so this value is always in range.
+        let nonce_offset = FieldElement::from_bytes_be(&nonce_offset).unwrap();
+
         let result = (0..self.jobs)
             .into_par_iter()
             .map(|job_id| {
-                let start_nonce =
-                    FieldElement::MAX.floor_div(self.jobs.into()) * FieldElement::from(job_id);
+                let start_nonce = FieldElement::MAX.floor_div(self.jobs.into())
+                    * FieldElement::from(job_id)
+                    + nonce_offset;
 
                 let miner = Miner {
                     udc_uniqueness: udc_uniqueness.clone(),
