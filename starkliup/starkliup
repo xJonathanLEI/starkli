@@ -14,7 +14,7 @@ STARKLI_BIN_PATH="${STARKLI_BIN_DIR}/starkli"
 
 # This MUST be updated whenever this file is changed.
 # TODO: add CI check to ensure this.
-STARKLIUP_VERSION="2023-07-21"
+STARKLIUP_VERSION="2023-08-30"
 
 # Fancy color setup:
 #   https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors
@@ -148,26 +148,37 @@ detect_host_triple() {
 
     case $PLATFORM in
         Linux)
-            # Likely very unreliable way to check musl
-            if [ -n "$(ls /lib | grep "libc.musl-")" ]; then
-                case $ARCHITECTURE in
-                    x86_64)
-                        TRIPLE="x86_64-unknown-linux-musl"
-                        ;;
-                    aarch64|arm64)
-                        TRIPLE="aarch64-unknown-linux-musl"
-                        ;;
-                esac
-            else
-                case $ARCHITECTURE in
-                    x86_64)
-                        TRIPLE="x86_64-unknown-linux-gnu"
-                        ;;
-                    aarch64|arm64)
-                        TRIPLE="aarch64-unknown-linux-gnu"
-                        ;;
-                esac
-            fi
+            # Android Termux detection
+            case $PREFIX in
+                *com.termux*)
+                    case $ARCHITECTURE in
+                        aarch64|arm64)
+                            TRIPLE="aarch64-linux-android"
+                            ;;
+                    esac
+                    ;;
+                *)
+                    # Likely very unreliable way to check musl
+                    if [ -n "$(ls /lib | grep "libc.musl-")" ]; then
+                        case $ARCHITECTURE in
+                            x86_64)
+                                TRIPLE="x86_64-unknown-linux-musl"
+                                ;;
+                            aarch64|arm64)
+                                TRIPLE="aarch64-unknown-linux-musl"
+                                ;;
+                        esac
+                    else
+                        case $ARCHITECTURE in
+                            x86_64)
+                                TRIPLE="x86_64-unknown-linux-gnu"
+                                ;;
+                            aarch64|arm64)
+                                TRIPLE="aarch64-unknown-linux-gnu"
+                                ;;
+                        esac
+                    fi
+            esac
             ;;
         Darwin)
             case $ARCHITECTURE in
