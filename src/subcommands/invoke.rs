@@ -1,23 +1,18 @@
-use std::{path::PathBuf, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    accounts::{Account, Call, SingleOwnerAccount},
-    core::{
-        types::{BlockId, BlockTag, FieldElement},
-        utils::get_selector_from_name,
-    },
-    providers::Provider,
+    accounts::{Account, Call},
+    core::{types::FieldElement, utils::get_selector_from_name},
 };
 
 use crate::{
-    account::{AccountConfig, DeploymentStatus},
+    account::AccountArgs,
     address_book::AddressBookResolver,
     decode::FeltDecoder,
     fee::{FeeArgs, FeeSetting},
-    path::ExpandedPathbufParser,
     signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
@@ -30,13 +25,8 @@ pub struct Invoke {
     provider: ProviderArgs,
     #[clap(flatten)]
     signer: SignerArgs,
-    #[clap(
-        long,
-        env = "STARKNET_ACCOUNT",
-        value_parser = ExpandedPathbufParser,
-        help = "Path to account config JSON file"
-    )]
-    account: PathBuf,
+    #[clap(flatten)]
+    account: AccountArgs,
     #[clap(flatten)]
     fee: FeeArgs,
     #[clap(long, help = "Wait for the transaction to confirm")]
@@ -55,10 +45,6 @@ impl Invoke {
 
         let provider = Arc::new(self.provider.into_provider());
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
-
-        if !self.account.exists() {
-            anyhow::bail!("account config file not found");
-        }
 
         // Parses and resolves the calls
         let calls = {
@@ -100,22 +86,8 @@ impl Invoke {
             anyhow::bail!("empty execution");
         }
 
-        // TODO: refactor account & signer loading
-
-        let account_config: AccountConfig =
-            serde_json::from_reader(&mut std::fs::File::open(&self.account)?)?;
-
-        let account_address = match account_config.deployment {
-            DeploymentStatus::Undeployed(_) => anyhow::bail!("account not deployed"),
-            DeploymentStatus::Deployed(inner) => inner.address,
-        };
-
-        let chain_id = provider.chain_id().await?;
-
         let signer = Arc::new(self.signer.into_signer()?);
-        let mut account =
-            SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
-        account.set_block_id(BlockId::Tag(BlockTag::Pending));
+        let account = self.account.into_account(provider.clone(), signer).await?;
 
         let execution = account.execute(calls).fee_estimate_multiplier(1.5f64);
 

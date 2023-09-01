@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    accounts::{Account, SingleOwnerAccount},
+    accounts::Account,
     core::types::{
         contract::{legacy::LegacyContractClass, CompiledClass, SierraClass},
         BlockId, BlockTag, FieldElement, StarknetError,
@@ -13,7 +13,7 @@ use starknet::{
 };
 
 use crate::{
-    account::{AccountConfig, DeploymentStatus},
+    account::AccountArgs,
     casm::{CasmArgs, CasmHashSource},
     fee::{FeeArgs, FeeSetting},
     path::ExpandedPathbufParser,
@@ -30,14 +30,9 @@ pub struct Declare {
     #[clap(flatten)]
     signer: SignerArgs,
     #[clap(flatten)]
+    account: AccountArgs,
+    #[clap(flatten)]
     casm: CasmArgs,
-    #[clap(
-        long,
-        env = "STARKNET_ACCOUNT",
-        value_parser = ExpandedPathbufParser,
-        help = "Path to account config JSON file"
-    )]
-    account: PathBuf,
     #[clap(flatten)]
     fee: FeeArgs,
     #[clap(long, help = "Wait for the transaction to confirm")]
@@ -59,24 +54,8 @@ impl Declare {
 
         let provider = Arc::new(self.provider.into_provider());
 
-        if !self.account.exists() {
-            anyhow::bail!("account config file not found");
-        }
-
-        let account_config: AccountConfig =
-            serde_json::from_reader(&mut std::fs::File::open(&self.account)?)?;
-
-        let account_address = match account_config.deployment {
-            DeploymentStatus::Undeployed(_) => anyhow::bail!("account not deployed"),
-            DeploymentStatus::Deployed(inner) => inner.address,
-        };
-
-        let chain_id = provider.chain_id().await?;
-
         let signer = self.signer.into_signer()?;
-        let mut account =
-            SingleOwnerAccount::new(provider.clone(), signer, account_address, chain_id);
-        account.set_block_id(BlockId::Tag(BlockTag::Pending));
+        let account = self.account.into_account(provider.clone(), signer).await?;
 
         // Workaround for issue:
         //   https://github.com/eqlabs/pathfinder/issues/1208

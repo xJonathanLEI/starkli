@@ -1,25 +1,23 @@
-use std::{path::PathBuf, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    accounts::SingleOwnerAccount,
+    accounts::Account,
     contract::ContractFactory,
     core::{
-        types::{BlockId, BlockTag, FieldElement},
+        types::FieldElement,
         utils::{get_udc_deployed_address, UdcUniqueSettings, UdcUniqueness},
     },
-    providers::Provider,
     signers::SigningKey,
 };
 
 use crate::{
-    account::{AccountConfig, DeploymentStatus},
+    account::AccountArgs,
     address_book::AddressBookResolver,
     decode::FeltDecoder,
     fee::{FeeArgs, FeeSetting},
-    path::ExpandedPathbufParser,
     signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
@@ -40,15 +38,10 @@ pub struct Deploy {
     provider: ProviderArgs,
     #[clap(flatten)]
     signer: SignerArgs,
+    #[clap(flatten)]
+    account: AccountArgs,
     #[clap(long, help = "Do not derive contract address from deployer address")]
     not_unique: bool,
-    #[clap(
-        long,
-        env = "STARKNET_ACCOUNT",
-        value_parser = ExpandedPathbufParser,
-        help = "Path to account config JSON file"
-    )]
-    account: PathBuf,
     #[clap(flatten)]
     fee: FeeArgs,
     #[clap(long, help = "Use the given salt to compute contract deploy address")]
@@ -72,10 +65,6 @@ impl Deploy {
         let provider = Arc::new(self.provider.into_provider());
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
 
-        if !self.account.exists() {
-            anyhow::bail!("account config file not found");
-        }
-
         let class_hash = FieldElement::from_hex_be(&self.class_hash)?;
         let mut ctor_args = vec![];
         for element in self.ctor_args.iter() {
@@ -88,15 +77,8 @@ impl Deploy {
             SigningKey::from_random().secret_scalar()
         };
 
-        // TODO: refactor account & signer loading
-
-        let account_config: AccountConfig =
-            serde_json::from_reader(&mut std::fs::File::open(&self.account)?)?;
-
-        let account_address = match account_config.deployment {
-            DeploymentStatus::Undeployed(_) => anyhow::bail!("account not deployed"),
-            DeploymentStatus::Deployed(inner) => inner.address,
-        };
+        let signer = Arc::new(self.signer.into_signer()?);
+        let account = self.account.into_account(provider.clone(), signer).await?;
 
         let deployed_address = get_udc_deployed_address(
             salt,
@@ -105,19 +87,12 @@ impl Deploy {
                 UdcUniqueness::NotUnique
             } else {
                 UdcUniqueness::Unique(UdcUniqueSettings {
-                    deployer_address: account_address,
+                    deployer_address: account.address(),
                     udc_contract_address: DEFAULT_UDC_ADDRESS,
                 })
             },
             &ctor_args,
         );
-
-        let chain_id = provider.chain_id().await?;
-
-        let signer = Arc::new(self.signer.into_signer()?);
-        let mut account =
-            SingleOwnerAccount::new(provider.clone(), signer.clone(), account_address, chain_id);
-        account.set_block_id(BlockId::Tag(BlockTag::Pending));
 
         // TODO: allow custom UDC
         let factory = ContractFactory::new_with_udc(class_hash, account, DEFAULT_UDC_ADDRESS);

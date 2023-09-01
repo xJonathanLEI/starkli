@@ -1,14 +1,22 @@
-use std::fmt::Display;
+use std::{fmt::Display, path::PathBuf};
 
 use anyhow::Result;
+use clap::Parser;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use starknet::{
+    accounts::SingleOwnerAccount,
     core::{
-        serde::unsigned_field_element::UfeHex, types::FieldElement, utils::get_contract_address,
+        serde::unsigned_field_element::UfeHex,
+        types::{BlockId, BlockTag, FieldElement},
+        utils::get_contract_address,
     },
     macros::{felt, selector},
+    providers::Provider,
+    signers::Signer,
 };
+
+use crate::path::ExpandedPathbufParser;
 
 const BRAAVOS_SIGNER_TYPE_STARK: FieldElement = FieldElement::ONE;
 
@@ -29,6 +37,17 @@ pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 3] = [
         description: "Braavos official proxy account",
     },
 ];
+
+#[derive(Debug, Clone, Parser)]
+pub struct AccountArgs {
+    #[clap(
+        long,
+        env = "STARKNET_ACCOUNT",
+        value_parser = ExpandedPathbufParser,
+        help = "Path to account config JSON file"
+    )]
+    account: PathBuf,
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct AccountConfig {
@@ -146,6 +165,38 @@ pub enum DeploymentContext {
 pub struct BraavosDeploymentContext {
     #[serde_as(as = "UfeHex")]
     pub mock_implementation: FieldElement,
+}
+
+impl AccountArgs {
+    pub async fn into_account<P, S>(
+        self,
+        provider: P,
+        signer: S,
+    ) -> Result<SingleOwnerAccount<P, S>>
+    where
+        P: Provider + Send + Sync,
+        P::Error: 'static,
+        S: Signer + Send + Sync,
+    {
+        if !self.account.exists() {
+            anyhow::bail!("account config file not found");
+        }
+
+        let account_config: AccountConfig =
+            serde_json::from_reader(&mut std::fs::File::open(&self.account)?)?;
+
+        let account_address = match account_config.deployment {
+            DeploymentStatus::Undeployed(_) => anyhow::bail!("account not deployed"),
+            DeploymentStatus::Deployed(inner) => inner.address,
+        };
+
+        let chain_id = provider.chain_id().await?;
+
+        let mut account = SingleOwnerAccount::new(provider, signer, account_address, chain_id);
+        account.set_block_id(BlockId::Tag(BlockTag::Pending));
+
+        Ok(account)
+    }
 }
 
 impl AccountConfig {
