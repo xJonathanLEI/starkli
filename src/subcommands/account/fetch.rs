@@ -101,6 +101,7 @@ impl Fetch {
                 AccountVariant::OpenZeppelin(OzAccountConfig {
                     version: 1,
                     public_key,
+                    legacy: true,
                 })
             }
             AccountVariantType::Argent => {

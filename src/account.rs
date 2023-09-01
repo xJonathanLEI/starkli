@@ -5,7 +5,7 @@ use clap::Parser;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use starknet::{
-    accounts::SingleOwnerAccount,
+    accounts::{ExecutionEncoding, SingleOwnerAccount},
     core::{
         serde::unsigned_field_element::UfeHex,
         types::{BlockId, BlockTag, FieldElement},
@@ -89,6 +89,8 @@ pub struct OzAccountConfig {
     pub version: u64,
     #[serde_as(as = "UfeHex")]
     pub public_key: FieldElement,
+    #[serde(default = "true_as_default")]
+    pub legacy: bool,
 }
 
 #[serde_as]
@@ -192,7 +194,13 @@ impl AccountArgs {
 
         let chain_id = provider.chain_id().await?;
 
-        let mut account = SingleOwnerAccount::new(provider, signer, account_address, chain_id);
+        let mut account = SingleOwnerAccount::new(
+            provider,
+            signer,
+            account_address,
+            chain_id,
+            account_config.variant.execution_encoding(),
+        );
         account.set_block_id(BlockId::Tag(BlockTag::Pending));
 
         Ok(account)
@@ -261,6 +269,22 @@ impl AccountConfig {
     }
 }
 
+impl AccountVariant {
+    pub fn execution_encoding(&self) -> ExecutionEncoding {
+        match self {
+            AccountVariant::OpenZeppelin(oz) => {
+                if oz.legacy {
+                    ExecutionEncoding::Legacy
+                } else {
+                    ExecutionEncoding::New
+                }
+            }
+            AccountVariant::Argent(_) => ExecutionEncoding::Legacy,
+            AccountVariant::Braavos(_) => ExecutionEncoding::Legacy,
+        }
+    }
+}
+
 impl BraavosSigner {
     pub fn decode(raw_signer_model: &[FieldElement]) -> Result<Self> {
         let raw_signer_type = raw_signer_model
@@ -286,4 +310,8 @@ impl Display for AccountVariantType {
             AccountVariantType::Braavos => write!(f, "Braavos"),
         }
     }
+}
+
+fn true_as_default() -> bool {
+    true
 }

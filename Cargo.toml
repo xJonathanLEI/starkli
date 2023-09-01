@@ -31,7 +31,7 @@ serde = { version = "1.0.164", features = ["derive"] }
 serde_json = { version = "1.0.99", features = ["preserve_order"] }
 serde_with = "2.3.3"
 shellexpand = "3.1.0"
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "e9bdd7efeae9c76ef62a130ccef3f4355a864797" }
+starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "4cbf0d66c213e4d2f01c796f642916af7675c4dd" }
 thiserror = "1.0.40"
 tokio = { version = "1.28.2", default-features = false, features = ["macros", "rt-multi-thread"] }
 url = "2.4.0"

@@ -53,6 +53,7 @@ impl Init {
             variant: AccountVariant::OpenZeppelin(OzAccountConfig {
                 version: 1,
                 public_key: signer.get_public_key().await?.scalar(),
+                legacy: true,
             }),
             deployment: DeploymentStatus::Undeployed(UndeployedStatus {
                 class_hash: OZ_ACCOUNT_CLASS_HASH,
