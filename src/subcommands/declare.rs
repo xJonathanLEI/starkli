@@ -92,6 +92,12 @@ impl Declare {
                             format!("{}", compiler.version()).bright_yellow()
                         );
                     }
+                    CasmHashSource::CompilerBinary(compiler) => {
+                        eprintln!(
+                            "Compiling Sierra class to CASM with compiler binary {}...",
+                            format!("{}", compiler.path().display()).bright_yellow()
+                        );
+                    }
                     CasmHashSource::Hash(hash) => {
                         eprintln!(
                             "Using the provided CASM hash: {}...",

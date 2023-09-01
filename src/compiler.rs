@@ -1,4 +1,9 @@
-use std::{fmt::Display, str::FromStr};
+use std::{
+    fmt::Display,
+    path::{Path, PathBuf},
+    process::Command,
+    str::FromStr,
+};
 
 use anyhow::Result;
 use cairo_starknet_2_1_0::{
@@ -14,6 +19,11 @@ use starknet::core::types::{
 #[derive(Debug)]
 pub struct BuiltInCompiler {
     version: CompilerVersion,
+}
+
+#[derive(Debug)]
+pub struct CompilerBinary {
+    path: PathBuf,
 }
 
 // TODO: separate known compiler versions with linked versions
@@ -50,6 +60,47 @@ impl BuiltInCompiler {
         };
 
         // TODO: directly convert type without going through JSON
+        let casm_class = serde_json::from_str::<CompiledClass>(&casm_class_json)?;
+
+        let casm_class_hash = casm_class.class_hash()?;
+
+        Ok(casm_class_hash)
+    }
+}
+
+impl CompilerBinary {
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub fn compile(&self, class: &SierraClass) -> Result<FieldElement> {
+        // We do this because the Sierra doesn't need ABI anyways. Feeding it with the ABI could
+        // actually cause unnecessary deserialization errors due to ABI structure changes between
+        // compiler versions.
+        let mut class = class.clone();
+        class.abi.clear();
+
+        let mut input_file = tempfile::NamedTempFile::new()?;
+        serde_json::to_writer(&mut input_file, &class)?;
+
+        let process_output = Command::new(&self.path)
+            .arg(
+                input_file
+                    .path()
+                    .to_str()
+                    .ok_or_else(|| anyhow::anyhow!("invalid temp file path"))?,
+            )
+            .output()?;
+
+        if !process_output.status.success() {
+            anyhow::bail!(
+                "Sierra compiler process failed with exit code: {}",
+                process_output.status
+            );
+        }
+
+        let casm_class_json = String::from_utf8(process_output.stdout)?;
+
         let casm_class = serde_json::from_str::<CompiledClass>(&casm_class_json)?;
 
         let casm_class_hash = casm_class.class_hash()?;
@@ -98,5 +149,11 @@ impl Display for CompilerVersion {
 impl From<CompilerVersion> for BuiltInCompiler {
     fn from(value: CompilerVersion) -> Self {
         Self { version: value }
+    }
+}
+
+impl From<PathBuf> for CompilerBinary {
+    fn from(value: PathBuf) -> Self {
+        Self { path: value }
     }
 }

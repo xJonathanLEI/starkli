@@ -1,17 +1,26 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::core::types::{contract::SierraClass, FieldElement};
 
 use crate::{
-    compiler::{BuiltInCompiler, CompilerVersion},
+    compiler::{BuiltInCompiler, CompilerBinary, CompilerVersion},
     network::{Network, NetworkSource},
+    path::ExpandedPathbufParser,
 };
 
 #[derive(Debug, Clone, Parser)]
 pub struct CasmArgs {
     #[clap(long, help = "Statically-linked Sierra compiler version")]
     compiler_version: Option<CompilerVersion>,
+    #[clap(
+        long,
+        value_parser = ExpandedPathbufParser,
+        help = "Path to the starknet-sierra-compile binary"
+    )]
+    compiler_path: Option<PathBuf>,
     #[clap(long, help = "Override Sierra compilation and use CASM hash directly")]
     casm_hash: Option<String>,
 }
@@ -19,6 +28,7 @@ pub struct CasmArgs {
 #[derive(Debug)]
 pub enum CasmHashSource {
     BuiltInCompiler(BuiltInCompiler),
+    CompilerBinary(CompilerBinary),
     Hash(FieldElement),
 }
 
@@ -27,13 +37,16 @@ impl CasmArgs {
     where
         N: NetworkSource,
     {
-        match (self.compiler_version, self.casm_hash) {
-            (Some(compiler_version), None) => {
+        match (self.compiler_version, self.compiler_path, self.casm_hash) {
+            (Some(compiler_version), None, None) => {
                 Ok(CasmHashSource::BuiltInCompiler(compiler_version.into()))
             }
-            (None, Some(casm_hash)) => Ok(CasmHashSource::Hash(casm_hash.parse()?)),
+            (None, Some(compiler_path), None) => {
+                Ok(CasmHashSource::CompilerBinary(compiler_path.into()))
+            }
+            (None, None, Some(casm_hash)) => Ok(CasmHashSource::Hash(casm_hash.parse()?)),
             // Tries to detect compiler version if nothing provided
-            (None, None) => {
+            (None, None, None) => {
                 eprintln!(
                     "Sierra compiler version not specified. \
                     Attempting to automatically decide version to use..."
@@ -84,6 +97,7 @@ impl CasmHashSource {
     pub fn get_casm_hash(&self, sierra_class: &SierraClass) -> Result<FieldElement> {
         match self {
             Self::BuiltInCompiler(compiler) => compiler.compile(sierra_class),
+            Self::CompilerBinary(compiler) => compiler.compile(sierra_class),
             Self::Hash(hash) => Ok(*hash),
         }
     }
