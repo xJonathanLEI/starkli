@@ -98,6 +98,12 @@ impl Declare {
                             format!("{}", compiler.path().display()).bright_yellow()
                         );
                     }
+                    CasmHashSource::CasmFile(path) => {
+                        eprintln!(
+                            "Using a compiled CASM file directly: {}...",
+                            format!("{}", path.display()).bright_yellow()
+                        );
+                    }
                     CasmHashSource::Hash(hash) => {
                         eprintln!(
                             "Using the provided CASM hash: {}...",
