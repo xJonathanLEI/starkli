@@ -3,15 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
-use starknet::{
-    accounts::Account,
-    contract::ContractFactory,
-    core::{
-        types::FieldElement,
-        utils::{get_udc_deployed_address, UdcUniqueSettings, UdcUniqueness},
-    },
-    signers::SigningKey,
-};
+use starknet::{contract::ContractFactory, core::types::FieldElement, signers::SigningKey};
 
 use crate::{
     account::AccountArgs,
@@ -80,26 +72,11 @@ impl Deploy {
         let signer = Arc::new(self.signer.into_signer()?);
         let account = self.account.into_account(provider.clone(), signer).await?;
 
-        let deployed_address = get_udc_deployed_address(
-            salt,
-            class_hash,
-            &if self.not_unique {
-                UdcUniqueness::NotUnique
-            } else {
-                UdcUniqueness::Unique(UdcUniqueSettings {
-                    deployer_address: account.address(),
-                    udc_contract_address: DEFAULT_UDC_ADDRESS,
-                })
-            },
-            &ctor_args,
-        );
-
         // TODO: allow custom UDC
         let factory = ContractFactory::new_with_udc(class_hash, account, DEFAULT_UDC_ADDRESS);
 
-        // TODO: pre-compute and show target deployment address
-
-        let contract_deployment = factory.deploy(&ctor_args, salt, !self.not_unique);
+        let contract_deployment = factory.deploy(ctor_args, salt, !self.not_unique);
+        let deployed_address = contract_deployment.deployed_address();
 
         let max_fee = match fee_setting {
             FeeSetting::Manual(fee) => fee,
