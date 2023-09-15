@@ -20,11 +20,16 @@ use crate::path::ExpandedPathbufParser;
 
 const BRAAVOS_SIGNER_TYPE_STARK: FieldElement = FieldElement::ONE;
 
-pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 4] = [
+pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 5] = [
     KnownAccountClass {
         class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
         variant: AccountVariantType::OpenZeppelin,
         description: "OpenZeppelin account contract v0.6.1 compiled with cairo-lang v0.11.0.2",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x04d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f"),
+        variant: AccountVariantType::OpenZeppelin,
+        description: "OpenZeppelin account contract v0.5.0 compiled with cairo-lang v0.10.1",
     },
     KnownAccountClass {
         class_hash: felt!("0x025ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918"),
