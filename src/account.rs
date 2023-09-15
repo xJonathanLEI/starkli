@@ -20,7 +20,7 @@ use crate::path::ExpandedPathbufParser;
 
 const BRAAVOS_SIGNER_TYPE_STARK: FieldElement = FieldElement::ONE;
 
-pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 3] = [
+pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 4] = [
     KnownAccountClass {
         class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
         variant: AccountVariantType::OpenZeppelin,
@@ -28,13 +28,18 @@ pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 3] = [
     },
     KnownAccountClass {
         class_hash: felt!("0x025ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918"),
-        variant: AccountVariantType::Argent,
-        description: "Argent X official proxy account",
+        variant: AccountVariantType::ArgentLegacy,
+        description: "Argent X legacy (Cairo 0) proxy account",
     },
     KnownAccountClass {
         class_hash: felt!("0x03131fa018d520a037686ce3efddeab8f28895662f019ca3ca18a626650f7d1e"),
         variant: AccountVariantType::Braavos,
         description: "Braavos official proxy account",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x01a736d6ed154502257f02b1ccdf4d9d1089f80811cd6acad48e6b6a9d1f2003"),
+        variant: AccountVariantType::Argent,
+        description: "Argent X official account",
     },
 ];
 
@@ -79,8 +84,9 @@ pub struct KnownAccountClass {
 
 pub enum AccountVariantType {
     OpenZeppelin,
-    Argent,
+    ArgentLegacy,
     Braavos,
+    Argent,
 }
 
 #[serde_as]
@@ -97,10 +103,13 @@ pub struct OzAccountConfig {
 #[derive(Serialize, Deserialize)]
 pub struct ArgentAccountConfig {
     pub version: u64,
+    #[serde_as(as = "Option<UfeHex>")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub implementation: Option<FieldElement>,
     #[serde_as(as = "UfeHex")]
-    pub implementation: FieldElement,
-    #[serde_as(as = "UfeHex")]
-    pub signer: FieldElement,
+    // Old account files use `signer`
+    #[serde(alias = "signer")]
+    pub owner: FieldElement,
     #[serde_as(as = "UfeHex")]
     pub guardian: FieldElement,
 }
@@ -223,18 +232,33 @@ impl AccountConfig {
                 &[oz.public_key],
                 FieldElement::ZERO,
             )),
-            AccountVariant::Argent(argent) => Ok(get_contract_address(
-                undeployed_status.salt,
-                undeployed_status.class_hash,
-                &[
-                    argent.implementation,   // implementation
-                    selector!("initialize"), // selector
-                    FieldElement::TWO,       // calldata_len
-                    argent.signer,           // calldata[0]: signer
-                    argent.guardian,         // calldata[1]: guardian
-                ],
-                FieldElement::ZERO,
-            )),
+            AccountVariant::Argent(argent) => match argent.implementation {
+                Some(implementation) => {
+                    // Legacy Cairo 0 account deployment
+                    Ok(get_contract_address(
+                        undeployed_status.salt,
+                        undeployed_status.class_hash,
+                        &[
+                            implementation,          // implementation
+                            selector!("initialize"), // selector
+                            FieldElement::TWO,       // calldata_len
+                            argent.owner,            // calldata[0]: signer
+                            argent.guardian,         // calldata[1]: guardian
+                        ],
+                        FieldElement::ZERO,
+                    ))
+                }
+                None => {
+                    // Cairo 1 account deployment without using proxy
+                    Ok(get_contract_address(
+                        undeployed_status.salt,
+                        undeployed_status.class_hash,
+                        &[argent.owner, argent.guardian],
+                        FieldElement::ZERO,
+                    ))
+                }
+            },
+
             AccountVariant::Braavos(braavos) => {
                 if !matches!(braavos.multisig, BraavosMultisigConfig::Off) {
                     anyhow::bail!("Braavos accounts cannot be deployed with multisig on");
@@ -279,7 +303,13 @@ impl AccountVariant {
                     ExecutionEncoding::New
                 }
             }
-            AccountVariant::Argent(_) => ExecutionEncoding::Legacy,
+            AccountVariant::Argent(argent) => {
+                if argent.implementation.is_some() {
+                    ExecutionEncoding::Legacy
+                } else {
+                    ExecutionEncoding::New
+                }
+            }
             AccountVariant::Braavos(_) => ExecutionEncoding::Legacy,
         }
     }
@@ -306,8 +336,9 @@ impl Display for AccountVariantType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AccountVariantType::OpenZeppelin => write!(f, "OpenZeppelin"),
-            AccountVariantType::Argent => write!(f, "Argent X"),
+            AccountVariantType::ArgentLegacy => write!(f, "Legacy Argent X (Cairo 0)"),
             AccountVariantType::Braavos => write!(f, "Braavos"),
+            AccountVariantType::Argent => write!(f, "Argent X"),
         }
     }
 }

@@ -18,10 +18,8 @@ use crate::{
 };
 
 /// Official hashes used as of extension version 5.7.0
-const ARGENT_PROXY_CLASS_HASH: FieldElement =
-    felt!("0x025ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918");
-const ARGENT_IMPL_CLASS_HASH: FieldElement =
-    felt!("0x033434ad846cdd5f23eb73ff09fe6fddd568284a0fb7d1be20ee482f044dabe2");
+const ARGENT_CLASS_HASH: FieldElement =
+    felt!("0x01a736d6ed154502257f02b1ccdf4d9d1089f80811cd6acad48e6b6a9d1f2003");
 
 #[derive(Debug, Parser)]
 pub struct Init {
@@ -56,12 +54,12 @@ impl Init {
             version: 1,
             variant: AccountVariant::Argent(ArgentAccountConfig {
                 version: 1,
-                implementation: ARGENT_IMPL_CLASS_HASH,
-                signer: signer.get_public_key().await?.scalar(),
+                implementation: None,
+                owner: signer.get_public_key().await?.scalar(),
                 guardian: FieldElement::ZERO,
             }),
             deployment: DeploymentStatus::Undeployed(UndeployedStatus {
-                class_hash: ARGENT_PROXY_CLASS_HASH,
+                class_hash: ARGENT_CLASS_HASH,
                 salt,
                 context: None,
             }),

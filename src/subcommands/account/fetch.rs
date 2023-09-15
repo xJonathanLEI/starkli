@@ -104,7 +104,7 @@ impl Fetch {
                     legacy: true,
                 })
             }
-            AccountVariantType::Argent => {
+            AccountVariantType::ArgentLegacy => {
                 let implementation = provider
                     .call(
                         FunctionCall {
@@ -138,8 +138,8 @@ impl Fetch {
 
                 AccountVariant::Argent(ArgentAccountConfig {
                     version: 1,
-                    implementation,
-                    signer,
+                    implementation: Some(implementation),
+                    owner: signer,
                     guardian,
                 })
             }
@@ -209,6 +209,35 @@ impl Fetch {
                     implementation,
                     multisig,
                     signers,
+                })
+            }
+            AccountVariantType::Argent => {
+                let owner = provider
+                    .call(
+                        FunctionCall {
+                            contract_address: address,
+                            entry_point_selector: selector!("get_owner"),
+                            calldata: vec![],
+                        },
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await?[0];
+                let guardian = provider
+                    .call(
+                        FunctionCall {
+                            contract_address: address,
+                            entry_point_selector: selector!("get_guardian"),
+                            calldata: vec![],
+                        },
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await?[0];
+
+                AccountVariant::Argent(ArgentAccountConfig {
+                    version: 1,
+                    implementation: None,
+                    owner,
+                    guardian,
                 })
             }
         };

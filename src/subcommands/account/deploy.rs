@@ -100,11 +100,19 @@ impl Deploy {
                 )
             }
             AccountVariant::Argent(argent_config) => {
+                // It's probably not worth it to continue to support legacy account deployment.
+                // Users can always deploy with an old Starkli version.
+                if argent_config.implementation.is_some() {
+                    anyhow::bail!(
+                        "deployment of legacy Argent X (Cairo 0) accounts is no longer supported"
+                    );
+                }
+
                 // Makes sure we're using the right key
-                if signer_public_key != argent_config.signer {
+                if signer_public_key != argent_config.owner {
                     anyhow::bail!(
                         "public key mismatch. Expected: {:#064x}; actual: {:#064x}.",
-                        argent_config.signer,
+                        argent_config.owner,
                         signer_public_key
                     );
                 }
@@ -112,7 +120,6 @@ impl Deploy {
                 AnyAccountFactory::Argent(
                     ArgentAccountFactory::new(
                         undeployed_status.class_hash,
-                        argent_config.implementation,
                         chain_id,
                         FieldElement::ZERO,
                         signer.clone(),
