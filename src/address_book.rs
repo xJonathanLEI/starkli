@@ -10,7 +10,9 @@ use starknet::{
 
 use crate::chain_id::ChainIdSource;
 
-pub const HARDCODED_ADDRESS_BOOK: [AddressBookEntry; 4] = [
+const CHAIN_ID_KATANA: FieldElement = felt!("0x4b4154414e41");
+
+pub const HARDCODED_ADDRESS_BOOK: [AddressBookEntry; 5] = [
     AddressBookEntry {
         chain_id: chain_id::MAINNET,
         name: "eth",
@@ -23,6 +25,11 @@ pub const HARDCODED_ADDRESS_BOOK: [AddressBookEntry; 4] = [
     },
     AddressBookEntry {
         chain_id: chain_id::TESTNET2,
+        name: "eth",
+        address: felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"),
+    },
+    AddressBookEntry {
+        chain_id: CHAIN_ID_KATANA,
         name: "eth",
         address: felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"),
     },
