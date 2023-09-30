@@ -39,6 +39,33 @@ pub struct SignerArgs {
     private_key: Option<String>,
 }
 
+#[derive(Debug)]
+pub enum SignerResolutionTask {
+    /// The user explicitly requested to use a signer, usually from the command line.
+    Strong(SignerResolutionTaskContent),
+    /// The signer comes from a global default or environment variable.
+    Weak(SignerResolutionTaskContent),
+    /// No signer option is provided at all.
+    None,
+}
+
+#[derive(Debug)]
+pub enum SignerResolutionTaskContent {
+    Keystore(KeystoreTaskContent),
+    PrivateKey(PrivateKeyTaskContent),
+}
+
+#[derive(Debug)]
+pub struct KeystoreTaskContent {
+    keystore: String,
+    keystore_password: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct PrivateKeyTaskContent {
+    key: String,
+}
+
 enum StringValue {
     FromCommandLine(String),
     FromEnvVar(String),
@@ -69,6 +96,13 @@ impl Signer for AnySigner {
 
 impl SignerArgs {
     pub fn into_signer(self) -> Result<AnySigner> {
+        self.into_task()?.resolve()
+    }
+
+    /// Parses the options into a resolution task without immediately performing the resolution.
+    /// This method allows callers to defer resolution to a later stage while still performing some
+    /// initial validations.
+    pub fn into_task(self) -> Result<SignerResolutionTask> {
         // We're not using the `env` derive from `clap` because we need to distinguish between
         // whether the value is supplied from the command line or the environment variable.
         //
@@ -83,33 +117,69 @@ impl SignerArgs {
             },
         };
 
-        match (keystore, self.keystore_password, self.private_key) {
+        let task = match (keystore, self.keystore_password, self.private_key) {
             (Some(StringValue::FromCommandLine(keystore)), keystore_password, None) => {
-                Self::resolve_keystore(keystore, keystore_password)
+                SignerResolutionTask::Strong(SignerResolutionTaskContent::Keystore(
+                    KeystoreTaskContent {
+                        keystore,
+                        keystore_password,
+                    },
+                ))
             }
-            (None, None, Some(private_key)) => Self::resolve_private_key(private_key),
+            (None, None, Some(private_key)) => SignerResolutionTask::Strong(
+                SignerResolutionTaskContent::PrivateKey(PrivateKeyTaskContent { key: private_key }),
+            ),
             (Some(StringValue::FromEnvVar(_)), None, Some(private_key)) => {
-                Self::resolve_private_key(private_key)
+                SignerResolutionTask::Strong(SignerResolutionTaskContent::PrivateKey(
+                    PrivateKeyTaskContent { key: private_key },
+                ))
             }
             (Some(StringValue::FromEnvVar(keystore)), keystore_password, None) => {
-                Self::resolve_keystore(keystore, keystore_password)
+                SignerResolutionTask::Weak(SignerResolutionTaskContent::Keystore(
+                    KeystoreTaskContent {
+                        keystore,
+                        keystore_password,
+                    },
+                ))
             }
-            _ => Err(anyhow::anyhow!(
+            (None, None, None) => SignerResolutionTask::None,
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "invalid signer option combination. \
+                    Do not mix options of different signer sources."
+                ))
+            }
+        };
+
+        Ok(task)
+    }
+}
+
+impl SignerResolutionTask {
+    pub fn resolve(self) -> Result<AnySigner> {
+        match self {
+            Self::Strong(task) | Self::Weak(task) => match task {
+                SignerResolutionTaskContent::Keystore(inner) => inner.resolve(),
+                SignerResolutionTaskContent::PrivateKey(inner) => inner.resolve(),
+            },
+            Self::None => Err(anyhow::anyhow!(
                 "no valid signer option provided. \
                 Consider using a keystore by providing a --keystore option.\
                 \n\nFor more information, see: https://book.starkli.rs/signers"
             )),
         }
     }
+}
 
-    fn resolve_keystore(keystore: String, keystore_password: Option<String>) -> Result<AnySigner> {
-        if keystore.is_empty() {
+impl KeystoreTaskContent {
+    pub fn resolve(self) -> Result<AnySigner> {
+        if self.keystore.is_empty() {
             anyhow::bail!("empty keystore path");
         }
 
-        let keystore = PathBuf::from(shellexpand::tilde(&keystore).into_owned());
+        let keystore = PathBuf::from(shellexpand::tilde(&self.keystore).into_owned());
 
-        if keystore_password.is_some() {
+        if self.keystore_password.is_some() {
             eprintln!(
                 "{}",
                 "WARNING: setting keystore passwords via --password is generally \
@@ -123,7 +193,7 @@ impl SignerArgs {
             anyhow::bail!("keystore file not found");
         }
 
-        let password = if let Some(password) = keystore_password {
+        let password = if let Some(password) = self.keystore_password {
             password
         } else {
             rpassword::prompt_password("Enter keystore password: ")?
@@ -133,8 +203,10 @@ impl SignerArgs {
 
         Ok(AnySigner::LocalWallet(LocalWallet::from_signing_key(key)))
     }
+}
 
-    fn resolve_private_key(private_key: String) -> Result<AnySigner> {
+impl PrivateKeyTaskContent {
+    pub fn resolve(self) -> Result<AnySigner> {
         // TODO: change to recommend hardware wallets when they become available
         eprintln!(
             "{}",
@@ -143,7 +215,7 @@ impl SignerArgs {
                 .bright_magenta()
         );
 
-        let private_key = FieldElement::from_hex_be(&private_key)?;
+        let private_key = FieldElement::from_hex_be(&self.key)?;
         let key = SigningKey::from_secret_scalar(private_key);
 
         Ok(AnySigner::LocalWallet(LocalWallet::from_signing_key(key)))

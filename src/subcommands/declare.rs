@@ -17,7 +17,6 @@ use crate::{
     casm::{CasmArgs, CasmHashSource},
     fee::{FeeArgs, FeeSetting},
     path::ExpandedPathbufParser,
-    signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
     ProviderArgs,
@@ -27,8 +26,6 @@ use crate::{
 pub struct Declare {
     #[clap(flatten)]
     provider: ProviderArgs,
-    #[clap(flatten)]
-    signer: SignerArgs,
     #[clap(flatten)]
     account: AccountArgs,
     #[clap(flatten)]
@@ -54,8 +51,7 @@ impl Declare {
 
         let provider = Arc::new(self.provider.into_provider());
 
-        let signer = self.signer.into_signer()?;
-        let account = self.account.into_account(provider.clone(), signer).await?;
+        let account = self.account.into_account(provider.clone()).await?;
 
         // Workaround for issue:
         //   https://github.com/eqlabs/pathfinder/issues/1208

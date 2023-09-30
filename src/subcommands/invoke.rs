@@ -13,7 +13,6 @@ use crate::{
     address_book::AddressBookResolver,
     decode::FeltDecoder,
     fee::{FeeArgs, FeeSetting},
-    signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
     ProviderArgs,
@@ -23,8 +22,6 @@ use crate::{
 pub struct Invoke {
     #[clap(flatten)]
     provider: ProviderArgs,
-    #[clap(flatten)]
-    signer: SignerArgs,
     #[clap(flatten)]
     account: AccountArgs,
     #[clap(flatten)]
@@ -86,8 +83,7 @@ impl Invoke {
             anyhow::bail!("empty execution");
         }
 
-        let signer = Arc::new(self.signer.into_signer()?);
-        let account = self.account.into_account(provider.clone(), signer).await?;
+        let account = self.account.into_account(provider.clone()).await?;
 
         let execution = account.execute(calls).fee_estimate_multiplier(1.5f64);
 

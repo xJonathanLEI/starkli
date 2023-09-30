@@ -13,10 +13,12 @@ use starknet::{
     },
     macros::{felt, selector},
     providers::Provider,
-    signers::Signer,
 };
 
-use crate::path::ExpandedPathbufParser;
+use crate::{
+    path::ExpandedPathbufParser,
+    signer::{AnySigner, SignerArgs},
+};
 
 const BRAAVOS_SIGNER_TYPE_STARK: FieldElement = FieldElement::ONE;
 
@@ -57,6 +59,8 @@ pub struct AccountArgs {
         help = "Path to account config JSON file"
     )]
     account: PathBuf,
+    #[clap(flatten)]
+    signer: SignerArgs,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -184,16 +188,13 @@ pub struct BraavosDeploymentContext {
 }
 
 impl AccountArgs {
-    pub async fn into_account<P, S>(
-        self,
-        provider: P,
-        signer: S,
-    ) -> Result<SingleOwnerAccount<P, S>>
+    pub async fn into_account<P>(self, provider: P) -> Result<SingleOwnerAccount<P, AnySigner>>
     where
         P: Provider + Send + Sync,
         P::Error: 'static,
-        S: Signer + Send + Sync,
     {
+        let signer = self.signer.into_signer()?;
+
         if !self.account.exists() {
             anyhow::bail!("account config file not found");
         }

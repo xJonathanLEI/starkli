@@ -10,7 +10,6 @@ use crate::{
     address_book::AddressBookResolver,
     decode::FeltDecoder,
     fee::{FeeArgs, FeeSetting},
-    signer::SignerArgs,
     utils::watch_tx,
     verbosity::VerbosityArgs,
     ProviderArgs,
@@ -28,8 +27,6 @@ const DEFAULT_UDC_ADDRESS: FieldElement = FieldElement::from_mont([
 pub struct Deploy {
     #[clap(flatten)]
     provider: ProviderArgs,
-    #[clap(flatten)]
-    signer: SignerArgs,
     #[clap(flatten)]
     account: AccountArgs,
     #[clap(long, help = "Do not derive contract address from deployer address")]
@@ -69,8 +66,7 @@ impl Deploy {
             SigningKey::from_random().secret_scalar()
         };
 
-        let signer = Arc::new(self.signer.into_signer()?);
-        let account = self.account.into_account(provider.clone(), signer).await?;
+        let account = self.account.into_account(provider.clone()).await?;
 
         // TODO: allow custom UDC
         let factory = ContractFactory::new_with_udc(class_hash, account, DEFAULT_UDC_ADDRESS);
