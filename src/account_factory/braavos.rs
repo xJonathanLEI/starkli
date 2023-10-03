@@ -1,7 +1,10 @@
 use async_trait::async_trait;
 use starknet::{
     accounts::{AccountFactory, PreparedAccountDeployment, RawAccountDeployment},
-    core::{crypto::compute_hash_on_elements, types::FieldElement},
+    core::{
+        crypto::compute_hash_on_elements,
+        types::{BlockId, BlockTag, FieldElement},
+    },
     macros::selector,
     providers::Provider,
     signers::Signer,
@@ -15,6 +18,7 @@ pub struct BraavosAccountFactory<S, P> {
     signer_public_key: FieldElement,
     signer: S,
     provider: P,
+    block_id: BlockId,
 }
 
 impl<S, P> BraavosAccountFactory<S, P>
@@ -38,7 +42,13 @@ where
             signer_public_key: signer_public_key.scalar(),
             signer,
             provider,
+            block_id: BlockId::Tag(BlockTag::Latest),
         })
+    }
+
+    pub fn set_block_id(&mut self, block_id: BlockId) -> &Self {
+        self.block_id = block_id;
+        self
     }
 }
 
@@ -71,6 +81,10 @@ where
 
     fn provider(&self) -> &Self::Provider {
         &self.provider
+    }
+
+    fn block_id(&self) -> BlockId {
+        self.block_id
     }
 
     async fn sign_deployment(

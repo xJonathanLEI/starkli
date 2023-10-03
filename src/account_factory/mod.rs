@@ -3,7 +3,7 @@ use starknet::{
     accounts::{
         AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory, RawAccountDeployment,
     },
-    core::types::FieldElement,
+    core::types::{BlockId, FieldElement},
     providers::Provider,
     signers::Signer,
 };
@@ -56,6 +56,14 @@ where
             AnyAccountFactory::OpenZeppelin(inner) => inner.provider(),
             AnyAccountFactory::Argent(inner) => inner.provider(),
             AnyAccountFactory::Braavos(inner) => inner.provider(),
+        }
+    }
+
+    fn block_id(&self) -> BlockId {
+        match self {
+            AnyAccountFactory::OpenZeppelin(inner) => inner.block_id(),
+            AnyAccountFactory::Argent(inner) => inner.block_id(),
+            AnyAccountFactory::Braavos(inner) => inner.block_id(),
         }
     }
 

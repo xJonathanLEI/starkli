@@ -5,7 +5,7 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::{
     accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory},
-    core::types::FieldElement,
+    core::types::{BlockId, BlockTag, FieldElement},
     providers::Provider,
     signers::Signer,
 };
@@ -89,15 +89,16 @@ impl Deploy {
                     );
                 }
 
-                AnyAccountFactory::OpenZeppelin(
-                    OpenZeppelinAccountFactory::new(
-                        undeployed_status.class_hash,
-                        chain_id,
-                        signer.clone(),
-                        provider.clone(),
-                    )
-                    .await?,
+                let mut factory = OpenZeppelinAccountFactory::new(
+                    undeployed_status.class_hash,
+                    chain_id,
+                    signer.clone(),
+                    provider.clone(),
                 )
+                .await?;
+                factory.set_block_id(BlockId::Tag(BlockTag::Pending));
+
+                AnyAccountFactory::OpenZeppelin(factory)
             }
             AccountVariant::Argent(argent_config) => {
                 // It's probably not worth it to continue to support legacy account deployment.
@@ -117,16 +118,17 @@ impl Deploy {
                     );
                 }
 
-                AnyAccountFactory::Argent(
-                    ArgentAccountFactory::new(
-                        undeployed_status.class_hash,
-                        chain_id,
-                        FieldElement::ZERO,
-                        signer.clone(),
-                        provider.clone(),
-                    )
-                    .await?,
+                let mut factory = ArgentAccountFactory::new(
+                    undeployed_status.class_hash,
+                    chain_id,
+                    FieldElement::ZERO,
+                    signer.clone(),
+                    provider.clone(),
                 )
+                .await?;
+                factory.set_block_id(BlockId::Tag(BlockTag::Pending));
+
+                AnyAccountFactory::Argent(factory)
             }
             AccountVariant::Braavos(braavos_config) => {
                 if !matches!(braavos_config.multisig, BraavosMultisigConfig::Off) {
@@ -151,17 +153,18 @@ impl Deploy {
                                     );
                                 }
 
-                                AnyAccountFactory::Braavos(
-                                    BraavosAccountFactory::new(
-                                        undeployed_status.class_hash,
-                                        context.mock_implementation,
-                                        braavos_config.implementation,
-                                        chain_id,
-                                        signer.clone(),
-                                        provider.clone(),
-                                    )
-                                    .await?,
+                                let mut factory = BraavosAccountFactory::new(
+                                    undeployed_status.class_hash,
+                                    context.mock_implementation,
+                                    braavos_config.implementation,
+                                    chain_id,
+                                    signer.clone(),
+                                    provider.clone(),
                                 )
+                                .await?;
+                                factory.set_block_id(BlockId::Tag(BlockTag::Pending));
+
+                                AnyAccountFactory::Braavos(factory)
                             } // Reject other variants as we add more types
                         }
                     }
