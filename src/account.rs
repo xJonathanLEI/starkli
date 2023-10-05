@@ -20,15 +20,15 @@ use crate::signer::{AnySigner, SignerArgs, SignerResolutionTask};
 
 const BRAAVOS_SIGNER_TYPE_STARK: FieldElement = FieldElement::ONE;
 
-pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 5] = [
+pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 6] = [
     KnownAccountClass {
         class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
-        variant: AccountVariantType::OpenZeppelin,
+        variant: AccountVariantType::OpenZeppelinLegacy,
         description: "OpenZeppelin account contract v0.6.1 compiled with cairo-lang v0.11.0.2",
     },
     KnownAccountClass {
         class_hash: felt!("0x04d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f"),
-        variant: AccountVariantType::OpenZeppelin,
+        variant: AccountVariantType::OpenZeppelinLegacy,
         description: "OpenZeppelin account contract v0.5.0 compiled with cairo-lang v0.10.1",
     },
     KnownAccountClass {
@@ -45,6 +45,11 @@ pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 5] = [
         class_hash: felt!("0x01a736d6ed154502257f02b1ccdf4d9d1089f80811cd6acad48e6b6a9d1f2003"),
         variant: AccountVariantType::Argent,
         description: "Argent X official account",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x04c6d6cf894f8bc96bb9c525e6853e5483177841f7388f74a46cfda6f028c755"),
+        variant: AccountVariantType::OpenZeppelin,
+        description: "OpenZeppelin account contract v0.7.0 compiled with cairo v2.2.0",
     },
 ];
 
@@ -160,10 +165,11 @@ pub struct BuiltinAccount {
 }
 
 pub enum AccountVariantType {
-    OpenZeppelin,
+    OpenZeppelinLegacy,
     ArgentLegacy,
     Braavos,
     Argent,
+    OpenZeppelin,
 }
 
 #[serde_as]
@@ -438,10 +444,11 @@ impl BraavosSigner {
 impl Display for AccountVariantType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AccountVariantType::OpenZeppelin => write!(f, "OpenZeppelin"),
+            AccountVariantType::OpenZeppelinLegacy => write!(f, "Legacy OpenZeppelin (Cairo 0)"),
             AccountVariantType::ArgentLegacy => write!(f, "Legacy Argent X (Cairo 0)"),
             AccountVariantType::Braavos => write!(f, "Braavos"),
             AccountVariantType::Argent => write!(f, "Argent X"),
+            AccountVariantType::OpenZeppelin => write!(f, "OpenZeppelin"),
         }
     }
 }

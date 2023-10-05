@@ -15,9 +15,9 @@ use crate::{
     signer::SignerArgs,
 };
 
-/// OpenZeppelin account contract v0.6.1 compiled with cairo-lang v0.11.0.2
+/// OpenZeppelin account contract v0.7.0 compiled with cairo v2.2.0
 const OZ_ACCOUNT_CLASS_HASH: FieldElement =
-    felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292");
+    felt!("0x04c6d6cf894f8bc96bb9c525e6853e5483177841f7388f74a46cfda6f028c755");
 
 #[derive(Debug, Parser)]
 pub struct Init {
@@ -53,7 +53,7 @@ impl Init {
             variant: AccountVariant::OpenZeppelin(OzAccountConfig {
                 version: 1,
                 public_key: signer.get_public_key().await?.scalar(),
-                legacy: true,
+                legacy: false,
             }),
             deployment: DeploymentStatus::Undeployed(UndeployedStatus {
                 class_hash: OZ_ACCOUNT_CLASS_HASH,

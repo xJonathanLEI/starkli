@@ -86,7 +86,7 @@ impl Fetch {
         };
 
         let variant = match known_class.variant {
-            AccountVariantType::OpenZeppelin => {
+            AccountVariantType::OpenZeppelinLegacy => {
                 let public_key = provider
                     .call(
                         FunctionCall {
@@ -238,6 +238,24 @@ impl Fetch {
                     implementation: None,
                     owner,
                     guardian,
+                })
+            }
+            AccountVariantType::OpenZeppelin => {
+                let public_key = provider
+                    .call(
+                        FunctionCall {
+                            contract_address: address,
+                            entry_point_selector: selector!("get_public_key"),
+                            calldata: vec![],
+                        },
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await?[0];
+
+                AccountVariant::OpenZeppelin(OzAccountConfig {
+                    version: 1,
+                    public_key,
+                    legacy: false,
                 })
             }
         };
