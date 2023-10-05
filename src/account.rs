@@ -13,12 +13,10 @@ use starknet::{
     },
     macros::{felt, selector},
     providers::Provider,
+    signers::{LocalWallet, SigningKey},
 };
 
-use crate::{
-    path::ExpandedPathbufParser,
-    signer::{AnySigner, SignerArgs},
-};
+use crate::signer::{AnySigner, SignerArgs, SignerResolutionTask};
 
 const BRAAVOS_SIGNER_TYPE_STARK: FieldElement = FieldElement::ONE;
 
@@ -50,15 +48,77 @@ pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 5] = [
     },
 ];
 
+pub const BUILTIN_ACCOUNTS: &[BuiltinAccount] = &[
+    BuiltinAccount {
+        id: "katana-0",
+        aliases: &["katana0", "katana"],
+        address: felt!("0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973"),
+        private_key: felt!("0x1800000000300000180000000000030000000000003006001800006600"),
+    },
+    BuiltinAccount {
+        id: "katana-1",
+        aliases: &["katana1"],
+        address: felt!("0x5686a647a9cdd63ade617e0baf3b364856b813b508f03903eb58a7e622d5855"),
+        private_key: felt!("0x33003003001800009900180300d206308b0070db00121318d17b5e6262150b"),
+    },
+    BuiltinAccount {
+        id: "katana-2",
+        aliases: &["katana2"],
+        address: felt!("0x765149d6bc63271df7b0316537888b81aa021523f9516a05306f10fd36914da"),
+        private_key: felt!("0x1c9053c053edf324aec366a34c6901b1095b07af69495bffec7d7fe21effb1b"),
+    },
+    BuiltinAccount {
+        id: "katana-3",
+        aliases: &["katana3"],
+        address: felt!("0x5006399928dad095cc39818cae15dc022592d47d883701e7814c9db19e96efc"),
+        private_key: felt!("0x736adbbcdac7cc600f89051db1abbc16b9996b46f6b58a9752a11c1028a8ec8"),
+    },
+    BuiltinAccount {
+        id: "katana-4",
+        aliases: &["katana4"],
+        address: felt!("0x586364c42cf7f6c968172ba0806b7403c567544266821c8cd28c292a08b2346"),
+        private_key: felt!("0x2bbf4f9fd0bbb2e60b0316c1fe0b76cf7a4d0198bd493ced9b8df2a3a24d68a"),
+    },
+    BuiltinAccount {
+        id: "katana-5",
+        aliases: &["katana5"],
+        address: felt!("0x70038d685013781745f0ac6fe44f23465f9c55a836fceb119b0d7d379f21026"),
+        private_key: felt!("0x283d1e73776cd4ac1ac5f0b879f561bded25eceb2cc589c674af0cec41df441"),
+    },
+    BuiltinAccount {
+        id: "katana-6",
+        aliases: &["katana6"],
+        address: felt!("0x5ae5b8925c1568f3ec6ab5f4d4ea4b5467e6d6a18f0944608a0d368ac15bdc7"),
+        private_key: felt!("0x3e3979c1ed728490308054fe357a9f49cf67f80f9721f44cc57235129e090f4"),
+    },
+    BuiltinAccount {
+        id: "katana-7",
+        aliases: &["katana7"],
+        address: felt!("0x456b9e6dbbfbfc59e23a80e5ff5ecc59bc02c3c5b9c78ab667471f52c018e87"),
+        private_key: felt!("0x6bf3604bcb41fed6c42bcca5436eeb65083a982ff65db0dc123f65358008b51"),
+    },
+    BuiltinAccount {
+        id: "katana-8",
+        aliases: &["katana8"],
+        address: felt!("0x5c47b38f788ec9d382b5079165bc96c0f49647250199a78d34c436d54d12217"),
+        private_key: felt!("0x14d6672dcb4b77ca36a887e9a11cd9d637d5012468175829e9c6e770c61642"),
+    },
+    BuiltinAccount {
+        id: "katana-9",
+        aliases: &["katana9"],
+        address: felt!("0x74bfdb5562f91764fddbbf3f4fb322de114a00d6d6889b19a4dd7b45d5ba24d"),
+        private_key: felt!("0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"),
+    },
+];
+
 #[derive(Debug, Clone, Parser)]
 pub struct AccountArgs {
     #[clap(
         long,
         env = "STARKNET_ACCOUNT",
-        value_parser = ExpandedPathbufParser,
         help = "Path to account config JSON file"
     )]
-    account: PathBuf,
+    account: String,
     #[clap(flatten)]
     signer: SignerArgs,
 }
@@ -89,6 +149,14 @@ pub struct KnownAccountClass {
     pub class_hash: FieldElement,
     pub variant: AccountVariantType,
     pub description: &'static str,
+}
+
+// All built-in accounts are assumed to be legacy OZ account for now.
+pub struct BuiltinAccount {
+    pub id: &'static str,
+    pub aliases: &'static [&'static str],
+    pub address: FieldElement,
+    pub private_key: FieldElement,
 }
 
 pub enum AccountVariantType {
@@ -193,29 +261,58 @@ impl AccountArgs {
         P: Provider + Send + Sync,
         P::Error: 'static,
     {
-        let signer = self.signer.into_signer()?;
+        let signer = self.signer.into_task()?;
 
-        if !self.account.exists() {
-            anyhow::bail!("account config file not found");
-        }
+        let mut account = if let Some(builtin_account) = find_builtin_account(&self.account) {
+            if matches!(signer, SignerResolutionTask::Strong(_)) {
+                // The user is supplying a signer explicitly when using a built-in account. This
+                // might be legitimate if the built-in account key has been modified, but it's more
+                // likely a user error. We would simply reject it here. Advanced users can always
+                // fetch the account into a file and use from there anyways.
+                anyhow::bail!(
+                    "do not supply signer options when using a built-in account ({})",
+                    builtin_account.id
+                );
+            }
 
-        let account_config: AccountConfig =
-            serde_json::from_reader(&mut std::fs::File::open(&self.account)?)?;
+            let chain_id = provider.chain_id().await?;
 
-        let account_address = match account_config.deployment {
-            DeploymentStatus::Undeployed(_) => anyhow::bail!("account not deployed"),
-            DeploymentStatus::Deployed(inner) => inner.address,
+            SingleOwnerAccount::new(
+                provider,
+                AnySigner::LocalWallet(LocalWallet::from_signing_key(
+                    SigningKey::from_secret_scalar(builtin_account.private_key),
+                )),
+                builtin_account.address,
+                chain_id,
+                ExecutionEncoding::Legacy,
+            )
+        } else {
+            let signer = signer.resolve()?;
+            let account = PathBuf::from(shellexpand::tilde(&self.account).into_owned());
+
+            if !account.exists() {
+                anyhow::bail!("account config file not found");
+            }
+
+            let account_config: AccountConfig =
+                serde_json::from_reader(&mut std::fs::File::open(&self.account)?)?;
+
+            let account_address = match account_config.deployment {
+                DeploymentStatus::Undeployed(_) => anyhow::bail!("account not deployed"),
+                DeploymentStatus::Deployed(inner) => inner.address,
+            };
+
+            let chain_id = provider.chain_id().await?;
+
+            SingleOwnerAccount::new(
+                provider,
+                signer,
+                account_address,
+                chain_id,
+                account_config.variant.execution_encoding(),
+            )
         };
 
-        let chain_id = provider.chain_id().await?;
-
-        let mut account = SingleOwnerAccount::new(
-            provider,
-            signer,
-            account_address,
-            chain_id,
-            account_config.variant.execution_encoding(),
-        );
         account.set_block_id(BlockId::Tag(BlockTag::Pending));
 
         Ok(account)
@@ -347,6 +444,12 @@ impl Display for AccountVariantType {
             AccountVariantType::Argent => write!(f, "Argent X"),
         }
     }
+}
+
+fn find_builtin_account(id: &str) -> Option<&'static BuiltinAccount> {
+    BUILTIN_ACCOUNTS
+        .iter()
+        .find(|&account| account.id == id || account.aliases.iter().any(|alias| *alias == id))
 }
 
 fn true_as_default() -> bool {
