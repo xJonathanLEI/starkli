@@ -1,0 +1,7 @@
+FROM --platform=linux/arm64/v8 alpine:latest
+
+LABEL org.opencontainers.image.source=https://github.com/xJonathanLEI/starkli
+
+COPY --chmod=744 ./starkli /usr/bin/
+
+ENTRYPOINT [ "starkli" ]

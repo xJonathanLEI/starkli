@@ -300,6 +300,90 @@ jobs:
             -H "Content-Type: application/octet-stream" \
             --data-binary "@target/aarch64-linux-android/release/${ARTIFACT_NAME}"
 
+  release-docker-images:
+    name: "Build Docker image for ${{ matrix.tag }}"
+    runs-on: "ubuntu-latest"
+    needs:
+      # We don't really need all these, but we want to make sure all platforms build successfully
+      # before running this step, as this step makes Docker images public already.
+      - "crate-info"
+      - "release-non-apple"
+      - "release-apple"
+      - "release-android"
+
+    strategy:
+      matrix:
+        include:
+          - tag: "amd64"
+            artifact: "starkli-x86_64-unknown-linux-musl"
+          - tag: "arm64"
+            artifact: "starkli-aarch64-unknown-linux-musl"
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v3"
+
+      - name: "Login to Docker Hub"
+        uses: "docker/login-action@v2"
+        with:
+          username: "${{ secrets.DOCKER_USERNAME }}"
+          password: "${{ secrets.DOCKER_PASSWORD }}"
+
+      - name: "Determine full Docker tag"
+        run: |
+          echo "DOCKER_TAG=starknet/starkli:${{ needs.crate-info.outputs.version }}-${{ matrix.tag }}" >> $GITHUB_ENV
+
+      - name: "Prepare work directory"
+        run: |
+          mkdir /tmp/work
+          cp ./.github/workflows/docker/Dockerfile.${{ matrix.tag }} /tmp/work/Dockerfile
+          cd /tmp/work
+
+      - name: "Download artifact"
+        uses: "actions/download-artifact@v3"
+        with:
+          name: "${{ matrix.artifact }}"
+          path: /tmp/work/starkli
+
+      - name: "Build Docker image"
+        run: |
+          cd /tmp/work
+          docker build -t $DOCKER_TAG .
+
+      - name: "Push Docker image"
+        run: |
+          docker push $DOCKER_TAG
+
+  release-docker-multiarch:
+    name: "Build Docker multi-arch image"
+    runs-on: "ubuntu-latest"
+    needs:
+      - "crate-info"
+      - "release-docker-images"
+
+    steps:
+      - name: "Login to Docker Hub"
+        uses: "docker/login-action@v2"
+        with:
+          username: "${{ secrets.DOCKER_USERNAME }}"
+          password: "${{ secrets.DOCKER_PASSWORD }}"
+
+      - name: "Pull arch-specific images"
+        run: |
+          docker pull starknet/starkli:${{ needs.crate-info.outputs.version }}-amd64
+          docker pull starknet/starkli:${{ needs.crate-info.outputs.version }}-arm64
+
+      - name: "Publish multi-arch manifest"
+        run: |
+          docker manifest create starknet/starkli:${{ needs.crate-info.outputs.version }} \
+            starknet/starkli:${{ needs.crate-info.outputs.version }}-amd64 \
+            starknet/starkli:${{ needs.crate-info.outputs.version }}-arm64
+          docker manifest create starknet/starkli:latest \
+            starknet/starkli:${{ needs.crate-info.outputs.version }}-amd64 \
+            starknet/starkli:${{ needs.crate-info.outputs.version }}-arm64
+          docker manifest push starknet/starkli:${{ needs.crate-info.outputs.version }}
+          docker manifest push starknet/starkli:latest
+
   publish-release:
     name: "Publish release"
     runs-on: "ubuntu-latest"
@@ -308,6 +392,7 @@ jobs:
       - "release-non-apple"
       - "release-apple"
       - "release-android"
+      - "release-docker-multiarch"
 
     steps:
       - name: "Publish release"
