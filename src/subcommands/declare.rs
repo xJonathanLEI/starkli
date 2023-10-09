@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use clap::Parser;
@@ -34,6 +34,13 @@ pub struct Declare {
     fee: FeeArgs,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
+    #[clap(
+        long,
+        env = "STARKNET_POLL_INTERVAL",
+        default_value = "5000",
+        help = "Transaction result poll interval in milliseconds"
+    )]
+    poll_interval: u64,
     #[clap(
         value_parser = ExpandedPathbufParser,
         help = "Path to contract artifact file"
@@ -219,7 +226,12 @@ impl Declare {
                 "Waiting for transaction {} to confirm...",
                 format!("{:#064x}", declaration_tx_hash).bright_yellow(),
             );
-            watch_tx(&provider, declaration_tx_hash).await?;
+            watch_tx(
+                &provider,
+                declaration_tx_hash,
+                Duration::from_millis(self.poll_interval),
+            )
+            .await?;
         }
 
         eprintln!("Class hash declared:");

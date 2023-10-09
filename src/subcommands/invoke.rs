@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use anyhow::Result;
 use clap::Parser;
@@ -28,6 +28,13 @@ pub struct Invoke {
     fee: FeeArgs,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
+    #[clap(
+        long,
+        env = "STARKNET_POLL_INTERVAL",
+        default_value = "5000",
+        help = "Transaction result poll interval in milliseconds"
+    )]
+    poll_interval: u64,
     #[clap(help = "One or more contract calls. See documentation for more details")]
     calls: Vec<String>,
     #[clap(flatten)]
@@ -122,7 +129,12 @@ impl Invoke {
                 "Waiting for transaction {} to confirm...",
                 format!("{:#064x}", invoke_tx).bright_yellow(),
             );
-            watch_tx(&provider, invoke_tx).await?;
+            watch_tx(
+                &provider,
+                invoke_tx,
+                Duration::from_millis(self.poll_interval),
+            )
+            .await?;
         }
 
         Ok(())

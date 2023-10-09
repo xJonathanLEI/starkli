@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use anyhow::Result;
 use clap::Parser;
@@ -37,6 +37,13 @@ pub struct Deploy {
     salt: Option<String>,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
+    #[clap(
+        long,
+        env = "STARKNET_POLL_INTERVAL",
+        default_value = "5000",
+        help = "Transaction result poll interval in milliseconds"
+    )]
+    poll_interval: u64,
     #[clap(help = "Class hash")]
     class_hash: String,
     #[clap(help = "Raw constructor arguments")]
@@ -123,7 +130,12 @@ impl Deploy {
                 "Waiting for transaction {} to confirm...",
                 format!("{:#064x}", deployment_tx).bright_yellow(),
             );
-            watch_tx(&provider, deployment_tx).await?;
+            watch_tx(
+                &provider,
+                deployment_tx,
+                Duration::from_millis(self.poll_interval),
+            )
+            .await?;
         }
 
         eprintln!("Contract deployed:");

@@ -10,35 +10,30 @@ use starknet::{
     providers::{MaybeUnknownErrorCode, Provider, ProviderError, StarknetErrorWithMessage},
 };
 
-pub async fn watch_tx<P>(provider: P, transaction_hash: FieldElement) -> Result<()>
+pub async fn watch_tx<P>(
+    provider: P,
+    transaction_hash: FieldElement,
+    poll_interval: Duration,
+) -> Result<()>
 where
     P: Provider,
     P::Error: 'static,
 {
     loop {
-        // TODO: check with sequencer gateway if it's not confirmed after an extended period of
-        // time, as full nodes don't have access to failed transactions and would report them
-        // as `NotReceived`.
         match provider.get_transaction_receipt(transaction_hash).await {
-            Ok(receipt) => {
-                // With JSON-RPC, once we get a receipt, the transaction must have been confirmed.
-                // Rejected transactions simply aren't available. This needs to be changed once we
-                // implement the sequencer fallback.
+            Ok(receipt) => match receipt.execution_result() {
+                ExecutionResult::Succeeded => {
+                    eprintln!(
+                        "Transaction {} confirmed",
+                        format!("{:#064x}", transaction_hash).bright_yellow()
+                    );
 
-                match receipt.execution_result() {
-                    ExecutionResult::Succeeded => {
-                        eprintln!(
-                            "Transaction {} confirmed",
-                            format!("{:#064x}", transaction_hash).bright_yellow()
-                        );
-
-                        return Ok(());
-                    }
-                    ExecutionResult::Reverted { reason } => {
-                        return Err(anyhow::anyhow!("transaction reverted: {}", reason));
-                    }
+                    return Ok(());
                 }
-            }
+                ExecutionResult::Reverted { reason } => {
+                    return Err(anyhow::anyhow!("transaction reverted: {}", reason));
+                }
+            },
             Err(ProviderError::StarknetError(StarknetErrorWithMessage {
                 code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
                 ..
@@ -48,7 +43,7 @@ where
             Err(err) => return Err(err.into()),
         }
 
-        tokio::time::sleep(Duration::from_secs(5)).await;
+        tokio::time::sleep(poll_interval).await;
     }
 }
 
