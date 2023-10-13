@@ -66,7 +66,7 @@ enum Subcommands {
     Call(Call),
     #[clap(alias = "tx", about = "Get Starknet transaction by hash")]
     Transaction(Transaction),
-    #[clap(about = "Get latest block number")]
+    #[clap(alias = "bn", about = "Get latest block number")]
     BlockNumber(BlockNumber),
     #[clap(about = "Get latest block hash")]
     BlockHash(BlockHash),
