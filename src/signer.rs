@@ -35,7 +35,7 @@ pub struct SignerArgs {
         help = "Supply keystore password from command line option instead of prompt"
     )]
     keystore_password: Option<String>,
-    #[clap(long, help = "Private key in hex in plain text")]
+    #[clap(long, help = private_key_help())]
     private_key: Option<String>,
 }
 
@@ -116,30 +116,70 @@ impl SignerArgs {
                 Err(_) => None,
             },
         };
+        let private_key = match self.private_key {
+            Some(value) => Some(StringValue::FromCommandLine(value)),
+            None => match std::env::var("STARKNET_PRIVATE_KEY") {
+                Ok(value) => Some(StringValue::FromEnvVar(value)),
+                Err(_) => None,
+            },
+        };
 
-        let task = match (keystore, self.keystore_password, self.private_key) {
-            (Some(StringValue::FromCommandLine(keystore)), keystore_password, None) => {
-                SignerResolutionTask::Strong(SignerResolutionTaskContent::Keystore(
-                    KeystoreTaskContent {
-                        keystore,
-                        keystore_password,
-                    },
-                ))
-            }
-            (None, None, Some(private_key)) => SignerResolutionTask::Strong(
-                SignerResolutionTaskContent::PrivateKey(PrivateKeyTaskContent { key: private_key }),
-            ),
-            (Some(StringValue::FromEnvVar(_)), None, Some(private_key)) => {
-                SignerResolutionTask::Strong(SignerResolutionTaskContent::PrivateKey(
-                    PrivateKeyTaskContent { key: private_key },
-                ))
-            }
+        let task = match (keystore, self.keystore_password, private_key) {
+            // Options:
+            //   Keystore: from command line
+            //   Private key: from env var or not supplied at all
+            // Resolution: use keystore
+            (Some(StringValue::FromCommandLine(keystore)), keystore_password, None)
+            | (
+                Some(StringValue::FromCommandLine(keystore)),
+                keystore_password,
+                Some(StringValue::FromEnvVar(_)),
+            ) => SignerResolutionTask::Strong(SignerResolutionTaskContent::Keystore(
+                KeystoreTaskContent {
+                    keystore,
+                    keystore_password,
+                },
+            )),
+            // Options:
+            //   Keystore: from env var or not supplied at all
+            //   Private key: from command line
+            // Resolution: use private key
+            (None, None, Some(StringValue::FromCommandLine(private_key)))
+            | (
+                Some(StringValue::FromEnvVar(_)),
+                None,
+                Some(StringValue::FromCommandLine(private_key)),
+            ) => SignerResolutionTask::Strong(SignerResolutionTaskContent::PrivateKey(
+                PrivateKeyTaskContent { key: private_key },
+            )),
+            // Options:
+            //   Keystore: from env var
+            //   Private key: not supplied at all
+            // Resolution: use keystore (weak)
             (Some(StringValue::FromEnvVar(keystore)), keystore_password, None) => {
                 SignerResolutionTask::Weak(SignerResolutionTaskContent::Keystore(
                     KeystoreTaskContent {
                         keystore,
                         keystore_password,
                     },
+                ))
+            }
+            // Options:
+            //   Keystore: not supplied at all
+            //   Private key: from env var
+            // Resolution: use private key (weak)
+            (None, None, Some(StringValue::FromEnvVar(private_key))) => SignerResolutionTask::Weak(
+                SignerResolutionTaskContent::PrivateKey(PrivateKeyTaskContent { key: private_key }),
+            ),
+            // Options:
+            //   Keystore: from env var
+            //   Private key: from env var
+            // Resolution: conflict
+            // (We don't really need this branch, but it's nice to show a case-specific warning.)
+            (Some(StringValue::FromEnvVar(_)), _, Some(StringValue::FromEnvVar(_))) => {
+                return Err(anyhow::anyhow!(
+                    "using STARKNET_KEYSTORE and STARKNET_PRIVATE_KEY \
+                    at the same time is not allowed"
                 ))
             }
             (None, None, None) => SignerResolutionTask::None,
@@ -226,5 +266,12 @@ fn keystore_help() -> String {
     format!(
         "Path to keystore JSON file [env: STARKNET_KEYSTORE={}]",
         std::env::var("STARKNET_KEYSTORE").unwrap_or_default()
+    )
+}
+
+fn private_key_help() -> String {
+    format!(
+        "Private key in hex in plain text [env: STARKNET_PRIVATE_KEY={}]",
+        std::env::var("STARKNET_PRIVATE_KEY").unwrap_or_default()
     )
 }
