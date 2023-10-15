@@ -1,11 +1,15 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use clap::Parser;
 use starknet::{
-    core::types::{BlockId, BlockTag, FieldElement},
+    core::types::{BlockId, BlockTag},
     providers::Provider,
 };
 
-use crate::{verbosity::VerbosityArgs, ProviderArgs};
+use crate::{
+    address_book::AddressBookResolver, decode::FeltDecoder, verbosity::VerbosityArgs, ProviderArgs,
+};
 
 #[derive(Debug, Parser)]
 pub struct Storage {
@@ -23,9 +27,15 @@ impl Storage {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
 
-        let provider = self.provider.into_provider();
-        let address = FieldElement::from_hex_be(&self.address)?;
-        let key = FieldElement::from_hex_be(&self.key)?;
+        let provider = Arc::new(self.provider.into_provider());
+        let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
+
+        let address = felt_decoder
+            .decode_single_with_addr_fallback(&self.address)
+            .await?;
+        let key = felt_decoder
+            .decode_single_with_storage_fallback(&self.key)
+            .await?;
 
         // TODO: allow custom block
         let value = provider

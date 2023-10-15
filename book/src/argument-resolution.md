@@ -31,14 +31,19 @@ The `const` scheme uses `content` as the key to look up a hard-coded table to co
 
 ### `selector`
 
-The `selector` calculates the _Starknet Keccak_ hash for the content to derive the function entryponit.
+The `selector` scheme calculates the _Starknet Keccak_ hash for the content to derive the function entryponit.
+
+### `storage`
+
+This scheme is currently the same as `selector`, but support for offsets and maps (e.g. `ERC20_balances[0x1234]`) might be added in the future to differentiate it.
 
 ## Scheme omission
 
 Normally, the `scheme:` prefix is required for opting in to argument resolution. However, there are a few exceptions:
 
 - the `addr:` prefix can be omitted when an address is expected;
-- the `selector:` prefix can be omitted when a selector is expected.
+- the `selector:` prefix can be omitted when a selector is expected;
+- the `storage:` prefix can be omitted in the `starkli storage` command.
 
 As an example, consider the `starkli invoke` command. To use the `addr` and `selector` schemes, one would run:
 

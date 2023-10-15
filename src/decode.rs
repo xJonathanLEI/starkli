@@ -2,7 +2,7 @@ use anyhow::Result;
 use num_bigint::BigUint;
 use starknet::core::{
     types::FieldElement,
-    utils::{cairo_short_string_to_felt, get_selector_from_name},
+    utils::{cairo_short_string_to_felt, get_selector_from_name, get_storage_var_address},
 };
 
 use crate::{address_book::AddressBookResolver, chain_id::ChainIdSource};
@@ -15,6 +15,7 @@ pub struct FeltDecoder<S> {
 enum FallbackOption {
     Address,
     Selector,
+    Storage,
     None,
 }
 
@@ -45,6 +46,19 @@ where
 
     pub async fn decode_single_with_selector_fallback(&self, raw: &str) -> Result<FieldElement> {
         let decoded = self.decode_inner(raw, FallbackOption::Selector).await?;
+
+        if decoded.len() == 1 {
+            Ok(decoded[0])
+        } else {
+            Err(anyhow::anyhow!(
+                "expected 1 element but found {}",
+                decoded.len()
+            ))
+        }
+    }
+
+    pub async fn decode_single_with_storage_fallback(&self, raw: &str) -> Result<FieldElement> {
+        let decoded = self.decode_inner(raw, FallbackOption::Storage).await?;
 
         if decoded.len() == 1 {
             Ok(decoded[0])
@@ -128,6 +142,11 @@ where
             Ok(vec![cairo_short_string_to_felt(short_string)?])
         } else if let Some(selector) = raw.strip_prefix("selector:") {
             Ok(vec![get_selector_from_name(selector)?])
+        } else if let Some(storage) = raw.strip_prefix("storage:") {
+            if storage.contains('[') || storage.contains(']') {
+                anyhow::bail!("cannot resolve storage address: maps not supported yet")
+            }
+            Ok(vec![get_storage_var_address(storage, &[])?])
         } else {
             match raw.parse::<FieldElement>() {
                 Ok(value) => Ok(vec![value]),
@@ -137,6 +156,12 @@ where
                         Err(_) => Err(err.into()),
                     },
                     FallbackOption::Selector => Ok(vec![get_selector_from_name(raw)?]),
+                    FallbackOption::Storage => {
+                        if raw.contains('[') || raw.contains(']') {
+                            anyhow::bail!("cannot resolve storage address: maps not supported yet")
+                        }
+                        Ok(vec![get_storage_var_address(raw, &[])?])
+                    }
                     FallbackOption::None => Err(err.into()),
                 },
             }
