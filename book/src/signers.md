@@ -49,4 +49,4 @@ Plain text private keys are only intended to be used for development purposes, w
 starkli signer gen-keypair
 ```
 
-For commands that expect a signer, you can then use the `--private-key <KEY>` option.
+For commands that expect a signer, you can then use the `--private-key <KEY>` option. Alternatively, you can set the `STARKNET_PRIVATE_KEY` environment variable to make command invocations easier.
