@@ -247,13 +247,21 @@ impl KeystoreTaskContent {
 
 impl PrivateKeyTaskContent {
     pub fn resolve(self) -> Result<AnySigner> {
+        let print_warning = match std::env::var("STARKLI_NO_PLAIN_KEY_WARNING") {
+            Ok(value) => value == "false",
+            Err(_) => true,
+        };
+
         // TODO: change to recommend hardware wallets when they become available
-        eprintln!(
-            "{}",
-            "WARNING: using private key in plain text is highly insecure, and you should \
-                    ONLY do this for development. Consider using an encrypted keystore instead."
-                .bright_magenta()
-        );
+        if print_warning {
+            eprintln!(
+                "{}",
+                "WARNING: using private key in plain text is highly insecure, and you should \
+                ONLY do this for development. Consider using an encrypted keystore instead. \
+                (Check out https://book.starkli.rs/signers on how to suppress this warning)"
+                    .bright_magenta()
+            );
+        }
 
         let private_key = FieldElement::from_hex_be(&self.key)?;
         let key = SigningKey::from_secret_scalar(private_key);

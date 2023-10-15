@@ -50,3 +50,7 @@ starkli signer gen-keypair
 ```
 
 For commands that expect a signer, you can then use the `--private-key <KEY>` option. Alternatively, you can set the `STARKNET_PRIVATE_KEY` environment variable to make command invocations easier.
+
+> ℹ️ **Note**
+>
+> Starkli shows a warning when you use plain-text private keys. If you know what you're doing, you can suppress this warning by setting the `STARKLI_NO_PLAIN_KEY_WARNING` to _anything_ but `false`.
