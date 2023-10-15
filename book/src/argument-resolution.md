@@ -29,18 +29,25 @@ The `const` scheme uses `content` as the key to look up a hard-coded table to co
 | `u256_max` | `0xffffffffffffffffffffffffffffffff, 0xffffffffffffffffffffffffffffffff` |
 | `felt_max` | `0x0800000000000011000000000000000000000000000000000000000000000000`     |
 
+### `selector`
+
+The `selector` calculates the _Starknet Keccak_ hash for the content to derive the function entryponit.
+
 ## Scheme omission
 
-Normally, the `scheme:` prefix is required for opting in to argument resolution. However, there's one exception: the `addr:` prefix can be omitted when an address is expected.
+Normally, the `scheme:` prefix is required for opting in to argument resolution. However, there are a few exceptions:
 
-As an example, consider the `starkli invoke` command. To use the `addr` scheme, one would run:
+- the `addr:` prefix can be omitted when an address is expected;
+- the `selector:` prefix can be omitted when a selector is expected.
+
+As an example, consider the `starkli invoke` command. To use the `addr` and `selector` schemes, one would run:
 
 ```console
-starkli invoke addr:eth ...
+starkli invoke addr:eth selector:transfer ...
 ```
 
-However, since the first positional argument for the `starkli invoke` is always expected to be an address, this command can be simplified into:
+However, since the first positional argument for the `starkli invoke` is always expected to be an address, and the second one a selector, this command can be simplified into:
 
 ```console
-starkli invoke eth ...
+starkli invoke eth transfer ...
 ```

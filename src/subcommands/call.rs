@@ -3,10 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use starknet::{
-    core::{
-        types::{BlockId, BlockTag, FunctionCall},
-        utils::get_selector_from_name,
-    },
+    core::types::{BlockId, BlockTag, FunctionCall},
     providers::Provider,
 };
 
@@ -38,7 +35,9 @@ impl Call {
         let contract_address = felt_decoder
             .decode_single_with_addr_fallback(&self.contract_address)
             .await?;
-        let selector = get_selector_from_name(&self.selector)?;
+        let selector = felt_decoder
+            .decode_single_with_selector_fallback(&self.selector)
+            .await?;
 
         let mut calldata = vec![];
         for element in self.calldata.iter() {

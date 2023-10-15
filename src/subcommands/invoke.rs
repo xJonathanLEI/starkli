@@ -5,7 +5,7 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::{
     accounts::{Account, Call},
-    core::{types::FieldElement, utils::get_selector_from_name},
+    core::types::FieldElement,
 };
 
 use crate::{
@@ -65,7 +65,9 @@ impl Invoke {
                     .await?;
 
                 let next_arg = arg_iter.next().ok_or_else(unexpected_end_of_args)?;
-                let selector = get_selector_from_name(&next_arg)?;
+                let selector = felt_decoder
+                    .decode_single_with_selector_fallback(&next_arg)
+                    .await?;
 
                 let mut calldata = vec![];
                 for arg in &mut arg_iter {

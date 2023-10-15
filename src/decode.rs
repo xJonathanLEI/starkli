@@ -1,11 +1,21 @@
 use anyhow::Result;
 use num_bigint::BigUint;
-use starknet::core::{types::FieldElement, utils::cairo_short_string_to_felt};
+use starknet::core::{
+    types::FieldElement,
+    utils::{cairo_short_string_to_felt, get_selector_from_name},
+};
 
 use crate::{address_book::AddressBookResolver, chain_id::ChainIdSource};
 
 pub struct FeltDecoder<S> {
     address_book_resolver: AddressBookResolver<S>,
+}
+
+#[derive(Clone, Copy)]
+enum FallbackOption {
+    Address,
+    Selector,
+    None,
 }
 
 impl<S> FeltDecoder<S> {
@@ -21,7 +31,20 @@ where
     S: ChainIdSource,
 {
     pub async fn decode_single_with_addr_fallback(&self, raw: &str) -> Result<FieldElement> {
-        let decoded = self.decode_inner(raw, true).await?;
+        let decoded = self.decode_inner(raw, FallbackOption::Address).await?;
+
+        if decoded.len() == 1 {
+            Ok(decoded[0])
+        } else {
+            Err(anyhow::anyhow!(
+                "expected 1 element but found {}",
+                decoded.len()
+            ))
+        }
+    }
+
+    pub async fn decode_single_with_selector_fallback(&self, raw: &str) -> Result<FieldElement> {
+        let decoded = self.decode_inner(raw, FallbackOption::Selector).await?;
 
         if decoded.len() == 1 {
             Ok(decoded[0])
@@ -34,10 +57,14 @@ where
     }
 
     pub async fn decode(&self, raw: &str) -> Result<Vec<FieldElement>> {
-        self.decode_inner(raw, false).await
+        self.decode_inner(raw, FallbackOption::None).await
     }
 
-    async fn decode_inner(&self, raw: &str, addr_fallback: bool) -> Result<Vec<FieldElement>> {
+    async fn decode_inner(
+        &self,
+        raw: &str,
+        fallback_option: FallbackOption,
+    ) -> Result<Vec<FieldElement>> {
         if let Some(addr_name) = raw.strip_prefix("addr:") {
             Ok(vec![self.resolve_addr(addr_name).await?])
         } else if let Some(u256_str) = raw.strip_prefix("u256:") {
@@ -99,19 +126,19 @@ where
             }
         } else if let Some(short_string) = raw.strip_prefix("str:") {
             Ok(vec![cairo_short_string_to_felt(short_string)?])
+        } else if let Some(selector) = raw.strip_prefix("selector:") {
+            Ok(vec![get_selector_from_name(selector)?])
         } else {
             match raw.parse::<FieldElement>() {
                 Ok(value) => Ok(vec![value]),
-                Err(err) => {
-                    if addr_fallback {
-                        match self.resolve_addr(raw).await {
-                            Ok(value) => Ok(vec![value]),
-                            Err(_) => Err(err.into()),
-                        }
-                    } else {
-                        Err(err.into())
-                    }
-                }
+                Err(err) => match fallback_option {
+                    FallbackOption::Address => match self.resolve_addr(raw).await {
+                        Ok(value) => Ok(vec![value]),
+                        Err(_) => Err(err.into()),
+                    },
+                    FallbackOption::Selector => Ok(vec![get_selector_from_name(raw)?]),
+                    FallbackOption::None => Err(err.into()),
+                },
             }
         }
     }
