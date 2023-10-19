@@ -26,6 +26,8 @@ pub struct Invoke {
     account: AccountArgs,
     #[clap(flatten)]
     fee: FeeArgs,
+    #[clap(long, help = "Provide transaction nonce manually")]
+    nonce: Option<FieldElement>,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(
@@ -118,6 +120,11 @@ impl Invoke {
 
                 estimated_fee_with_buffer.into()
             }
+        };
+
+        let execution = match self.nonce {
+            Some(nonce) => execution.nonce(nonce),
+            None => execution,
         };
 
         let invoke_tx = execution.max_fee(max_fee).send().await?.transaction_hash;

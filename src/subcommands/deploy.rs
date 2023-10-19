@@ -35,6 +35,8 @@ pub struct Deploy {
     fee: FeeArgs,
     #[clap(long, help = "Use the given salt to compute contract deploy address")]
     salt: Option<String>,
+    #[clap(long, help = "Provide transaction nonce manually")]
+    nonce: Option<FieldElement>,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(
@@ -114,6 +116,11 @@ impl Deploy {
             "The contract will be deployed at address {}",
             format!("{:#064x}", deployed_address).bright_yellow()
         );
+
+        let contract_deployment = match self.nonce {
+            Some(nonce) => contract_deployment.nonce(nonce),
+            None => contract_deployment,
+        };
 
         let deployment_tx = contract_deployment
             .max_fee(max_fee)

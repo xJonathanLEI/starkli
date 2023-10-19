@@ -32,6 +32,8 @@ pub struct Deploy {
     signer: SignerArgs,
     #[clap(flatten)]
     fee: FeeArgs,
+    #[clap(long, help = "Provide transaction nonce manually")]
+    nonce: Option<FieldElement>,
     #[clap(
         long,
         env = "STARKNET_POLL_INTERVAL",
@@ -244,6 +246,11 @@ impl Deploy {
         // TODO: add flag for skipping this manual confirmation step
         eprint!("Press [ENTER] once you've funded the address.");
         std::io::stdin().read_line(&mut String::new())?;
+
+        let account_deployment = match self.nonce {
+            Some(nonce) => account_deployment.nonce(nonce),
+            None => account_deployment,
+        };
 
         // TODO: add option to check ETH balance before sending out tx
         let account_deployment_tx = account_deployment

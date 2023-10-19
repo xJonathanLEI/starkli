@@ -32,6 +32,8 @@ pub struct Declare {
     casm: CasmArgs,
     #[clap(flatten)]
     fee: FeeArgs,
+    #[clap(long, help = "Provide transaction nonce manually")]
+    nonce: Option<FieldElement>,
     #[clap(long, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(
@@ -153,6 +155,11 @@ impl Declare {
                 }
             };
 
+            let declaration = match self.nonce {
+                Some(nonce) => declaration.nonce(nonce),
+                None => declaration,
+            };
+
             (
                 class_hash,
                 declaration.max_fee(max_fee).send().await?.transaction_hash,
@@ -206,6 +213,11 @@ impl Declare {
 
                     estimated_fee_with_buffer.into()
                 }
+            };
+
+            let declaration = match self.nonce {
+                Some(nonce) => declaration.nonce(nonce),
+                None => declaration,
             };
 
             (
