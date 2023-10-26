@@ -37,7 +37,7 @@ pub struct Declare {
     simulate: bool,
     #[clap(long, help = "Provide transaction nonce manually")]
     nonce: Option<FieldElement>,
-    #[clap(long, help = "Wait for the transaction to confirm")]
+    #[clap(long, short, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(
         long,
