@@ -78,6 +78,8 @@ enum Subcommands {
     StateUpdate(StateUpdate),
     #[clap(alias = "receipt", about = "Get transaction receipt by hash")]
     TransactionReceipt(TransactionReceipt),
+    #[clap(about = "Get transaction trace by hash")]
+    Trace(TransactionTrace),
     #[clap(about = "Get Starknet network ID")]
     ChainId(ChainId),
     #[clap(about = "Get native gas token (currently ETH) balance")]
@@ -166,6 +168,7 @@ async fn run_command(cli: Cli) -> Result<()> {
             Subcommands::BlockTime(cmd) => cmd.run().await,
             Subcommands::StateUpdate(cmd) => cmd.run().await,
             Subcommands::TransactionReceipt(cmd) => cmd.run().await,
+            Subcommands::Trace(cmd) => cmd.run().await,
             Subcommands::ChainId(cmd) => cmd.run().await,
             Subcommands::Balance(cmd) => cmd.run().await,
             Subcommands::Nonce(cmd) => cmd.run().await,

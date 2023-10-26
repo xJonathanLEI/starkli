@@ -81,3 +81,6 @@ pub use invoke::Invoke;
 
 mod lab;
 pub use lab::Lab;
+
+mod transaction_trace;
+pub use transaction_trace::TransactionTrace;
