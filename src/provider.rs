@@ -370,4 +370,44 @@ impl Provider for ExtendedProvider {
         )
         .await
     }
+
+    async fn trace_transaction<H>(
+        &self,
+        transaction_hash: H,
+    ) -> Result<TransactionTrace, ProviderError<Self::Error>>
+    where
+        H: AsRef<FieldElement> + Send + Sync,
+    {
+        <AnyProvider as Provider>::trace_transaction(&self.provider, transaction_hash).await
+    }
+
+    async fn simulate_transactions<B, T, S>(
+        &self,
+        block_id: B,
+        transactions: T,
+        simulation_flags: S,
+    ) -> Result<Vec<SimulatedTransaction>, ProviderError<Self::Error>>
+    where
+        B: AsRef<BlockId> + Send + Sync,
+        T: AsRef<[BroadcastedTransaction]> + Send + Sync,
+        S: AsRef<[SimulationFlag]> + Send + Sync,
+    {
+        <AnyProvider as Provider>::simulate_transactions(
+            &self.provider,
+            block_id,
+            transactions,
+            simulation_flags,
+        )
+        .await
+    }
+
+    async fn trace_block_transactions<H>(
+        &self,
+        block_hash: H,
+    ) -> Result<Vec<TransactionTraceWithHash>, ProviderError<Self::Error>>
+    where
+        H: AsRef<FieldElement> + Send + Sync,
+    {
+        <AnyProvider as Provider>::trace_block_transactions(&self.provider, block_hash).await
+    }
 }

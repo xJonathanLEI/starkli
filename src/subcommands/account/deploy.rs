@@ -3,6 +3,7 @@ use std::{io::Write, path::PathBuf, sync::Arc, time::Duration};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
+use colored_json::{ColorMode, Output};
 use starknet::{
     accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory},
     core::types::{BlockId, BlockTag, FieldElement},
@@ -32,6 +33,8 @@ pub struct Deploy {
     signer: SignerArgs,
     #[clap(flatten)]
     fee: FeeArgs,
+    #[clap(long, help = "Simulate the transaction only")]
+    simulate: bool,
     #[clap(long, help = "Provide transaction nonce manually")]
     nonce: Option<FieldElement>,
     #[clap(
@@ -65,6 +68,9 @@ impl Deploy {
         self.verbosity.setup_logging();
 
         let fee_setting = self.fee.into_setting()?;
+        if self.simulate && fee_setting.is_estimate_only() {
+            anyhow::bail!("--simulate cannot be used with --estimate-only");
+        }
 
         let provider = Arc::new(self.provider.into_provider());
         let signer = Arc::new(self.signer.into_signer()?);
@@ -216,48 +222,57 @@ impl Deploy {
             }
         };
 
-        match max_fee {
-            MaxFeeType::Manual { max_fee } => {
-                eprintln!(
-                    "You've manually specified the account deployment fee to be {}. \
-                    Therefore, fund at least:\n    {}",
-                    format!("{} ETH", max_fee.to_big_decimal(18)).bright_yellow(),
-                    format!("{} ETH", max_fee.to_big_decimal(18)).bright_yellow(),
-                );
+        if !self.simulate {
+            match max_fee {
+                MaxFeeType::Manual { max_fee } => {
+                    eprintln!(
+                        "You've manually specified the account deployment fee to be {}. \
+                        Therefore, fund at least:\n    {}",
+                        format!("{} ETH", max_fee.to_big_decimal(18)).bright_yellow(),
+                        format!("{} ETH", max_fee.to_big_decimal(18)).bright_yellow(),
+                    );
+                }
+                MaxFeeType::Estimated {
+                    estimate,
+                    estimate_with_buffer,
+                } => {
+                    eprintln!(
+                        "The estimated account deployment fee is {}. \
+                        However, to avoid failure, fund at least:\n    {}",
+                        format!("{} ETH", estimate.to_big_decimal(18)).bright_yellow(),
+                        format!("{} ETH", estimate_with_buffer.to_big_decimal(18)).bright_yellow()
+                    );
+                }
             }
-            MaxFeeType::Estimated {
-                estimate,
-                estimate_with_buffer,
-            } => {
-                eprintln!(
-                    "The estimated account deployment fee is {}. \
-                    However, to avoid failure, fund at least:\n    {}",
-                    format!("{} ETH", estimate.to_big_decimal(18)).bright_yellow(),
-                    format!("{} ETH", estimate_with_buffer.to_big_decimal(18)).bright_yellow()
-                );
-            }
+
+            eprintln!(
+                "to the following address:\n    {}",
+                format!("{:#064x}", target_deployment_address).bright_yellow()
+            );
+
+            // TODO: add flag for skipping this manual confirmation step
+            eprint!("Press [ENTER] once you've funded the address.");
+            std::io::stdin().read_line(&mut String::new())?;
         }
-
-        eprintln!(
-            "to the following address:\n    {}",
-            format!("{:#064x}", target_deployment_address).bright_yellow()
-        );
-
-        // TODO: add flag for skipping this manual confirmation step
-        eprint!("Press [ENTER] once you've funded the address.");
-        std::io::stdin().read_line(&mut String::new())?;
 
         let account_deployment = match self.nonce {
             Some(nonce) => account_deployment.nonce(nonce),
             None => account_deployment,
         };
+        let account_deployment = account_deployment.max_fee(max_fee.max_fee());
+
+        if self.simulate {
+            let simulation = account_deployment.simulate(false, false).await?;
+            let simulation_json = serde_json::to_value(simulation)?;
+
+            let simulation_json =
+                colored_json::to_colored_json(&simulation_json, ColorMode::Auto(Output::StdOut))?;
+            println!("{simulation_json}");
+            return Ok(());
+        }
 
         // TODO: add option to check ETH balance before sending out tx
-        let account_deployment_tx = account_deployment
-            .max_fee(max_fee.max_fee())
-            .send()
-            .await?
-            .transaction_hash;
+        let account_deployment_tx = account_deployment.send().await?.transaction_hash;
         eprintln!(
             "Account deployment transaction: {}",
             format!("{:#064x}", account_deployment_tx).bright_yellow()

@@ -3,6 +3,7 @@ use std::{sync::Arc, time::Duration};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
+use colored_json::{ColorMode, Output};
 use starknet::{contract::ContractFactory, core::types::FieldElement, signers::SigningKey};
 
 use crate::{
@@ -33,6 +34,8 @@ pub struct Deploy {
     not_unique: bool,
     #[clap(flatten)]
     fee: FeeArgs,
+    #[clap(long, help = "Simulate the transaction only")]
+    simulate: bool,
     #[clap(long, help = "Use the given salt to compute contract deploy address")]
     salt: Option<String>,
     #[clap(long, help = "Provide transaction nonce manually")]
@@ -59,6 +62,9 @@ impl Deploy {
         self.verbosity.setup_logging();
 
         let fee_setting = self.fee.into_setting()?;
+        if self.simulate && fee_setting.is_estimate_only() {
+            anyhow::bail!("--simulate cannot be used with --estimate-only");
+        }
 
         let provider = Arc::new(self.provider.into_provider());
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
@@ -121,12 +127,19 @@ impl Deploy {
             Some(nonce) => contract_deployment.nonce(nonce),
             None => contract_deployment,
         };
+        let contract_deployment = contract_deployment.max_fee(max_fee);
 
-        let deployment_tx = contract_deployment
-            .max_fee(max_fee)
-            .send()
-            .await?
-            .transaction_hash;
+        if self.simulate {
+            let simulation = contract_deployment.simulate(false, false).await?;
+            let simulation_json = serde_json::to_value(simulation)?;
+
+            let simulation_json =
+                colored_json::to_colored_json(&simulation_json, ColorMode::Auto(Output::StdOut))?;
+            println!("{simulation_json}");
+            return Ok(());
+        }
+
+        let deployment_tx = contract_deployment.send().await?.transaction_hash;
         eprintln!(
             "Contract deployment transaction: {}",
             format!("{:#064x}", deployment_tx).bright_yellow()

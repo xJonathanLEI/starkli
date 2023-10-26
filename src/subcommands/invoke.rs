@@ -3,6 +3,7 @@ use std::{sync::Arc, time::Duration};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
+use colored_json::{ColorMode, Output};
 use starknet::{
     accounts::{Account, Call},
     core::types::FieldElement,
@@ -26,6 +27,8 @@ pub struct Invoke {
     account: AccountArgs,
     #[clap(flatten)]
     fee: FeeArgs,
+    #[clap(long, help = "Simulate the transaction only")]
+    simulate: bool,
     #[clap(long, help = "Provide transaction nonce manually")]
     nonce: Option<FieldElement>,
     #[clap(long, help = "Wait for the transaction to confirm")]
@@ -48,6 +51,9 @@ impl Invoke {
         self.verbosity.setup_logging();
 
         let fee_setting = self.fee.into_setting()?;
+        if self.simulate && fee_setting.is_estimate_only() {
+            anyhow::bail!("--simulate cannot be used with --estimate-only");
+        }
 
         let provider = Arc::new(self.provider.into_provider());
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
@@ -126,8 +132,19 @@ impl Invoke {
             Some(nonce) => execution.nonce(nonce),
             None => execution,
         };
+        let execution = execution.max_fee(max_fee);
 
-        let invoke_tx = execution.max_fee(max_fee).send().await?.transaction_hash;
+        if self.simulate {
+            let simulation = execution.simulate(false, false).await?;
+            let simulation_json = serde_json::to_value(simulation)?;
+
+            let simulation_json =
+                colored_json::to_colored_json(&simulation_json, ColorMode::Auto(Output::StdOut))?;
+            println!("{simulation_json}");
+            return Ok(());
+        }
+
+        let invoke_tx = execution.send().await?.transaction_hash;
         eprintln!(
             "Invoke transaction: {}",
             format!("{:#064x}", invoke_tx).bright_yellow()
