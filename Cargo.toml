@@ -1,6 +1,6 @@
 [package]
 name = "starkli"
-version = "0.1.19"
+version = "0.1.20"
 authors = ["Jonathan LEI <me@xjonathan.dev>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
