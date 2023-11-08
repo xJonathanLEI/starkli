@@ -17,7 +17,6 @@ pub async fn watch_tx<P>(
 ) -> Result<()>
 where
     P: Provider,
-    P::Error: 'static,
 {
     loop {
         match provider.get_transaction_receipt(transaction_hash).await {

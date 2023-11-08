@@ -283,7 +283,6 @@ impl Declare {
     async fn check_already_declared<P>(provider: P, class_hash: FieldElement) -> Result<bool>
     where
         P: Provider,
-        P::Error: 'static,
     {
         match provider
             .get_class(BlockId::Tag(BlockTag::Pending), class_hash)

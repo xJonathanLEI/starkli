@@ -265,7 +265,6 @@ impl AccountArgs {
     pub async fn into_account<P>(self, provider: P) -> Result<SingleOwnerAccount<P, AnySigner>>
     where
         P: Provider + Send + Sync,
-        P::Error: 'static,
     {
         let signer = self.signer.into_task()?;
 
