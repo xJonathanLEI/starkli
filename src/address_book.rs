@@ -1,4 +1,4 @@
-// Very temporary implementation of a hard-coded addres book
+// Very temporary implementation of a hard-coded address book
 
 use std::cell::OnceCell;
 

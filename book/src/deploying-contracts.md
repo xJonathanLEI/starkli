@@ -8,7 +8,7 @@ With Starkli, this is done with the `starkli deploy` command.
 >
 > You need both a [signer](./signers.md) and an [account](./accounts.md) for this. The commands shown in this page omit the signer and account options for better readability, and assume you've properly configured the environment variables.
 
-To deploy a contract with class hash `<CLAS_HASH>`, simply run:
+To deploy a contract with class hash `<CLASS_HASH>`, simply run:
 
 ```console
 starkli deploy <CLASS_HASH> <CTOR_ARGS>
