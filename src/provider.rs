@@ -25,7 +25,7 @@ pub struct ProviderArgs {
     network: Option<Network>,
 }
 
-/// We need this because integration network has the same chain ID as `goerli-1`. We would otherwise
+/// We need this because integration network has the same chain ID as `goerli`. We would otherwise
 /// has no way of telling them apart. We could generally just ignore this, but it would actually
 /// cause issues when deciding what Sierra compiler version to use depending on network, so we still
 /// need this.
@@ -67,8 +67,7 @@ impl ProviderArgs {
                 ExtendedProvider::new(
                     AnyProvider::SequencerGateway(match network {
                         Network::Mainnet => SequencerGatewayProvider::starknet_alpha_mainnet(),
-                        Network::Goerli1 => SequencerGatewayProvider::starknet_alpha_goerli(),
-                        Network::Goerli2 => SequencerGatewayProvider::starknet_alpha_goerli_2(),
+                        Network::Goerli => SequencerGatewayProvider::starknet_alpha_goerli(),
                         Network::Integration => SequencerGatewayProvider::new(
                             Url::parse("https://external.integration.starknet.io/gateway").unwrap(),
                             Url::parse("https://external.integration.starknet.io/feeder_gateway")
@@ -77,17 +76,17 @@ impl ProviderArgs {
                         ),
                     }),
                     match network {
-                        Network::Mainnet | Network::Goerli1 | Network::Goerli2 => false,
+                        Network::Mainnet | Network::Goerli => false,
                         Network::Integration => true,
                     },
                 )
             }
             (None, None) => {
-                // If nothing is provided we fall back to using sequencer gateway for goerli-1
+                // If nothing is provided we fall back to using sequencer gateway for goerli
                 eprintln!(
                     "{}",
                     "WARNING: no valid provider option found. Falling back to using the sequencer \
-                    gateway for the goerli-1 network. Doing this is discouraged. See \
+                    gateway for the goerli network. Doing this is discouraged. See \
                     https://book.starkli.rs/providers for more details."
                         .bright_magenta()
                 );

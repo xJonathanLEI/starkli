@@ -6,7 +6,7 @@ Currently, two providers are supported: [JSON-RPC](#json-rpc) and the [sequencer
 
 > ℹ️ **Note**
 >
-> When no provider option is supplied, Starkli falls back to using the sequencer gateway provider for the `goerli-1` network.
+> When no provider option is supplied, Starkli falls back to using the sequencer gateway provider for the `goerli` network.
 
 ## JSON-RPC
 
@@ -58,8 +58,7 @@ Historically, before the JSON-RPC API became available, access to the network ha
 To use the sequencer gateway anyways, use the `--network <NETWORK>` option, where `<NETWORK>` is one of the following:
 
 - `mainnet`
-- `goerli-1`
-- `goerli-2`
+- `goerli`
 - `integration`
 
 For example, to check the latest block number on `mainnet`:
