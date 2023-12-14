@@ -1,17 +1,25 @@
 use anyhow::Result;
 use clap::Parser;
-use colored_json::{ColorMode, Output};
 use starknet::{
-    core::types::{BlockId, BlockTag, FieldElement},
+    core::types::{BlockId, BlockTag, ContractClass, FieldElement},
     providers::Provider,
 };
 
-use crate::{verbosity::VerbosityArgs, ProviderArgs};
+use crate::{
+    utils::{parse_compressed_legacy_class, parse_flattened_sierra_class, print_colored_json},
+    verbosity::VerbosityArgs,
+    ProviderArgs,
+};
 
 #[derive(Debug, Parser)]
 pub struct ClassAt {
     #[clap(flatten)]
     provider: ProviderArgs,
+    #[clap(
+        long,
+        help = "Attempt to recover a flattened Sierra class or a compressed legacy class"
+    )]
+    parse: bool,
     #[clap(help = "Contract address")]
     address: String,
     #[clap(flatten)]
@@ -30,10 +38,20 @@ impl ClassAt {
             .get_class_at(BlockId::Tag(BlockTag::Pending), address)
             .await?;
 
-        let class_json = serde_json::to_value(class)?;
-        let class_json =
-            colored_json::to_colored_json(&class_json, ColorMode::Auto(Output::StdOut))?;
-        println!("{class_json}");
+        if self.parse {
+            match class {
+                ContractClass::Sierra(class) => {
+                    let class = parse_flattened_sierra_class(class)?;
+                    print_colored_json(&class)?;
+                }
+                ContractClass::Legacy(class) => {
+                    let class = parse_compressed_legacy_class(class)?;
+                    print_colored_json(&class)?;
+                }
+            }
+        } else {
+            print_colored_json(&serde_json::to_value(class)?)?;
+        }
 
         Ok(())
     }
