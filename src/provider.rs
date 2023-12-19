@@ -74,16 +74,22 @@ impl ProviderArgs {
                             Url::parse("https://alpha-sepolia.starknet.io/feeder_gateway").unwrap(),
                             short_string!("SN_SEPOLIA"),
                         ),
-                        Network::Integration => SequencerGatewayProvider::new(
+                        Network::GoerliIntegration => SequencerGatewayProvider::new(
                             Url::parse("https://external.integration.starknet.io/gateway").unwrap(),
                             Url::parse("https://external.integration.starknet.io/feeder_gateway")
                                 .unwrap(),
                             chain_id::TESTNET,
                         ),
+                        Network::SepoliaIntegration => SequencerGatewayProvider::new(
+                            Url::parse("https://integration-sepolia.starknet.io/gateway").unwrap(),
+                            Url::parse("https://integration-sepolia.starknet.io/feeder_gateway")
+                                .unwrap(),
+                            short_string!("SN_INTEGRATION_SEPOLIA"),
+                        ),
                     }),
                     match network {
                         Network::Mainnet | Network::Goerli | Network::Sepolia => false,
-                        Network::Integration => true,
+                        Network::GoerliIntegration | Network::SepoliaIntegration => true,
                     },
                 )
             }
