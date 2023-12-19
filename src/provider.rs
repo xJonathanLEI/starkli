@@ -4,6 +4,7 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::{
     core::{chain_id, types::*},
+    macros::short_string,
     providers::{
         jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider, ProviderError,
         SequencerGatewayProvider,
@@ -68,6 +69,11 @@ impl ProviderArgs {
                     AnyProvider::SequencerGateway(match network {
                         Network::Mainnet => SequencerGatewayProvider::starknet_alpha_mainnet(),
                         Network::Goerli => SequencerGatewayProvider::starknet_alpha_goerli(),
+                        Network::Sepolia => SequencerGatewayProvider::new(
+                            Url::parse("https://alpha-sepolia.starknet.io/gateway").unwrap(),
+                            Url::parse("https://alpha-sepolia.starknet.io/feeder_gateway").unwrap(),
+                            short_string!("SN_SEPOLIA"),
+                        ),
                         Network::Integration => SequencerGatewayProvider::new(
                             Url::parse("https://external.integration.starknet.io/gateway").unwrap(),
                             Url::parse("https://external.integration.starknet.io/feeder_gateway")
@@ -76,7 +82,7 @@ impl ProviderArgs {
                         ),
                     }),
                     match network {
-                        Network::Mainnet | Network::Goerli => false,
+                        Network::Mainnet | Network::Goerli | Network::Sepolia => false,
                         Network::Integration => true,
                     },
                 )

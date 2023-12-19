@@ -4,7 +4,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use auto_impl::auto_impl;
 use clap::{builder::PossibleValue, ValueEnum};
-use starknet::providers::Provider;
+use starknet::{macros::short_string, providers::Provider};
 
 use crate::provider::ExtendedProvider;
 
@@ -12,6 +12,7 @@ use crate::provider::ExtendedProvider;
 pub enum Network {
     Mainnet,
     Goerli,
+    Sepolia,
     Integration,
 }
 
@@ -24,7 +25,12 @@ pub trait NetworkSource {
 
 impl ValueEnum for Network {
     fn value_variants<'a>() -> &'a [Self] {
-        &[Self::Mainnet, Self::Goerli, Self::Integration]
+        &[
+            Self::Mainnet,
+            Self::Goerli,
+            Self::Sepolia,
+            Self::Integration,
+        ]
     }
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
@@ -37,6 +43,9 @@ impl ValueEnum for Network {
                 "alpha-goerli1",
                 "alpha-goerli-1",
             ])),
+            Network::Sepolia => {
+                Some(PossibleValue::new("sepolia").aliases(["alpha-sepolia", "sepolia-testnet"]))
+            }
             Network::Integration => Some(PossibleValue::new("integration")),
         }
     }
@@ -50,6 +59,7 @@ impl FromStr for Network {
             "mainnet" | "alpha-mainnet" => Ok(Self::Mainnet),
             "goerli" | "goerli1" | "goerli-1" | "alpha-goerli" | "alpha-goerli1"
             | "alpha-goerli-1" => Ok(Self::Goerli),
+            "sepolia" | "alpha-sepolia" | "sepolia-testnet" => Ok(Self::Sepolia),
             "integration" => Ok(Self::Integration),
             _ => Err(anyhow::anyhow!("unknown network: {}", s)),
         }
@@ -61,6 +71,7 @@ impl Display for Network {
         match self {
             Self::Mainnet => write!(f, "mainnet"),
             Self::Goerli => write!(f, "goerli"),
+            Self::Sepolia => write!(f, "sepolia"),
             Self::Integration => write!(f, "integration"),
         }
     }
@@ -83,6 +94,8 @@ impl NetworkSource for ExtendedProvider {
             Some(Network::Mainnet)
         } else if chain_id == starknet::core::chain_id::TESTNET {
             Some(Network::Goerli)
+        } else if chain_id == short_string!("SN_SEPOLIA") {
+            Some(Network::Sepolia)
         } else {
             None
         })

@@ -59,6 +59,7 @@ To use the sequencer gateway anyways, use the `--network <NETWORK>` option, wher
 
 - `mainnet`
 - `goerli`
+- `sepolia`
 - `integration`
 
 For example, to check the latest block number on `mainnet`:
