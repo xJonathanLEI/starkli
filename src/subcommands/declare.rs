@@ -10,7 +10,8 @@ use starknet::{
         contract::{legacy::LegacyContractClass, CompiledClass, SierraClass},
         BlockId, BlockTag, FieldElement, StarknetError,
     },
-    providers::{MaybeUnknownErrorCode, Provider, ProviderError, StarknetErrorWithMessage},
+    macros::felt,
+    providers::{Provider, ProviderError},
 };
 
 use crate::{
@@ -70,8 +71,12 @@ impl Declare {
 
         // Workaround for issue:
         //   https://github.com/eqlabs/pathfinder/issues/1208
-        let (fee_multiplier_num, fee_multiplier_denom) =
-            if provider.is_rpc() { (5, 2) } else { (3, 2) };
+        let (fee_multiplier_num, fee_multiplier_denom): (FieldElement, FieldElement) =
+            if provider.is_rpc() {
+                (felt!("5"), felt!("2"))
+            } else {
+                (felt!("3"), felt!("2"))
+            };
 
         // Working around a deserialization bug in `starknet-rs`:
         //   https://github.com/xJonathanLEI/starknet-rs/issues/392
@@ -144,20 +149,13 @@ impl Declare {
                     if fee_setting.is_estimate_only() {
                         println!(
                             "{} ETH",
-                            format!(
-                                "{}",
-                                <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
-                            )
-                            .bright_yellow(),
+                            format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
                         );
                         return Ok(());
                     }
 
                     // TODO: make buffer configurable
-                    let estimated_fee_with_buffer =
-                        estimated_fee * fee_multiplier_num / fee_multiplier_denom;
-
-                    estimated_fee_with_buffer.into()
+                    (estimated_fee * fee_multiplier_num).floor_div(fee_multiplier_denom)
                 }
             };
 
@@ -214,20 +212,13 @@ impl Declare {
                     if fee_setting.is_estimate_only() {
                         println!(
                             "{} ETH",
-                            format!(
-                                "{}",
-                                <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
-                            )
-                            .bright_yellow(),
+                            format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
                         );
                         return Ok(());
                     }
 
                     // TODO: make buffer configurable
-                    let estimated_fee_with_buffer =
-                        estimated_fee * fee_multiplier_num / fee_multiplier_denom;
-
-                    estimated_fee_with_buffer.into()
+                    (estimated_fee * fee_multiplier_num).floor_div(fee_multiplier_denom)
                 }
             };
 
@@ -294,10 +285,7 @@ impl Declare {
 
                 Ok(true)
             }
-            Err(ProviderError::StarknetError(StarknetErrorWithMessage {
-                code: MaybeUnknownErrorCode::Known(StarknetError::ClassHashNotFound),
-                ..
-            })) => Ok(false),
+            Err(ProviderError::StarknetError(StarknetError::ClassHashNotFound)) => Ok(false),
             Err(err) => Err(err.into()),
         }
     }

@@ -21,7 +21,7 @@ use starknet::{
         BlockId, BlockTag, CompressedLegacyContractClass, ExecutionResult, FieldElement,
         FlattenedSierraClass, LegacyContractEntryPoint, StarknetError,
     },
-    providers::{MaybeUnknownErrorCode, Provider, ProviderError, StarknetErrorWithMessage},
+    providers::{Provider, ProviderError},
 };
 
 pub async fn watch_tx<P>(
@@ -47,19 +47,7 @@ where
                     return Err(anyhow::anyhow!("transaction reverted: {}", reason));
                 }
             },
-            Err(ProviderError::StarknetError(StarknetErrorWithMessage {
-                code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
-                ..
-            })) => {
-                eprintln!("Transaction not confirmed yet...");
-            }
-            // Some nodes are still serving error code `25` for tx hash not found. This is
-            // technically a bug on the node's side, but we maximize compatibility here by also
-            // accepting it.
-            Err(ProviderError::StarknetError(StarknetErrorWithMessage {
-                code: MaybeUnknownErrorCode::Known(StarknetError::InvalidTransactionHash),
-                ..
-            })) => {
+            Err(ProviderError::StarknetError(StarknetError::TransactionHashNotFound)) => {
                 eprintln!("Transaction not confirmed yet...");
             }
             Err(err) => return Err(err.into()),

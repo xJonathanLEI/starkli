@@ -126,6 +126,10 @@ impl ExtendedProvider {
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 impl Provider for ExtendedProvider {
+    async fn spec_version(&self) -> Result<String, ProviderError> {
+        <AnyProvider as Provider>::spec_version(&self.provider).await
+    }
+
     async fn get_block_with_tx_hashes<B>(
         &self,
         block_id: B,
@@ -169,6 +173,16 @@ impl Provider for ExtendedProvider {
     {
         <AnyProvider as Provider>::get_storage_at(&self.provider, contract_address, key, block_id)
             .await
+    }
+
+    async fn get_transaction_status<H>(
+        &self,
+        transaction_hash: H,
+    ) -> Result<TransactionStatus, ProviderError>
+    where
+        H: AsRef<FieldElement> + Send + Sync,
+    {
+        <AnyProvider as Provider>::get_transaction_status(&self.provider, transaction_hash).await
     }
 
     async fn get_transaction_by_hash<H>(
@@ -259,16 +273,19 @@ impl Provider for ExtendedProvider {
         <AnyProvider as Provider>::call(&self.provider, request, block_id).await
     }
 
-    async fn estimate_fee<R, B>(
+    async fn estimate_fee<R, S, B>(
         &self,
         request: R,
+        simulation_flags: S,
         block_id: B,
     ) -> Result<Vec<FeeEstimate>, ProviderError>
     where
         R: AsRef<[BroadcastedTransaction]> + Send + Sync,
+        S: AsRef<[SimulationFlagForEstimateFee]> + Send + Sync,
         B: AsRef<BlockId> + Send + Sync,
     {
-        <AnyProvider as Provider>::estimate_fee(&self.provider, request, block_id).await
+        <AnyProvider as Provider>::estimate_fee(&self.provider, request, simulation_flags, block_id)
+            .await
     }
 
     async fn estimate_message_fee<M, B>(
@@ -293,10 +310,6 @@ impl Provider for ExtendedProvider {
 
     async fn chain_id(&self) -> Result<FieldElement, ProviderError> {
         <AnyProvider as Provider>::chain_id(&self.provider).await
-    }
-
-    async fn pending_transactions(&self) -> Result<Vec<Transaction>, ProviderError> {
-        <AnyProvider as Provider>::pending_transactions(&self.provider).await
     }
 
     async fn syncing(&self) -> Result<SyncStatusType, ProviderError> {
@@ -395,13 +408,13 @@ impl Provider for ExtendedProvider {
         .await
     }
 
-    async fn trace_block_transactions<H>(
+    async fn trace_block_transactions<B>(
         &self,
-        block_hash: H,
+        block_id: B,
     ) -> Result<Vec<TransactionTraceWithHash>, ProviderError>
     where
-        H: AsRef<FieldElement> + Send + Sync,
+        B: AsRef<BlockId> + Send + Sync,
     {
-        <AnyProvider as Provider>::trace_block_transactions(&self.provider, block_hash).await
+        <AnyProvider as Provider>::trace_block_transactions(&self.provider, block_id).await
     }
 }

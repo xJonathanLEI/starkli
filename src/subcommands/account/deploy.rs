@@ -7,6 +7,7 @@ use colored_json::{ColorMode, Output};
 use starknet::{
     accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory},
     core::types::{BlockId, BlockTag, FieldElement},
+    macros::felt,
     providers::Provider,
     signers::Signer,
 };
@@ -203,9 +204,7 @@ impl Deploy {
                 let estimated_fee = account_deployment.estimate_fee().await?.overall_fee;
 
                 // TODO: make buffer configurable
-                let estimated_fee_with_buffer = estimated_fee * 3 / 2;
-
-                let estimated_fee: FieldElement = estimated_fee.into();
+                let estimated_fee_with_buffer = (estimated_fee * felt!("3")).floor_div(felt!("2"));
 
                 if fee_setting.is_estimate_only() {
                     println!(
@@ -217,7 +216,7 @@ impl Deploy {
 
                 MaxFeeType::Estimated {
                     estimate: estimated_fee,
-                    estimate_with_buffer: estimated_fee_with_buffer.into(),
+                    estimate_with_buffer: estimated_fee_with_buffer,
                 }
             }
         };

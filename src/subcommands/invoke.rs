@@ -7,6 +7,7 @@ use colored_json::{ColorMode, Output};
 use starknet::{
     accounts::{Account, Call},
     core::types::FieldElement,
+    macros::felt,
 };
 
 use crate::{
@@ -112,19 +113,13 @@ impl Invoke {
                 if fee_setting.is_estimate_only() {
                     println!(
                         "{} ETH",
-                        format!(
-                            "{}",
-                            <u64 as Into<FieldElement>>::into(estimated_fee).to_big_decimal(18)
-                        )
-                        .bright_yellow(),
+                        format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
                     );
                     return Ok(());
                 }
 
                 // TODO: make buffer configurable
-                let estimated_fee_with_buffer = estimated_fee * 3 / 2;
-
-                estimated_fee_with_buffer.into()
+                (estimated_fee * felt!("3")).floor_div(felt!("2"))
             }
         };
 
