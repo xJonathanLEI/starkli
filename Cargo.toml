@@ -19,9 +19,11 @@ clap_complete = "4.3.1"
 colored = "2.0.0"
 colored_json = "3.2.0"
 env_logger = "0.10.0"
+etcetera = "0.8.0"
 flate2 = "1.0.28"
 hex = "0.4.3"
 hex-literal = "0.4.1"
+indexmap = "2.1.0"
 log = "0.4.19"
 num-bigint = "0.4.3"
 num-integer = "0.1.45"
@@ -37,6 +39,7 @@ starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "c974e5c
 tempfile = "3.8.0"
 thiserror = "1.0.40"
 tokio = { version = "1.28.2", default-features = false, features = ["macros", "rt-multi-thread"] }
+toml = "0.8.8"
 url = "2.4.0"
 
 [build-dependencies]

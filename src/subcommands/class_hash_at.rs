@@ -21,7 +21,7 @@ impl ClassHashAt {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
 
-        let provider = self.provider.into_provider();
+        let provider = self.provider.into_provider()?;
         let address = FieldElement::from_hex_be(&self.address)?;
 
         // TODO: allow custom block

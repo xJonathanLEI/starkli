@@ -50,7 +50,7 @@ impl Fetch {
             anyhow::bail!("account config file already exists");
         }
 
-        let provider = self.provider.into_provider();
+        let provider = self.provider.into_provider()?;
         let address = FieldElement::from_hex_be(&self.address)?;
 
         let class_hash = provider

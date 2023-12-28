@@ -22,7 +22,7 @@ impl StateUpdate {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
 
-        let provider = self.provider.into_provider();
+        let provider = self.provider.into_provider()?;
 
         let block_id = parse_block_id(&self.block_id)?;
 

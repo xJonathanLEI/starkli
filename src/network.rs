@@ -3,7 +3,6 @@ use std::{fmt::Display, str::FromStr};
 use anyhow::Result;
 use async_trait::async_trait;
 use auto_impl::auto_impl;
-use clap::{builder::PossibleValue, ValueEnum};
 use starknet::{macros::short_string, providers::Provider};
 
 use crate::provider::ExtendedProvider;
@@ -22,38 +21,6 @@ pub enum Network {
 #[auto_impl(&, Box, Arc)]
 pub trait NetworkSource {
     async fn get_network(&self) -> Result<Option<Network>>;
-}
-
-impl ValueEnum for Network {
-    fn value_variants<'a>() -> &'a [Self] {
-        &[
-            Self::Mainnet,
-            Self::Goerli,
-            Self::Sepolia,
-            Self::GoerliIntegration,
-            Self::SepoliaIntegration,
-        ]
-    }
-
-    fn to_possible_value(&self) -> Option<PossibleValue> {
-        match self {
-            Network::Mainnet => Some(PossibleValue::new("mainnet").aliases(["alpha-mainnet"])),
-            Network::Goerli => Some(PossibleValue::new("goerli-1").aliases([
-                "goerli",
-                "goerli1",
-                "alpha-goerli",
-                "alpha-goerli1",
-                "alpha-goerli-1",
-            ])),
-            Network::Sepolia => {
-                Some(PossibleValue::new("sepolia").aliases(["alpha-sepolia", "sepolia-testnet"]))
-            }
-            Network::GoerliIntegration => {
-                Some(PossibleValue::new("goerli-integration").aliases(["integration"]))
-            }
-            Network::SepoliaIntegration => Some(PossibleValue::new("sepolia-integration")),
-        }
-    }
 }
 
 impl FromStr for Network {

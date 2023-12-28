@@ -1,18 +1,26 @@
+use std::str::FromStr;
+
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
+use indexmap::map::Entry;
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use starknet::{
-    core::{chain_id, types::*},
+    core::types::*,
     macros::short_string,
-    providers::{
-        jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider, ProviderError,
-        SequencerGatewayProvider,
-    },
+    providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider, ProviderError},
 };
 use url::Url;
 
-use crate::network::Network;
+use crate::{
+    network::Network,
+    profile::{FreeProviderVendor, NetworkProvider, Profile, Profiles, DEFAULT_PROFILE_NAME},
+};
+
+const CHAIN_ID_MAINNET: FieldElement = short_string!("SN_MAIN");
+const CHAIN_ID_GOERLI: FieldElement = short_string!("SN_GOERLI");
+const CHAIN_ID_SEPOLIA: FieldElement = short_string!("SN_SEPOLIA");
 
 #[derive(Debug, Clone, Parser)]
 pub struct ProviderArgs {
@@ -23,7 +31,7 @@ pub struct ProviderArgs {
     )]
     rpc: Option<Url>,
     #[clap(long = "network", env = "STARKNET_NETWORK", help = "Starknet network")]
-    network: Option<Network>,
+    network: Option<String>,
 }
 
 /// We need this because integration network has the same chain ID as `goerli`. We would otherwise
@@ -36,8 +44,8 @@ pub struct ExtendedProvider {
 }
 
 impl ProviderArgs {
-    pub fn into_provider(self) -> ExtendedProvider {
-        match (self.rpc, self.network) {
+    pub fn into_provider(self) -> Result<ExtendedProvider> {
+        Ok(match (self.rpc, self.network) {
             (Some(rpc), None) => ExtendedProvider::new(
                 AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc))),
                 false,
@@ -45,9 +53,9 @@ impl ProviderArgs {
             (Some(rpc), Some(_)) => {
                 eprintln!(
                     "{}",
-                    "WARNING: when using JSON-RPC, the --network option and the STARKNET_NETWORK \
-                    environment variable are ignored, as those are for using the deprecated \
-                    sequencer gateway. See https://book.starkli.rs/providers for more details."
+                    "WARNING: the --rpc option and the STARKNET_RPC environment variable take \
+                    precedence over the --network option and the STARKNET_NETWORK environment \
+                    variable. See https://book.starkli.rs/providers for more details."
                         .bright_magenta()
                 );
 
@@ -56,59 +64,203 @@ impl ProviderArgs {
                     false,
                 )
             }
-            (None, Some(network)) => {
-                eprintln!(
-                    "{}",
-                    "WARNING: you're using the sequencer gateway instead of providing a JSON-RPC \
-                    endpoint. This is strongly discouraged. See https://book.starkli.rs/providers \
-                    for more details."
-                        .bright_magenta()
-                );
-
-                ExtendedProvider::new(
-                    AnyProvider::SequencerGateway(match network {
-                        Network::Mainnet => SequencerGatewayProvider::starknet_alpha_mainnet(),
-                        Network::Goerli => SequencerGatewayProvider::starknet_alpha_goerli(),
-                        Network::Sepolia => SequencerGatewayProvider::new(
-                            Url::parse("https://alpha-sepolia.starknet.io/gateway").unwrap(),
-                            Url::parse("https://alpha-sepolia.starknet.io/feeder_gateway").unwrap(),
-                            short_string!("SN_SEPOLIA"),
-                        ),
-                        Network::GoerliIntegration => SequencerGatewayProvider::new(
-                            Url::parse("https://external.integration.starknet.io/gateway").unwrap(),
-                            Url::parse("https://external.integration.starknet.io/feeder_gateway")
-                                .unwrap(),
-                            chain_id::TESTNET,
-                        ),
-                        Network::SepoliaIntegration => SequencerGatewayProvider::new(
-                            Url::parse("https://integration-sepolia.starknet.io/gateway").unwrap(),
-                            Url::parse("https://integration-sepolia.starknet.io/feeder_gateway")
-                                .unwrap(),
-                            short_string!("SN_INTEGRATION_SEPOLIA"),
-                        ),
-                    }),
-                    match network {
-                        Network::Mainnet | Network::Goerli | Network::Sepolia => false,
-                        Network::GoerliIntegration | Network::SepoliaIntegration => true,
-                    },
-                )
-            }
+            (None, Some(network)) => Self::resolve_network(&network)?,
             (None, None) => {
-                // If nothing is provided we fall back to using sequencer gateway for goerli
                 eprintln!(
                     "{}",
-                    "WARNING: no valid provider option found. Falling back to using the sequencer \
-                    gateway for the goerli network. Doing this is discouraged. See \
+                    "WARNING: you're using neither --rpc (STARKNET_RPC) nor --network \
+                    (STARKNET_NETWORK). The `goerli` network is used by default. See \
                     https://book.starkli.rs/providers for more details."
                         .bright_magenta()
                 );
 
-                ExtendedProvider::new(
-                    AnyProvider::SequencerGateway(SequencerGatewayProvider::starknet_alpha_goerli()),
-                    false,
-                )
+                Self::resolve_network("goerli")?
             }
+        })
+    }
+
+    pub fn resolve_network(network: &str) -> Result<ExtendedProvider> {
+        // TODO: move lazy profile loading to a higher level context
+        let mut profiles = Profiles::load()?;
+
+        // We save the profiles only when changes are made
+        let mut made_changes = false;
+
+        // The only profile supported right now is the `default` profile. We create it if it
+        // doesn't exist.
+        let matched_profile = match profiles.profiles.entry(DEFAULT_PROFILE_NAME.to_owned()) {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => {
+                made_changes = true;
+
+                entry.insert(Profile {
+                    networks: Default::default(),
+                })
+            }
+        };
+
+        let matched_network = match matched_profile.networks.get(network) {
+            Some(network) => {
+                // The network has been configured. We're good to go!
+                network
+            }
+            None => {
+                // This network is not configured. Let's check if it's a known built-in network.
+                match Network::from_str(network) {
+                    Ok(builtin_network) => {
+                        // This is a builtin network. Did we resolve to this network via an alias?
+                        // If so, it's possible that the canonical name is configured after all.
+                        // Note that we're doing this for backward compatibility only. We might
+                        // want to display a warning and remove the aliasing in the future.
+                        match matched_profile.networks.get(&builtin_network.to_string()) {
+                            Some(network) => {
+                                // Yes, although the specified name was not configured, the
+                                // canonical name is. Simply return the configured network.
+                                network
+                            }
+                            None => {
+                                // The network really is not configured. Let's see if we can
+                                // configure it. Only networks with a free provider available can
+                                // be configured.
+                                //
+                                // When configuring a network, we choose a free provider randomly
+                                // to be as fair as possible. The chosen provider is persisted for
+                                // a consistent experience. A notice is printed to stderr notifying
+                                // the user the first time this happens for a certain network.
+
+                                fn choose_vendor(builtin_network: &Network) -> FreeProviderVendor {
+                                    let chosen_provider = randome_free_provider(&[
+                                        FreeProviderVendor::Blast,
+                                        FreeProviderVendor::Nethermind,
+                                    ]);
+
+                                    eprintln!(
+                                        "{}{}{}{}{}",
+                                        "NOTE: you're using the `".bright_magenta(),
+                                        format!("{}", builtin_network).bright_yellow(),
+                                        "` network without specifying an RPC endpoint for the \
+                                        first time. A random free RPC vendor has been selected \
+                                        for you: "
+                                            .bright_magenta(),
+                                        format!("{}", chosen_provider).bright_yellow(),
+                                        ". This message will only be shown once. See \
+                                        https://book.starkli.rs/providers for more details."
+                                            .bright_magenta()
+                                    );
+
+                                    chosen_provider
+                                }
+
+                                let new_network = match builtin_network {
+                                    Network::Mainnet => crate::profile::Network {
+                                        name: Some("Starknet Mainnet".into()),
+                                        chain_id: CHAIN_ID_MAINNET,
+                                        is_integration: false,
+                                        provider: NetworkProvider::Free(choose_vendor(
+                                            &builtin_network,
+                                        )),
+                                    },
+                                    Network::Goerli => crate::profile::Network {
+                                        name: Some("Starknet Goerli Testnet".into()),
+                                        chain_id: CHAIN_ID_GOERLI,
+                                        is_integration: false,
+                                        provider: NetworkProvider::Free(choose_vendor(
+                                            &builtin_network,
+                                        )),
+                                    },
+                                    Network::Sepolia => crate::profile::Network {
+                                        name: Some("Starknet Sepolia Testnet".into()),
+                                        chain_id: CHAIN_ID_SEPOLIA,
+                                        is_integration: false,
+                                        provider: NetworkProvider::Free(choose_vendor(
+                                            &builtin_network,
+                                        )),
+                                    },
+                                    Network::GoerliIntegration | Network::SepoliaIntegration => {
+                                        anyhow::bail!(
+                                            "network {} cannot be used without being configured",
+                                            network
+                                        );
+                                    }
+                                };
+
+                                made_changes = true;
+
+                                matched_profile
+                                    .networks
+                                    .insert(network.to_owned(), new_network);
+
+                                // We just inserted this so it must exist
+                                matched_profile.networks.get(network).unwrap()
+                            }
+                        }
+                    }
+                    Err(_) => {
+                        anyhow::bail!(
+                            "network `{}` is not configured in the active profile, and it's not a \
+                            well-known network",
+                            network
+                        );
+                    }
+                }
+            }
+        };
+
+        let rpc_url = match &matched_network.provider {
+            NetworkProvider::Rpc(rpc) => rpc.to_owned(),
+            NetworkProvider::Free(vendor) => {
+                let url = match vendor {
+                    FreeProviderVendor::Blast => {
+                        if matched_network.chain_id == CHAIN_ID_MAINNET {
+                            Some("https://starknet-mainnet.public.blastapi.io/rpc/v0_6")
+                        } else if matched_network.chain_id == CHAIN_ID_GOERLI {
+                            Some("https://starknet-testnet.public.blastapi.io/rpc/v0_6")
+                        } else if matched_network.chain_id == CHAIN_ID_SEPOLIA {
+                            Some("https://starknet-sepolia.public.blastapi.io/rpc/v0_6")
+                        } else {
+                            None
+                        }
+                    }
+                    FreeProviderVendor::Nethermind => {
+                        if matched_network.chain_id == CHAIN_ID_MAINNET {
+                            Some("https://starknet-mainnet.public.blastapi.io/rpc/v0_6")
+                        } else if matched_network.chain_id == CHAIN_ID_GOERLI {
+                            Some("https://starknet-testnet.public.blastapi.io/rpc/v0_6")
+                        } else if matched_network.chain_id == CHAIN_ID_SEPOLIA {
+                            Some("https://starknet-sepolia.public.blastapi.io/rpc/v0_6")
+                        } else {
+                            None
+                        }
+                    }
+                };
+
+                match url {
+                    Some(url) => {
+                        // All hard-coded URLs above are valid
+                        Url::parse(url).unwrap()
+                    }
+                    None => {
+                        anyhow::bail!(
+                            "invalid network in profile: chain ID {:#x} is not supported by \
+                            vendor {}",
+                            matched_network.chain_id,
+                            vendor
+                        );
+                    }
+                }
+            }
+        };
+
+        let provider = ExtendedProvider::new(
+            AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc_url))),
+            matched_network.is_integration,
+        );
+
+        if made_changes {
+            profiles.save()?;
         }
+
+        Ok(provider)
     }
 }
 
@@ -423,4 +575,12 @@ impl Provider for ExtendedProvider {
     {
         <AnyProvider as Provider>::trace_block_transactions(&self.provider, block_id).await
     }
+}
+
+fn randome_free_provider(choices: &[FreeProviderVendor]) -> FreeProviderVendor {
+    let mut rng = StdRng::from_entropy();
+
+    // We never call this function with an empty slice
+    let index = rng.gen_range(0..choices.len());
+    choices[index]
 }

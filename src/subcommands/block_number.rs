@@ -16,7 +16,7 @@ impl BlockNumber {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
 
-        let provider = self.provider.into_provider();
+        let provider = self.provider.into_provider()?;
 
         let block = provider.block_hash_and_number().await?;
 

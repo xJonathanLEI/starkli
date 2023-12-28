@@ -19,7 +19,7 @@ impl TransactionTrace {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
 
-        let provider = self.provider.into_provider();
+        let provider = self.provider.into_provider()?;
         let transaction_hash: FieldElement = self.hash.parse()?;
 
         let trace = provider.trace_transaction(transaction_hash).await?;

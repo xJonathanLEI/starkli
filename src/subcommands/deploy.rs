@@ -68,7 +68,7 @@ impl Deploy {
             anyhow::bail!("--simulate cannot be used with --estimate-only");
         }
 
-        let provider = Arc::new(self.provider.into_provider());
+        let provider = Arc::new(self.provider.into_provider()?);
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
 
         let class_hash = FieldElement::from_hex_be(&self.class_hash)?;

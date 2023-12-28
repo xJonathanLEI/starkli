@@ -73,7 +73,7 @@ impl Deploy {
             anyhow::bail!("--simulate cannot be used with --estimate-only");
         }
 
-        let provider = Arc::new(self.provider.into_provider());
+        let provider = Arc::new(self.provider.into_provider()?);
         let signer = Arc::new(self.signer.into_signer()?);
 
         if !self.file.exists() {

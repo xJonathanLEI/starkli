@@ -56,7 +56,7 @@ impl Invoke {
             anyhow::bail!("--simulate cannot be used with --estimate-only");
         }
 
-        let provider = Arc::new(self.provider.into_provider());
+        let provider = Arc::new(self.provider.into_provider()?);
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
 
         // Parses and resolves the calls

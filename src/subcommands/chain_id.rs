@@ -28,7 +28,7 @@ impl ChainId {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
 
-        let provider = self.provider.into_provider();
+        let provider = self.provider.into_provider()?;
 
         let raw_chain_id = provider.chain_id().await?;
 

@@ -19,7 +19,7 @@ impl Transaction {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
 
-        let provider = self.provider.into_provider();
+        let provider = self.provider.into_provider()?;
         let transaction_hash = FieldElement::from_hex_be(&self.hash)?;
 
         let transaction = provider.get_transaction_by_hash(transaction_hash).await?;

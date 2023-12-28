@@ -14,6 +14,7 @@ mod decode;
 mod fee;
 mod network;
 mod path;
+mod profile;
 mod provider;
 mod signer;
 mod subcommands;

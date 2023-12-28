@@ -48,7 +48,7 @@ impl Balance {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
 
-        let provider = Arc::new(self.provider.into_provider());
+        let provider = Arc::new(self.provider.into_provider()?);
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
 
         let account_address = felt_decoder
