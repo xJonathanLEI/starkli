@@ -1,5 +1,4 @@
 use std::{
-    collections::{hash_map::Entry, HashMap},
     fmt::Display,
     io::{Read, Write},
     path::PathBuf,
@@ -81,23 +80,6 @@ impl Profiles {
             anyhow::bail!(
                 "invalid profiles: only the `default` profile is supported at the moment"
             );
-        }
-
-        if let Some(default_profile) = loaded_profiles.profiles.get(DEFAULT_PROFILE_NAME) {
-            // Checks chain ID duplication
-            let mut chain_id_last_used_in_network = HashMap::new();
-            for (network_id, network) in default_profile.networks.iter() {
-                match chain_id_last_used_in_network.entry(network.chain_id) {
-                    Entry::Occupied(entry) => anyhow::bail!(
-                        "invalid profile `default`: networks {} and {} have the same chain ID",
-                        entry.get(),
-                        network_id
-                    ),
-                    Entry::Vacant(entry) => {
-                        entry.insert(network_id);
-                    }
-                }
-            }
         }
 
         Ok(loaded_profiles)
