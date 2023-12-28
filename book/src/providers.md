@@ -53,7 +53,7 @@ which is the same as the running with the `--rpc` option.
 
 ## Using a predefined network
 
-Networks can be defined in profiles. Each network is uniquely identified by an identifier within a profile. When the `--network` option, or the `STARKNET_NETWORK` environment variable, is used, Starkli looks up the network identifier in the current active profile, and uses its provider settings to connect to the network. See the profiles page for details on defining networks.
+Networks can be defined in [profiles](./profiles.md). Each network is uniquely identified by an identifier within a profile. When the `--network` option, or the `STARKNET_NETWORK` environment variable, is used, Starkli looks up the network identifier in the current active profile, and uses its provider settings to connect to the network. See the [profiles page](./profiles.md) for details on defining networks.
 
 If the supplied network identifier is not found, Starkli terminates with an error, **unless the network is eligible for [free RPC vendors](#free-rpc-vendors)**, in which case Starkli automatically creates the network and persists it into the profile.
 
@@ -100,4 +100,4 @@ Once selected, the vendor choice is persisted in the profile. A message is print
 
 > 💡 **Tips**
 >
-> You can always change the automatically assigned free RPC vendor for a network by editing the profiles.
+> You can always change the automatically assigned free RPC vendor for a network by [editing the profiles](./profiles.md).

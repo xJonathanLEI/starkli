@@ -10,6 +10,7 @@
 # Core concepts
 
 - [Providers](./providers.md)
+- [Profiles](./profiles.md)
 - [Signers](./signers.md)
 - [Accounts](./accounts.md)
 - [Transaction fees](./transaction-fees.md)
