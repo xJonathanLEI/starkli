@@ -9,7 +9,7 @@ In this tutorial, you will be guided from scratch to deploy contracts on the Sta
 
 > ℹ️ **Note**
 >
-> To make it easier to get started, this tutorial skips the step of choosing a provider and uses the sequencer gateway fallback, but this is discouraged in practice.
+> To make it easier to get started, this tutorial skips the step of choosing a provider and uses the `goerli` network fallback with [free RPC vendor](../providers.md#free-rpc-vendors), but relying on the network fallback is discouraged in practice.
 >
 > Make sure to visit the [providers](../providers.md) page to learn more once you finish the tutorial.
 
