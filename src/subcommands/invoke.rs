@@ -5,7 +5,7 @@ use clap::Parser;
 use colored::Colorize;
 use colored_json::{ColorMode, Output};
 use starknet::{
-    accounts::{Account, Call},
+    accounts::{Account, Call, ConnectedAccount},
     core::types::FieldElement,
     macros::felt,
 };
@@ -30,6 +30,8 @@ pub struct Invoke {
     fee: FeeArgs,
     #[clap(long, help = "Simulate the transaction only")]
     simulate: bool,
+    #[clap(long, help = "Print the raw transaction data")]
+    raw_tx: bool,
     #[clap(long, help = "Provide transaction nonce manually")]
     nonce: Option<FieldElement>,
     #[clap(long, short, help = "Wait for the transaction to confirm")]
@@ -103,7 +105,9 @@ impl Invoke {
 
         let account = self.account.into_account(provider.clone()).await?;
 
-        let execution = account.execute(calls).fee_estimate_multiplier(1.5f64);
+        let execution = account
+            .execute(calls.clone())
+            .fee_estimate_multiplier(1.5f64);
 
         let max_fee = match fee_setting {
             FeeSetting::Manual(fee) => fee,
@@ -128,6 +132,20 @@ impl Invoke {
             None => execution,
         };
         let execution = execution.max_fee(max_fee);
+
+        if self.raw_tx {
+            let nonce = account.get_nonce().await?;
+            let execution = execution.max_fee(max_fee);
+            let execution = execution.nonce(nonce);
+            println!("RawTx");
+            let raw_tx = execution.prepared()?.get_invoke_request(true).await?;
+            println!("{:#?}", raw_tx);
+            let raw_tx_json = serde_json::to_value(raw_tx)?;
+            let raw_tx_json =
+                colored_json::to_colored_json(&raw_tx_json, ColorMode::Auto(Output::StdOut))?;
+            println!("{raw_tx_json}");
+            return Ok(());
+        }
 
         if self.simulate {
             let simulation = execution.simulate(false, false).await?;
