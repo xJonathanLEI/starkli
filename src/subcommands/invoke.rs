@@ -109,9 +109,7 @@ impl Invoke {
 
         let account = self.account.into_account(provider.clone()).await?;
 
-        let execution = account
-            .execute(calls.clone())
-            .fee_estimate_multiplier(1.5f64);
+        let execution = account.execute(calls).fee_estimate_multiplier(1.5f64);
 
         let max_fee = match fee_setting {
             FeeSetting::Manual(fee) => fee,
