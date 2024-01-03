@@ -58,6 +58,8 @@ impl Invoke {
             anyhow::bail!("--simulate cannot be used with --estimate-only");
         } else if self.simulate && self.raw_tx {
             anyhow::bail!("--simulate cannot be used with --raw-tx");
+        } else if self.raw_tx && fee_setting.is_estimate_only() {
+            anyhow::bail!("--estimate-only cannot be used with --raw-tx");
         }
 
         let provider = Arc::new(self.provider.into_provider()?);
@@ -136,7 +138,10 @@ impl Invoke {
         let execution = execution.max_fee(max_fee);
 
         if self.raw_tx {
-            let nonce = account.get_nonce().await?;
+            let nonce = match self.nonce {
+                Some(nonce) => nonce,
+                None => account.get_nonce().await?,
+            };
             let execution = execution.nonce(nonce);
             let raw_tx = execution.prepared()?.get_invoke_request(true).await?;
             let raw_tx_json = serde_json::to_value(raw_tx)?;
