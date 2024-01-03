@@ -37,7 +37,7 @@ pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 6] = [
         description: "Argent X legacy (Cairo 0) proxy account",
     },
     KnownAccountClass {
-        class_hash: felt!("0x03131fa018d520a037686ce3efddeab8f28895662f019ca3ca18a626650f7d1e"),
+        class_hash: felt!("0x0553efc3f74409b08e7bc638c32cadbf1d7d9b19b2fdbff649c7ffe186741ecf"),
         variant: AccountVariantType::Braavos,
         description: "Braavos official proxy account",
     },
