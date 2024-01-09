@@ -1,14 +1,22 @@
 # Accounts
 
-Starkli sends out transactions through accounts. Starknet natively supports [account abstraction](https://ethereum.org/en/roadmap/account-abstraction/) and all accounts are smart contracts. Therefore, there are many "flavors" of accounts and Starkli supports the most popular ones. Starkli refers to these "flavors" as _variants_.
+Starkli sends out transactions through accounts. Starknet natively supports [account abstraction](https://ethereum.org/en/roadmap/account-abstraction/) and all accounts are smart contracts. Therefore, there are many "flavors" of accounts and Starkli supports the most popular ones. Starkli refers to these "flavors" as _variants_. See [this section](#supported-account-variants) for the supported variants.
 
-Currently, the only supported variant is [OpenZeppelin's account contract implementation](https://github.com/OpenZeppelin/cairo-contracts/blob/70cbd05ed24ccd147f24b18c638dbd6e7fea88bb/src/openzeppelin/account/presets/Account.cairo), but many more are expected to be supported soon.
+Accounts can be created and managed through the `starkli account` command. Variant-specific commands are available under `starkli account <VARIANT>` (where `<VARIANT>` is the unique identifier of the variant).
 
-Accounts can be created and managed through the `starkli account` command. Variant-specific commands are available under `starkli account <VARIANT>`.
+## Supported account variants
+
+The current version of Starkli supports these account variants (by alphabetical order):
+
+| Vendor       | Identifier | Link                                                    |
+| ------------ | ---------- | ------------------------------------------------------- |
+| Argent       | `argent`   | [Link](https://www.argent.xyz/argent-x/)                |
+| Braavos      | `braavos`  | [Link](https://braavos.app/)                            |
+| OpenZeppelin | `oz`       | [Link](https://github.com/OpenZeppelin/cairo-contracts) |
 
 ## Account creation
 
-Before creating an account, you must first decide on the _variant_ to use. As of this writing, the only supported variant is `oz`, the OpenZeppelin account contract.
+Before creating an account, you must first decide on the _variant_ to use. As an example here, we will use the OpenZeppelin variant, whose identifier is `oz`.
 
 All variants come with an `init` subcommand that creates an account file ready to be deployed. For example, to create an `oz` account:
 
