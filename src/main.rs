@@ -11,6 +11,7 @@ mod casm;
 mod chain_id;
 mod compiler;
 mod decode;
+mod error;
 mod fee;
 mod network;
 mod path;

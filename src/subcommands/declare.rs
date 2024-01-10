@@ -17,6 +17,7 @@ use starknet::{
 use crate::{
     account::AccountArgs,
     casm::{CasmArgs, CasmHashSource},
+    error::account_error_mapper,
     fee::{FeeArgs, FeeSetting},
     path::ExpandedPathbufParser,
     utils::watch_tx,
@@ -144,7 +145,11 @@ impl Declare {
             let max_fee = match fee_setting {
                 FeeSetting::Manual(fee) => fee,
                 FeeSetting::EstimateOnly | FeeSetting::None => {
-                    let estimated_fee = declaration.estimate_fee().await?.overall_fee;
+                    let estimated_fee = declaration
+                        .estimate_fee()
+                        .await
+                        .map_err(account_error_mapper)?
+                        .overall_fee;
 
                     if fee_setting.is_estimate_only() {
                         println!(
@@ -207,7 +212,11 @@ impl Declare {
             let max_fee = match fee_setting {
                 FeeSetting::Manual(fee) => fee,
                 FeeSetting::EstimateOnly | FeeSetting::None => {
-                    let estimated_fee = declaration.estimate_fee().await?.overall_fee;
+                    let estimated_fee = declaration
+                        .estimate_fee()
+                        .await
+                        .map_err(account_error_mapper)?
+                        .overall_fee;
 
                     if fee_setting.is_estimate_only() {
                         println!(

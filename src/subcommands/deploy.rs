@@ -12,6 +12,7 @@ use crate::{
     account::AccountArgs,
     address_book::AddressBookResolver,
     decode::FeltDecoder,
+    error::account_error_mapper,
     fee::{FeeArgs, FeeSetting},
     utils::watch_tx,
     verbosity::VerbosityArgs,
@@ -94,7 +95,11 @@ impl Deploy {
         let max_fee = match fee_setting {
             FeeSetting::Manual(fee) => fee,
             FeeSetting::EstimateOnly | FeeSetting::None => {
-                let estimated_fee = contract_deployment.estimate_fee().await?.overall_fee;
+                let estimated_fee = contract_deployment
+                    .estimate_fee()
+                    .await
+                    .map_err(account_error_mapper)?
+                    .overall_fee;
 
                 if fee_setting.is_estimate_only() {
                     eprintln!(

@@ -18,6 +18,7 @@ use crate::{
         DeploymentContext, DeploymentStatus,
     },
     account_factory::{AnyAccountFactory, BraavosAccountFactory},
+    error::account_factory_error_mapper,
     fee::{FeeArgs, FeeSetting},
     path::ExpandedPathbufParser,
     signer::SignerArgs,
@@ -201,7 +202,11 @@ impl Deploy {
         let max_fee = match fee_setting {
             FeeSetting::Manual(fee) => MaxFeeType::Manual { max_fee: fee },
             FeeSetting::EstimateOnly | FeeSetting::None => {
-                let estimated_fee = account_deployment.estimate_fee().await?.overall_fee;
+                let estimated_fee = account_deployment
+                    .estimate_fee()
+                    .await
+                    .map_err(account_factory_error_mapper)?
+                    .overall_fee;
 
                 // TODO: make buffer configurable
                 let estimated_fee_with_buffer = (estimated_fee * felt!("3")).floor_div(felt!("2"));
