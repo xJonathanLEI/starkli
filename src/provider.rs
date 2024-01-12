@@ -223,11 +223,11 @@ impl ProviderArgs {
                     }
                     FreeProviderVendor::Nethermind => {
                         if matched_network.chain_id == CHAIN_ID_MAINNET {
-                            Some("https://starknet-mainnet.public.blastapi.io/rpc/v0_6")
+                            Some("https://free-rpc.nethermind.io/mainnet-juno/rpc/v0_6")
                         } else if matched_network.chain_id == CHAIN_ID_GOERLI {
-                            Some("https://starknet-testnet.public.blastapi.io/rpc/v0_6")
+                            Some("https://free-rpc.nethermind.io/goerli-juno/rpc/v0_6")
                         } else if matched_network.chain_id == CHAIN_ID_SEPOLIA {
-                            Some("https://starknet-sepolia.public.blastapi.io/rpc/v0_6")
+                            Some("https://free-rpc.nethermind.io/sepolia-juno/rpc/v0_6")
                         } else {
                             None
                         }
