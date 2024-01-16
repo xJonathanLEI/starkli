@@ -67,61 +67,61 @@ pub const BUILTIN_ACCOUNTS: &[BuiltinAccount] = &[
     BuiltinAccount {
         id: "katana-0",
         aliases: &["katana0", "katana"],
-        address: felt!("0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973"),
+        address: felt!("0x6162896d1d7ab204c7ccac6dd5f8e9e7c25ecd5ae4fcb4ad32e57786bb46e03"),
         private_key: felt!("0x1800000000300000180000000000030000000000003006001800006600"),
     },
     BuiltinAccount {
         id: "katana-1",
         aliases: &["katana1"],
-        address: felt!("0x5686a647a9cdd63ade617e0baf3b364856b813b508f03903eb58a7e622d5855"),
+        address: felt!("0x2d71e9c974539bb3ffb4b115e66a23d0f62a641ea66c4016e903454c8753bbc"),
         private_key: felt!("0x33003003001800009900180300d206308b0070db00121318d17b5e6262150b"),
     },
     BuiltinAccount {
         id: "katana-2",
         aliases: &["katana2"],
-        address: felt!("0x765149d6bc63271df7b0316537888b81aa021523f9516a05306f10fd36914da"),
+        address: felt!("0x6b86e40118f29ebe393a75469b4d926c7a44c2e2681b6d319520b7c1156d114"),
         private_key: felt!("0x1c9053c053edf324aec366a34c6901b1095b07af69495bffec7d7fe21effb1b"),
     },
     BuiltinAccount {
         id: "katana-3",
         aliases: &["katana3"],
-        address: felt!("0x5006399928dad095cc39818cae15dc022592d47d883701e7814c9db19e96efc"),
+        address: felt!("0x541da8f7f3ab8247329d22b3987d1ffb181bc8dc7f9611a6eccec3b0749a585"),
         private_key: felt!("0x736adbbcdac7cc600f89051db1abbc16b9996b46f6b58a9752a11c1028a8ec8"),
     },
     BuiltinAccount {
         id: "katana-4",
         aliases: &["katana4"],
-        address: felt!("0x586364c42cf7f6c968172ba0806b7403c567544266821c8cd28c292a08b2346"),
+        address: felt!("0xb3ff441a68610b30fd5e2abbf3a1548eb6ba6f3559f2862bf2dc757e5828ca"),
         private_key: felt!("0x2bbf4f9fd0bbb2e60b0316c1fe0b76cf7a4d0198bd493ced9b8df2a3a24d68a"),
     },
     BuiltinAccount {
         id: "katana-5",
         aliases: &["katana5"],
-        address: felt!("0x70038d685013781745f0ac6fe44f23465f9c55a836fceb119b0d7d379f21026"),
+        address: felt!("0x66efb28ac62686966ae85095ff3a772e014e7fbf56d4c5f6fac5606d4dde23a"),
         private_key: felt!("0x283d1e73776cd4ac1ac5f0b879f561bded25eceb2cc589c674af0cec41df441"),
     },
     BuiltinAccount {
         id: "katana-6",
         aliases: &["katana6"],
-        address: felt!("0x5ae5b8925c1568f3ec6ab5f4d4ea4b5467e6d6a18f0944608a0d368ac15bdc7"),
+        address: felt!("0x3ebb4767aae1262f8eb28d9368db5388cfe367f50552a8244123506f0b0bcca"),
         private_key: felt!("0x3e3979c1ed728490308054fe357a9f49cf67f80f9721f44cc57235129e090f4"),
     },
     BuiltinAccount {
         id: "katana-7",
         aliases: &["katana7"],
-        address: felt!("0x456b9e6dbbfbfc59e23a80e5ff5ecc59bc02c3c5b9c78ab667471f52c018e87"),
+        address: felt!("0x56c155b624fdf6bfc94f7b37cf1dbebb5e186ef2e4ab2762367cd07c8f892a1"),
         private_key: felt!("0x6bf3604bcb41fed6c42bcca5436eeb65083a982ff65db0dc123f65358008b51"),
     },
     BuiltinAccount {
         id: "katana-8",
         aliases: &["katana8"],
-        address: felt!("0x5c47b38f788ec9d382b5079165bc96c0f49647250199a78d34c436d54d12217"),
+        address: felt!("0xe29882a1fcba1e7e10cad46212257fea5c752a4f9b1b1ec683c503a2cf5c8a"),
         private_key: felt!("0x14d6672dcb4b77ca36a887e9a11cd9d637d5012468175829e9c6e770c61642"),
     },
     BuiltinAccount {
         id: "katana-9",
         aliases: &["katana9"],
-        address: felt!("0x74bfdb5562f91764fddbbf3f4fb322de114a00d6d6889b19a4dd7b45d5ba24d"),
+        address: felt!("0x29873c310fbefde666dc32a1554fea6bb45eecc84f680f8a2b0a8fbb8cb89af"),
         private_key: felt!("0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"),
     },
 ];
@@ -299,7 +299,8 @@ impl AccountArgs {
                 )),
                 builtin_account.address,
                 chain_id,
-                ExecutionEncoding::Legacy,
+                // All built-in accounts are now on Cairo 1
+                ExecutionEncoding::New,
             )
         } else {
             let signer = signer.resolve()?;
