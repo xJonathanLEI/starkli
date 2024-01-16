@@ -101,6 +101,8 @@ enum Subcommands {
     ClassAt(ClassAt),
     #[clap(about = "Get node syncing status")]
     Syncing(Syncing),
+    #[clap(about = "Get node spec version")]
+    SpecVersion(SpecVersion),
     //
     // Signer management
     //
@@ -182,6 +184,7 @@ async fn run_command(cli: Cli) -> Result<()> {
             Subcommands::ClassByHash(cmd) => cmd.run().await,
             Subcommands::ClassAt(cmd) => cmd.run().await,
             Subcommands::Syncing(cmd) => cmd.run().await,
+            Subcommands::SpecVersion(cmd) => cmd.run().await,
             Subcommands::Signer(cmd) => cmd.run(),
             Subcommands::Account(cmd) => cmd.run().await,
             Subcommands::Invoke(cmd) => cmd.run().await,

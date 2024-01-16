@@ -84,3 +84,6 @@ pub use lab::Lab;
 
 mod transaction_trace;
 pub use transaction_trace::TransactionTrace;
+
+mod spec_version;
+pub use spec_version::SpecVersion;
