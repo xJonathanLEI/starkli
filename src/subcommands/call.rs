@@ -8,7 +8,8 @@ use starknet::{
 };
 
 use crate::{
-    address_book::AddressBookResolver, decode::FeltDecoder, verbosity::VerbosityArgs, ProviderArgs,
+    address_book::AddressBookResolver, decode::FeltDecoder, error::provider_error_mapper,
+    verbosity::VerbosityArgs, ProviderArgs,
 };
 
 #[derive(Debug, Parser)]
@@ -53,7 +54,8 @@ impl Call {
                 },
                 BlockId::Tag(BlockTag::Pending),
             )
-            .await?;
+            .await
+            .map_err(provider_error_mapper)?;
 
         if result.is_empty() {
             println!("[]");

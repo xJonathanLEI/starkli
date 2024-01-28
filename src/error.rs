@@ -28,6 +28,14 @@ where
     }
 }
 
+/// Makes error details visible, as they're not displayed by default.
+pub fn provider_error_mapper(err: ProviderError) -> anyhow::Error {
+    match err {
+        ProviderError::StarknetError(err) => map_starknet_error(err),
+        err => anyhow::anyhow!("{}", err),
+    }
+}
+
 fn map_starknet_error(err: StarknetError) -> anyhow::Error {
     match err {
         StarknetError::ContractError(err) => {
