@@ -78,6 +78,8 @@ enum Subcommands {
     BlockTime(BlockTime),
     #[clap(about = "Get state update from a certain block")]
     StateUpdate(StateUpdate),
+    #[clap(about = "Get all traces from a certain block")]
+    BlockTraces(BlockTraces),
     #[clap(
         alias = "transaction-receipt",
         about = "Get transaction receipt by hash"
@@ -174,6 +176,7 @@ async fn run_command(cli: Cli) -> Result<()> {
             Subcommands::Block(cmd) => cmd.run().await,
             Subcommands::BlockTime(cmd) => cmd.run().await,
             Subcommands::StateUpdate(cmd) => cmd.run().await,
+            Subcommands::BlockTraces(cmd) => cmd.run().await,
             Subcommands::Receipt(cmd) => cmd.run().await,
             Subcommands::Trace(cmd) => cmd.run().await,
             Subcommands::ChainId(cmd) => cmd.run().await,

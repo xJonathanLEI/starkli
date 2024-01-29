@@ -87,3 +87,6 @@ pub use transaction_trace::TransactionTrace;
 
 mod spec_version;
 pub use spec_version::SpecVersion;
+
+mod block_traces;
+pub use block_traces::BlockTraces;
