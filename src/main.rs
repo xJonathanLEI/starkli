@@ -22,6 +22,8 @@ mod subcommands;
 mod utils;
 mod verbosity;
 
+pub(crate) const JSON_RPC_VERSION: &str = "0.6.0";
+
 const VERSION_STRING: &str = concat!(env!("CARGO_PKG_VERSION"), " (", env!("VERGEN_GIT_SHA"), ")");
 const VERSION_STRING_VERBOSE: &str = concat!(
     env!("CARGO_PKG_VERSION"),

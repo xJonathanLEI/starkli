@@ -11,11 +11,13 @@ use starknet::{
     macros::short_string,
     providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider, ProviderError},
 };
+use tokio::sync::OnceCell;
 use url::Url;
 
 use crate::{
     network::Network,
     profile::{FreeProviderVendor, NetworkProvider, Profile, Profiles, DEFAULT_PROFILE_NAME},
+    JSON_RPC_VERSION,
 };
 
 const CHAIN_ID_MAINNET: FieldElement = short_string!("SN_MAIN");
@@ -34,13 +36,17 @@ pub struct ProviderArgs {
     network: Option<String>,
 }
 
-/// We need this because integration network has the same chain ID as `goerli`. We would otherwise
-/// has no way of telling them apart. We could generally just ignore this, but it would actually
-/// cause issues when deciding what Sierra compiler version to use depending on network, so we still
-/// need this.
+/// This type was created because integration network has the same chain ID as `goerli`. We would
+/// otherwise has no way of telling them apart. We could generally just ignore this, but it would
+/// actually cause issues when deciding what Sierra compiler version to use depending on network, so
+/// we still need this.
+///
+/// Now the type also internally stores the RPC version of the endpoint, which is useful for showing
+/// warnings whens using methods that contain breaking changes between versions.
 pub struct ExtendedProvider {
     provider: AnyProvider,
     is_integration: bool,
+    rpc_version: OnceCell<String>,
 }
 
 impl ProviderArgs {
@@ -49,6 +55,7 @@ impl ProviderArgs {
             (Some(rpc), None) => ExtendedProvider::new(
                 AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc))),
                 false,
+                None,
             ),
             (Some(rpc), Some(_)) => {
                 eprintln!(
@@ -62,6 +69,7 @@ impl ProviderArgs {
                 ExtendedProvider::new(
                     AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc))),
                     false,
+                    None,
                 )
             }
             (None, Some(network)) => Self::resolve_network(&network)?,
@@ -206,8 +214,8 @@ impl ProviderArgs {
             }
         };
 
-        let rpc_url = match &matched_network.provider {
-            NetworkProvider::Rpc(rpc) => rpc.to_owned(),
+        let (rpc_url, rpc_version) = match &matched_network.provider {
+            NetworkProvider::Rpc(rpc) => (rpc.to_owned(), None),
             NetworkProvider::Free(vendor) => {
                 let url = match vendor {
                     FreeProviderVendor::Blast => {
@@ -234,7 +242,7 @@ impl ProviderArgs {
                     }
                 };
 
-                match url {
+                let url = match url {
                     Some(url) => {
                         // All hard-coded URLs above are valid
                         Url::parse(url).unwrap()
@@ -247,13 +255,20 @@ impl ProviderArgs {
                             vendor
                         );
                     }
-                }
+                };
+
+                (
+                    url,
+                    // We always make sure to use the right version for free RPC vendors
+                    Some(JSON_RPC_VERSION.into()),
+                )
             }
         };
 
         let provider = ExtendedProvider::new(
             AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc_url))),
             matched_network.is_integration,
+            rpc_version,
         );
 
         if made_changes {
@@ -265,10 +280,14 @@ impl ProviderArgs {
 }
 
 impl ExtendedProvider {
-    pub fn new(provider: AnyProvider, is_integration: bool) -> Self {
+    pub fn new(provider: AnyProvider, is_integration: bool, rpc_version: Option<String>) -> Self {
         Self {
             provider,
             is_integration,
+            rpc_version: match rpc_version {
+                Some(rpc_version) => OnceCell::from(rpc_version),
+                None => OnceCell::new(),
+            },
         }
     }
 
@@ -442,6 +461,31 @@ impl Provider for ExtendedProvider {
         S: AsRef<[SimulationFlagForEstimateFee]> + Send + Sync,
         B: AsRef<BlockId> + Send + Sync,
     {
+        let spec_version = match self.rpc_version.get() {
+            Some(version) => version.to_owned(),
+            None => {
+                let fetched_version = self.spec_version().await?;
+
+                // It's OK if another thread set it first
+                let _ = self.rpc_version.set(fetched_version.clone());
+
+                fetched_version
+            }
+        };
+
+        if spec_version != JSON_RPC_VERSION {
+            eprintln!(
+                "{}",
+                format!(
+                    "WARNING: the JSON-RPC endpoint you're using serves specs {}, which might be \
+                    incompatible with the version {} supported by this Starkli release for the \
+                    `starknet_estimateFee` method. You might encounter errors.",
+                    spec_version, JSON_RPC_VERSION
+                )
+                .bright_magenta()
+            );
+        }
+
         <AnyProvider as Provider>::estimate_fee(&self.provider, request, simulation_flags, block_id)
             .await
     }
