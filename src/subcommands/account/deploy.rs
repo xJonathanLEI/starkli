@@ -158,7 +158,7 @@ impl Deploy {
                 match &undeployed_status.context {
                     Some(DeploymentContext::Braavos(context)) => {
                         // Safe to unwrap as we already checked for length
-                        match braavos_config.signers.get(0).unwrap() {
+                        match braavos_config.signers.first().unwrap() {
                             BraavosSigner::Stark(stark_signer) => {
                                 // Makes sure we're using the right key
                                 if signer_public_key != stark_signer.public_key {

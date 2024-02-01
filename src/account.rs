@@ -389,7 +389,7 @@ impl AccountConfig {
                 match &undeployed_status.context {
                     Some(DeploymentContext::Braavos(context)) => {
                         // Safe to unwrap as we already checked for length
-                        match braavos.signers.get(0).unwrap() {
+                        match braavos.signers.first().unwrap() {
                             BraavosSigner::Stark(stark_signer) => {
                                 Ok(get_contract_address(
                                     undeployed_status.salt,
