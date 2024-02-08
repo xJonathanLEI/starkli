@@ -90,3 +90,6 @@ pub use spec_version::SpecVersion;
 
 mod block_traces;
 pub use block_traces::BlockTraces;
+
+mod transaction_status;
+pub use transaction_status::TransactionStatus;
