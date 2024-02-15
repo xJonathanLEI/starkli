@@ -17,9 +17,9 @@ use crate::{
     signer::SignerArgs,
 };
 
-/// Official hashes used as of extension version 5.7.0
+/// Official hashes used as of extension version 5.13.1
 const ARGENT_CLASS_HASH: FieldElement =
-    felt!("0x01a736d6ed154502257f02b1ccdf4d9d1089f80811cd6acad48e6b6a9d1f2003");
+    felt!("0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b");
 
 #[derive(Debug, Parser)]
 pub struct Init {
