@@ -47,7 +47,7 @@ pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 6] = [
         description: "Argent X official account",
     },
     KnownAccountClass {
-        class_hash: felt!("0x04c6d6cf894f8bc96bb9c525e6853e5483177841f7388f74a46cfda6f028c755"),
+        class_hash: felt!("0x006280083f8c2a2db9f737320d5e3029b380e0e820fe24b8d312a6a34fdba0cd"),
         variant: AccountVariantType::OpenZeppelin,
         description: "OpenZeppelin account contract v0.7.0 compiled with cairo v2.2.0",
     },
