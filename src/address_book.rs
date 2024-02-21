@@ -12,11 +12,16 @@ use crate::chain_id::ChainIdSource;
 
 const CHAIN_ID_KATANA: FieldElement = felt!("0x4b4154414e41");
 
-pub const HARDCODED_ADDRESS_BOOK: [AddressBookEntry; 6] = [
+pub const HARDCODED_ADDRESS_BOOK: [AddressBookEntry; 10] = [
     AddressBookEntry {
         chain_id: chain_id::MAINNET,
         name: "eth",
         address: felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"),
+    },
+    AddressBookEntry {
+        chain_id: chain_id::MAINNET,
+        name: "strk",
+        address: felt!("0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"),
     },
     AddressBookEntry {
         chain_id: chain_id::TESTNET,
@@ -24,14 +29,29 @@ pub const HARDCODED_ADDRESS_BOOK: [AddressBookEntry; 6] = [
         address: felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"),
     },
     AddressBookEntry {
+        chain_id: chain_id::TESTNET,
+        name: "strk",
+        address: felt!("0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"),
+    },
+    AddressBookEntry {
         chain_id: short_string!("SN_SEPOLIA"),
         name: "eth",
         address: felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"),
     },
     AddressBookEntry {
+        chain_id: short_string!("SN_SEPOLIA"),
+        name: "strk",
+        address: felt!("0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"),
+    },
+    AddressBookEntry {
         chain_id: short_string!("SN_INTEGRATION_SEPOLIA"),
         name: "eth",
         address: felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"),
+    },
+    AddressBookEntry {
+        chain_id: short_string!("SN_INTEGRATION_SEPOLIA"),
+        name: "strk",
+        address: felt!("0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"),
     },
     AddressBookEntry {
         chain_id: CHAIN_ID_KATANA,
