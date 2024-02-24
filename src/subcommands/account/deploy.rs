@@ -172,8 +172,7 @@ impl Deploy {
 
                                 let mut factory = BraavosAccountFactory::new(
                                     undeployed_status.class_hash,
-                                    context.mock_implementation,
-                                    braavos_config.implementation,
+                                    context.base_account_class_hash,
                                     chain_id,
                                     signer.clone(),
                                     provider.clone(),

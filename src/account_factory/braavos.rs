@@ -1,19 +1,15 @@
 use async_trait::async_trait;
 use starknet::{
     accounts::{AccountFactory, PreparedAccountDeployment, RawAccountDeployment},
-    core::{
-        crypto::compute_hash_on_elements,
-        types::{BlockId, BlockTag, FieldElement},
-    },
-    macros::selector,
+    core::types::{BlockId, BlockTag, FieldElement},
     providers::Provider,
     signers::Signer,
 };
+use starknet_crypto::poseidon_hash_many;
 
 pub struct BraavosAccountFactory<S, P> {
-    proxy_class_hash: FieldElement,
-    mock_impl_class_hash: FieldElement,
-    impl_class_hash: FieldElement,
+    class_hash: FieldElement,
+    base_class_hash: FieldElement,
     chain_id: FieldElement,
     signer_public_key: FieldElement,
     signer: S,
@@ -26,18 +22,16 @@ where
     S: Signer,
 {
     pub async fn new(
-        proxy_class_hash: FieldElement,
-        mock_impl_class_hash: FieldElement,
-        impl_class_hash: FieldElement,
+        class_hash: FieldElement,
+        base_class_hash: FieldElement,
         chain_id: FieldElement,
         signer: S,
         provider: P,
     ) -> Result<Self, S::GetPublicKeyError> {
         let signer_public_key = signer.get_public_key().await?;
         Ok(Self {
-            proxy_class_hash,
-            mock_impl_class_hash,
-            impl_class_hash,
+            class_hash,
+            base_class_hash,
             chain_id,
             signer_public_key: signer_public_key.scalar(),
             signer,
@@ -62,17 +56,13 @@ where
     type Provider = P;
     type SignError = S::SignError;
 
+    #[allow(clippy::misnamed_getters)]
     fn class_hash(&self) -> FieldElement {
-        self.proxy_class_hash
+        self.base_class_hash
     }
 
     fn calldata(&self) -> Vec<FieldElement> {
-        vec![
-            self.mock_impl_class_hash,
-            selector!("initializer"),
-            FieldElement::ONE,
-            self.signer_public_key,
-        ]
+        vec![self.signer_public_key]
     }
 
     fn chain_id(&self) -> FieldElement {
@@ -94,31 +84,42 @@ where
         let tx_hash =
             PreparedAccountDeployment::from_raw(deployment.clone(), self).transaction_hash();
 
-        let sig_hash = compute_hash_on_elements(&[
-            tx_hash,
-            self.impl_class_hash,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-        ]);
+        let signature = self.signer.sign_hash(&tx_hash).await?;
 
-        let signature = self.signer.sign_hash(&sig_hash).await?;
+        let mut aux_data = vec![
+            // account_implementation
+            self.class_hash,
+            // signer_type
+            FieldElement::ZERO,
+            // secp256r1_signer.x.low
+            FieldElement::ZERO,
+            // secp256r1_signer.x.high
+            FieldElement::ZERO,
+            // secp256r1_signer.y.low
+            FieldElement::ZERO,
+            // secp256r1_signer.y.high
+            FieldElement::ZERO,
+            // multisig_threshold
+            FieldElement::ZERO,
+            // withdrawal_limit_low
+            FieldElement::ZERO,
+            // fee_rate
+            FieldElement::ZERO,
+            // stark_fee_rate
+            FieldElement::ZERO,
+            // chain_id
+            self.chain_id,
+        ];
 
-        Ok(vec![
-            signature.r,
-            signature.s,
-            self.impl_class_hash,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-            FieldElement::ZERO,
-        ])
+        let aux_hash = poseidon_hash_many(&aux_data);
+
+        let aux_signature = self.signer.sign_hash(&aux_hash).await?;
+
+        let mut full_signature_payload = vec![signature.r, signature.s];
+        full_signature_payload.append(&mut aux_data);
+        full_signature_payload.push(aux_signature.r);
+        full_signature_payload.push(aux_signature.s);
+
+        Ok(full_signature_payload)
     }
 }

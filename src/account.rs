@@ -20,7 +20,7 @@ use crate::signer::{AnySigner, SignerArgs, SignerResolutionTask};
 
 const BRAAVOS_SIGNER_TYPE_STARK: FieldElement = FieldElement::ONE;
 
-pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 9] = [
+pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 10] = [
     KnownAccountClass {
         class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
         variant: AccountVariantType::OpenZeppelinLegacy,
@@ -38,13 +38,18 @@ pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 9] = [
     },
     KnownAccountClass {
         class_hash: felt!("0x03131fa018d520a037686ce3efddeab8f28895662f019ca3ca18a626650f7d1e"),
-        variant: AccountVariantType::Braavos,
-        description: "Braavos official proxy account (legacy)",
+        variant: AccountVariantType::BraavosLegacy,
+        description: "Braavos legacy (Cairo 0) proxy account",
     },
     KnownAccountClass {
         class_hash: felt!("0x0553efc3f74409b08e7bc638c32cadbf1d7d9b19b2fdbff649c7ffe186741ecf"),
+        variant: AccountVariantType::BraavosLegacy,
+        description: "Braavos legacy (Cairo 0) proxy account (as of v3.33.3)",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253"),
         variant: AccountVariantType::Braavos,
-        description: "Braavos official proxy account (as of v3.33.3)",
+        description: "Braavos official account (as of v3.37.4)",
     },
     KnownAccountClass {
         class_hash: felt!("0x01a736d6ed154502257f02b1ccdf4d9d1089f80811cd6acad48e6b6a9d1f2003"),
@@ -182,8 +187,9 @@ pub struct BuiltinAccount {
 pub enum AccountVariantType {
     OpenZeppelinLegacy,
     ArgentLegacy,
-    Braavos,
+    BraavosLegacy,
     Argent,
+    Braavos,
     OpenZeppelin,
 }
 
@@ -216,8 +222,9 @@ pub struct ArgentAccountConfig {
 #[derive(Serialize, Deserialize)]
 pub struct BraavosAccountConfig {
     pub version: u64,
-    #[serde_as(as = "UfeHex")]
-    pub implementation: FieldElement,
+    #[serde_as(as = "Option<UfeHex>")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub implementation: Option<FieldElement>,
     pub multisig: BraavosMultisigConfig,
     pub signers: Vec<BraavosSigner>,
 }
@@ -272,8 +279,10 @@ pub enum DeploymentContext {
 #[serde_as]
 #[derive(Serialize, Deserialize)]
 pub struct BraavosDeploymentContext {
+    // Old account files use `mock_implementation`
+    #[serde(alias = "mock_implementation")]
     #[serde_as(as = "UfeHex")]
-    pub mock_implementation: FieldElement,
+    pub base_account_class_hash: FieldElement,
 }
 
 impl AccountArgs {
@@ -398,12 +407,9 @@ impl AccountConfig {
                             BraavosSigner::Stark(stark_signer) => {
                                 Ok(get_contract_address(
                                     undeployed_status.salt,
-                                    undeployed_status.class_hash,
+                                    context.base_account_class_hash,
                                     &[
-                                        context.mock_implementation, // implementation_address
-                                        selector!("initializer"),    // initializer_selector
-                                        FieldElement::ONE,           // calldata_len
-                                        stark_signer.public_key,     // calldata[0]: public_key
+                                        stark_signer.public_key, // calldata[0]: public_key
                                     ],
                                     FieldElement::ZERO,
                                 ))
@@ -434,7 +440,13 @@ impl AccountVariant {
                     ExecutionEncoding::New
                 }
             }
-            AccountVariant::Braavos(_) => ExecutionEncoding::Legacy,
+            AccountVariant::Braavos(braavos) => {
+                if braavos.implementation.is_some() {
+                    ExecutionEncoding::Legacy
+                } else {
+                    ExecutionEncoding::New
+                }
+            }
         }
     }
 }
@@ -461,8 +473,9 @@ impl Display for AccountVariantType {
         match self {
             AccountVariantType::OpenZeppelinLegacy => write!(f, "Legacy OpenZeppelin (Cairo 0)"),
             AccountVariantType::ArgentLegacy => write!(f, "Legacy Argent X (Cairo 0)"),
-            AccountVariantType::Braavos => write!(f, "Braavos"),
+            AccountVariantType::BraavosLegacy => write!(f, "Legacy Braavos (Cairo 0)"),
             AccountVariantType::Argent => write!(f, "Argent X"),
+            AccountVariantType::Braavos => write!(f, "Braavos"),
             AccountVariantType::OpenZeppelin => write!(f, "OpenZeppelin"),
         }
     }

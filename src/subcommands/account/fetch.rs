@@ -12,8 +12,8 @@ use starknet::{
 use crate::{
     account::{
         AccountConfig, AccountVariant, AccountVariantType, ArgentAccountConfig,
-        BraavosMultisigConfig, BraavosSigner, DeployedStatus, DeploymentStatus, OzAccountConfig,
-        KNOWN_ACCOUNT_CLASSES,
+        BraavosMultisigConfig, BraavosSigner, BraavosStarkSigner, DeployedStatus, DeploymentStatus,
+        OzAccountConfig, KNOWN_ACCOUNT_CLASSES,
     },
     verbosity::VerbosityArgs,
     ProviderArgs,
@@ -143,7 +143,7 @@ impl Fetch {
                     guardian,
                 })
             }
-            AccountVariantType::Braavos => {
+            AccountVariantType::BraavosLegacy => {
                 let implementation = provider
                     .call(
                         FunctionCall {
@@ -206,7 +206,7 @@ impl Fetch {
 
                 AccountVariant::Braavos(crate::account::BraavosAccountConfig {
                     version: 1,
-                    implementation,
+                    implementation: Some(implementation),
                     multisig,
                     signers,
                 })
@@ -238,6 +238,59 @@ impl Fetch {
                     implementation: None,
                     owner,
                     guardian,
+                })
+            }
+            AccountVariantType::Braavos => {
+                let signers = provider
+                    .call(
+                        FunctionCall {
+                            contract_address: address,
+                            entry_point_selector: selector!("get_signers"),
+                            calldata: vec![],
+                        },
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await?;
+                let multisig = provider
+                    .call(
+                        FunctionCall {
+                            contract_address: address,
+                            entry_point_selector: selector!("get_multisig_threshold"),
+                            calldata: vec![],
+                        },
+                        BlockId::Tag(BlockTag::Pending),
+                    )
+                    .await?[0];
+
+                // Structure:
+                // - stark: Array<felt252>,
+                // - secp256r1: Array<felt252>,
+                // - webauthn: Array<felt252>,
+                let signers = {
+                    let num_signers = TryInto::<u64>::try_into(signers[0])? as usize;
+                    if signers.len() < 1 + num_signers {
+                        anyhow::bail!("unexpected end of signers array");
+                    }
+
+                    signers[1..(1 + num_signers)]
+                        .iter()
+                        .map(|item| BraavosSigner::Stark(BraavosStarkSigner { public_key: *item }))
+                        .collect()
+                };
+
+                let multisig = if multisig == FieldElement::ZERO {
+                    BraavosMultisigConfig::Off
+                } else {
+                    BraavosMultisigConfig::On {
+                        num_signers: TryInto::<u64>::try_into(multisig)? as usize,
+                    }
+                };
+
+                AccountVariant::Braavos(crate::account::BraavosAccountConfig {
+                    version: 1,
+                    implementation: None,
+                    multisig,
+                    signers,
                 })
             }
             AccountVariantType::OpenZeppelin => {

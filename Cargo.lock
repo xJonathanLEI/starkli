@@ -3318,6 +3318,7 @@ dependencies = [
  "serde_with",
  "shellexpand",
  "starknet",
+ "starknet-crypto 0.6.1 (git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed)",
  "tempfile",
  "thiserror",
  "tokio",

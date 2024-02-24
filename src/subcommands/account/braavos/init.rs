@@ -19,13 +19,11 @@ use crate::{
     signer::SignerArgs,
 };
 
-/// Official hashes used as of extension version 3.21.10
-const BRAAVOS_PROXY_CLASS_HASH: FieldElement =
-    felt!("0x03131fa018d520a037686ce3efddeab8f28895662f019ca3ca18a626650f7d1e");
-const BRAAVOS_MOCK_IMPL_CLASS_HASH: FieldElement =
-    felt!("0x05aa23d5bb71ddaa783da7ea79d405315bafa7cf0387a74f4593578c3e9e6570");
-const BRAAVOS_IMPL_CLASS_HASH: FieldElement =
-    felt!("0x02c2b8f559e1221468140ad7b2352b1a5be32660d0bf1a3ae3a054a4ec5254e4");
+/// Official hashes used as of extension version 3.37.4
+const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: FieldElement =
+    felt!("0x013bfe114fb1cf405bfc3a7f8dbe2d91db146c17521d40dcf57e16d6b59fa8e6");
+const BRAAVOS_ACCOUNT_CLASS_HASH: FieldElement =
+    felt!("0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253");
 
 #[derive(Debug, Parser)]
 pub struct Init {
@@ -60,17 +58,17 @@ impl Init {
             version: 1,
             variant: AccountVariant::Braavos(BraavosAccountConfig {
                 version: 1,
-                implementation: BRAAVOS_IMPL_CLASS_HASH,
+                implementation: None,
                 multisig: BraavosMultisigConfig::Off,
                 signers: vec![BraavosSigner::Stark(BraavosStarkSigner {
                     public_key: signer.get_public_key().await?.scalar(),
                 })],
             }),
             deployment: DeploymentStatus::Undeployed(UndeployedStatus {
-                class_hash: BRAAVOS_PROXY_CLASS_HASH,
+                class_hash: BRAAVOS_ACCOUNT_CLASS_HASH,
                 salt,
                 context: Some(DeploymentContext::Braavos(BraavosDeploymentContext {
-                    mock_implementation: BRAAVOS_MOCK_IMPL_CLASS_HASH,
+                    base_account_class_hash: BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
                 })),
             }),
         };
