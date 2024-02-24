@@ -10,7 +10,7 @@ use cairo_starknet_2_4_0::{
     casm_contract_class::CasmContractClass as Cairo240CasmClass,
     contract_class::ContractClass as Cairo240Class,
 };
-use cairo_starknet_2_5_3::{
+use cairo_starknet_2_5_4::{
     casm_contract_class::CasmContractClass as Cairo253CasmClass,
     contract_class::ContractClass as Cairo253Class,
 };
@@ -34,7 +34,7 @@ pub struct CompilerBinary {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompilerVersion {
     V2_4_0,
-    V2_5_3,
+    V2_5_4,
 }
 
 impl BuiltInCompiler {
@@ -62,7 +62,7 @@ impl BuiltInCompiler {
 
                 serde_json::to_string(&casm_contract)?
             }
-            CompilerVersion::V2_5_3 => {
+            CompilerVersion::V2_5_4 => {
                 // TODO: directly convert type without going through JSON
                 let contract_class: Cairo253Class = serde_json::from_str(&sierra_class_json)?;
 
@@ -126,19 +126,19 @@ impl CompilerBinary {
 
 impl Default for CompilerVersion {
     fn default() -> Self {
-        Self::V2_4_0
+        Self::V2_5_4
     }
 }
 
 impl ValueEnum for CompilerVersion {
     fn value_variants<'a>() -> &'a [Self] {
-        &[Self::V2_4_0, Self::V2_5_3]
+        &[Self::V2_4_0, Self::V2_5_4]
     }
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         match self {
             Self::V2_4_0 => Some(PossibleValue::new("2.4.0").alias("v2.4.0")),
-            Self::V2_5_3 => Some(PossibleValue::new("2.5.3").alias("v2.5.3")),
+            Self::V2_5_4 => Some(PossibleValue::new("2.5.4").alias("v2.5.4")),
         }
     }
 }
@@ -149,7 +149,7 @@ impl FromStr for CompilerVersion {
     fn from_str(s: &str) -> Result<Self> {
         match s {
             "2.4.0" | "v2.4.0" => Ok(Self::V2_4_0),
-            "2.5.3" | "v2.5.3" => Ok(Self::V2_5_3),
+            "2.5.4" | "v2.5.4" => Ok(Self::V2_5_4),
             _ => Err(anyhow::anyhow!("unknown version: {}", s)),
         }
     }
@@ -159,7 +159,7 @@ impl Display for CompilerVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             CompilerVersion::V2_4_0 => write!(f, "2.4.0"),
-            CompilerVersion::V2_5_3 => write!(f, "2.5.3"),
+            CompilerVersion::V2_5_4 => write!(f, "2.5.4"),
         }
     }
 }

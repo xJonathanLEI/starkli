@@ -76,7 +76,7 @@ impl CasmArgs {
                             | Network::Goerli
                             | Network::Sepolia
                             | Network::GoerliIntegration
-                            | Network::SepoliaIntegration => CompilerVersion::V2_4_0,
+                            | Network::SepoliaIntegration => CompilerVersion::V2_5_4,
                         };
 
                         eprintln!(
