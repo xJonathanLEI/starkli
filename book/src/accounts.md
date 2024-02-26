@@ -41,6 +41,8 @@ starkli account deploy /path/to/account
 > ℹ️ **Note**
 >
 > This command also requires a signer. You must provide the same signer used for creating the account file in the first place.
+>
+> Unlike the `init` command, `deploy` needs to access the network, so a [provider](./providers.md) must also be configured.
 
 When run, the command shows the address where the contract will be deployed on, and instructs the user to fund the account before proceeding. Here's an example command output:
 
