@@ -298,6 +298,7 @@ impl Deploy {
 
         account.deployment = DeploymentStatus::Deployed(DeployedStatus {
             class_hash: undeployed_status.class_hash,
+            salt: undeployed_status.salt,
             address: target_deployment_address,
         });
 

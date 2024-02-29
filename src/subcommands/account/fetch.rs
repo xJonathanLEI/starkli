@@ -1,10 +1,13 @@
-use std::{io::Write, path::PathBuf};
+use std::{default::Default, io::Write, path::PathBuf};
 
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    core::types::{BlockId, BlockTag, FieldElement, FunctionCall},
+    core::types::{
+        BlockId, BlockTag, DeployAccountTransaction, EventFilter, FieldElement, FunctionCall,
+        Transaction,
+    },
     macros::selector,
     providers::Provider,
 };
@@ -312,12 +315,38 @@ impl Fetch {
                 })
             }
         };
-
+        let event = provider
+            .get_events(
+                EventFilter {
+                    from_block: Some(BlockId::Number(0)),
+                    to_block: Some(BlockId::Tag(BlockTag::Latest)),
+                    address: Some(address),
+                    keys: None,
+                },
+                None,
+                1024,
+            )
+            .await?;
+        let salt = if let Some(event) = event.events.first() {
+            let tx = provider
+                .get_transaction_by_hash(event.transaction_hash)
+                .await?;
+            match tx {
+                Transaction::DeployAccount(tx) => match tx {
+                    DeployAccountTransaction::V1(tx) => tx.contract_address_salt,
+                    DeployAccountTransaction::V3(tx) => tx.contract_address_salt,
+                },
+                _ => FieldElement::default(),
+            }
+        } else {
+            FieldElement::default()
+        };
         let account = AccountConfig {
             version: 1,
             variant,
             deployment: DeploymentStatus::Deployed(DeployedStatus {
                 class_hash,
+                salt,
                 address,
             }),
         };

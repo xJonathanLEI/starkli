@@ -267,6 +267,8 @@ pub struct DeployedStatus {
     #[serde_as(as = "UfeHex")]
     pub class_hash: FieldElement,
     #[serde_as(as = "UfeHex")]
+    pub salt: FieldElement,
+    #[serde_as(as = "UfeHex")]
     pub address: FieldElement,
 }
 
