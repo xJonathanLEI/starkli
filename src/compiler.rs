@@ -14,11 +14,17 @@ use cairo_starknet_2_5_4::{
     casm_contract_class::CasmContractClass as Cairo253CasmClass,
     contract_class::ContractClass as Cairo253Class,
 };
+use cairo_starknet_2_6_2::{
+    casm_contract_class::CasmContractClass as Cairo262CasmClass,
+    contract_class::ContractClass as Cairo262Class,
+};
 use clap::{builder::PossibleValue, ValueEnum};
 use starknet::core::types::{
     contract::{CompiledClass, SierraClass},
     FieldElement,
 };
+
+const MAX_BYTECODE_SIZE: usize = 180000;
 
 #[derive(Debug)]
 pub struct BuiltInCompiler {
@@ -35,6 +41,7 @@ pub struct CompilerBinary {
 pub enum CompilerVersion {
     V2_4_0,
     V2_5_4,
+    V2_6_2,
 }
 
 impl BuiltInCompiler {
@@ -69,6 +76,20 @@ impl BuiltInCompiler {
                 // TODO: implement the `validate_compatible_sierra_version` call
 
                 let casm_contract = Cairo253CasmClass::from_contract_class(contract_class, false)?;
+
+                serde_json::to_string(&casm_contract)?
+            }
+            CompilerVersion::V2_6_2 => {
+                // TODO: directly convert type without going through JSON
+                let contract_class: Cairo262Class = serde_json::from_str(&sierra_class_json)?;
+
+                // TODO: implement the `validate_compatible_sierra_version` call
+
+                let casm_contract = Cairo262CasmClass::from_contract_class(
+                    contract_class,
+                    false,
+                    MAX_BYTECODE_SIZE,
+                )?;
 
                 serde_json::to_string(&casm_contract)?
             }
@@ -132,13 +153,14 @@ impl Default for CompilerVersion {
 
 impl ValueEnum for CompilerVersion {
     fn value_variants<'a>() -> &'a [Self] {
-        &[Self::V2_4_0, Self::V2_5_4]
+        &[Self::V2_4_0, Self::V2_5_4, Self::V2_6_2]
     }
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         match self {
             Self::V2_4_0 => Some(PossibleValue::new("2.4.0").alias("v2.4.0")),
             Self::V2_5_4 => Some(PossibleValue::new("2.5.4").alias("v2.5.4")),
+            Self::V2_6_2 => Some(PossibleValue::new("2.6.2").alias("v2.6.2")),
         }
     }
 }
@@ -150,6 +172,7 @@ impl FromStr for CompilerVersion {
         match s {
             "2.4.0" | "v2.4.0" => Ok(Self::V2_4_0),
             "2.5.4" | "v2.5.4" => Ok(Self::V2_5_4),
+            "2.6.2" | "v2.6.2" => Ok(Self::V2_6_2),
             _ => Err(anyhow::anyhow!("unknown version: {}", s)),
         }
     }
@@ -160,6 +183,7 @@ impl Display for CompilerVersion {
         match self {
             CompilerVersion::V2_4_0 => write!(f, "2.4.0"),
             CompilerVersion::V2_5_4 => write!(f, "2.5.4"),
+            CompilerVersion::V2_6_2 => write!(f, "2.6.2"),
         }
     }
 }

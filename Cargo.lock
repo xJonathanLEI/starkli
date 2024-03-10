@@ -419,6 +419,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-lang-casm"
+version = "2.6.2"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.6.2#fb76dd901e5bb3d8155c3d4e2d8a39d22b6aefab"
+dependencies = [
+ "cairo-lang-utils 2.6.2",
+ "indoc",
+ "num-bigint",
+ "num-traits 0.2.16",
+ "parity-scale-codec",
+ "serde",
+]
+
+[[package]]
 name = "cairo-lang-compiler"
 version = "2.4.0"
 source = "git+https://github.com/starkware-libs/cairo?tag=v2.4.0#a4de08fbd75fa1d58c69d054d6b3d99aaf318f90"
@@ -546,6 +559,15 @@ version = "2.5.4"
 source = "git+https://github.com/starkware-libs/cairo?tag=v2.5.4#f42bf295a8792716e45926ace5c747e8e20a9eb7"
 dependencies = [
  "cairo-lang-utils 2.5.4",
+ "good_lp",
+]
+
+[[package]]
+name = "cairo-lang-eq-solver"
+version = "2.6.2"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.6.2#fb76dd901e5bb3d8155c3d4e2d8a39d22b6aefab"
+dependencies = [
+ "cairo-lang-utils 2.6.2",
  "good_lp",
 ]
 
@@ -842,6 +864,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-lang-sierra"
+version = "2.6.2"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.6.2#fb76dd901e5bb3d8155c3d4e2d8a39d22b6aefab"
+dependencies = [
+ "anyhow",
+ "cairo-felt 0.9.1",
+ "cairo-lang-utils 2.6.2",
+ "const-fnv1a-hash",
+ "convert_case",
+ "derivative",
+ "itertools 0.11.0",
+ "lalrpop",
+ "lalrpop-util",
+ "num-bigint",
+ "num-traits 0.2.16",
+ "regex",
+ "salsa",
+ "serde",
+ "serde_json",
+ "sha3",
+ "smol_str",
+ "thiserror",
+]
+
+[[package]]
 name = "cairo-lang-sierra-ap-change"
 version = "2.4.0"
 source = "git+https://github.com/starkware-libs/cairo?tag=v2.4.0#a4de08fbd75fa1d58c69d054d6b3d99aaf318f90"
@@ -869,6 +916,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-lang-sierra-ap-change"
+version = "2.6.2"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.6.2#fb76dd901e5bb3d8155c3d4e2d8a39d22b6aefab"
+dependencies = [
+ "cairo-lang-eq-solver 2.6.2",
+ "cairo-lang-sierra 2.6.2",
+ "cairo-lang-sierra-type-size 2.6.2",
+ "cairo-lang-utils 2.6.2",
+ "itertools 0.11.0",
+ "num-traits 0.2.16",
+ "thiserror",
+]
+
+[[package]]
 name = "cairo-lang-sierra-gas"
 version = "2.4.0"
 source = "git+https://github.com/starkware-libs/cairo?tag=v2.4.0#a4de08fbd75fa1d58c69d054d6b3d99aaf318f90"
@@ -890,6 +951,20 @@ dependencies = [
  "cairo-lang-sierra 2.5.4",
  "cairo-lang-sierra-type-size 2.5.4",
  "cairo-lang-utils 2.5.4",
+ "itertools 0.11.0",
+ "num-traits 0.2.16",
+ "thiserror",
+]
+
+[[package]]
+name = "cairo-lang-sierra-gas"
+version = "2.6.2"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.6.2#fb76dd901e5bb3d8155c3d4e2d8a39d22b6aefab"
+dependencies = [
+ "cairo-lang-eq-solver 2.6.2",
+ "cairo-lang-sierra 2.6.2",
+ "cairo-lang-sierra-type-size 2.6.2",
+ "cairo-lang-utils 2.6.2",
  "itertools 0.11.0",
  "num-traits 0.2.16",
  "thiserror",
@@ -981,6 +1056,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-lang-sierra-to-casm"
+version = "2.6.2"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.6.2#fb76dd901e5bb3d8155c3d4e2d8a39d22b6aefab"
+dependencies = [
+ "assert_matches",
+ "cairo-felt 0.9.1",
+ "cairo-lang-casm 2.6.2",
+ "cairo-lang-sierra 2.6.2",
+ "cairo-lang-sierra-ap-change 2.6.2",
+ "cairo-lang-sierra-gas 2.6.2",
+ "cairo-lang-sierra-type-size 2.6.2",
+ "cairo-lang-utils 2.6.2",
+ "indoc",
+ "itertools 0.11.0",
+ "num-bigint",
+ "num-traits 0.2.16",
+ "thiserror",
+]
+
+[[package]]
 name = "cairo-lang-sierra-type-size"
 version = "2.4.0"
 source = "git+https://github.com/starkware-libs/cairo?tag=v2.4.0#a4de08fbd75fa1d58c69d054d6b3d99aaf318f90"
@@ -996,6 +1091,15 @@ source = "git+https://github.com/starkware-libs/cairo?tag=v2.5.4#f42bf295a879271
 dependencies = [
  "cairo-lang-sierra 2.5.4",
  "cairo-lang-utils 2.5.4",
+]
+
+[[package]]
+name = "cairo-lang-sierra-type-size"
+version = "2.6.2"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.6.2#fb76dd901e5bb3d8155c3d4e2d8a39d22b6aefab"
+dependencies = [
+ "cairo-lang-sierra 2.6.2",
+ "cairo-lang-utils 2.6.2",
 ]
 
 [[package]]
@@ -1058,6 +1162,30 @@ dependencies = [
  "convert_case",
  "indent",
  "indoc",
+ "itertools 0.11.0",
+ "num-bigint",
+ "num-integer",
+ "num-traits 0.2.16",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "sha3",
+ "smol_str",
+ "starknet-crypto 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror",
+]
+
+[[package]]
+name = "cairo-lang-starknet-classes"
+version = "2.6.2"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.6.2#fb76dd901e5bb3d8155c3d4e2d8a39d22b6aefab"
+dependencies = [
+ "cairo-felt 0.9.1",
+ "cairo-lang-casm 2.6.2",
+ "cairo-lang-sierra 2.6.2",
+ "cairo-lang-sierra-to-casm 2.6.2",
+ "cairo-lang-utils 2.6.2",
+ "convert_case",
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",
@@ -1137,6 +1265,20 @@ dependencies = [
 name = "cairo-lang-utils"
 version = "2.5.4"
 source = "git+https://github.com/starkware-libs/cairo?tag=v2.5.4#f42bf295a8792716e45926ace5c747e8e20a9eb7"
+dependencies = [
+ "hashbrown 0.14.3",
+ "indexmap 2.1.0",
+ "itertools 0.11.0",
+ "num-bigint",
+ "num-traits 0.2.16",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "cairo-lang-utils"
+version = "2.6.2"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.6.2#fb76dd901e5bb3d8155c3d4e2d8a39d22b6aefab"
 dependencies = [
  "hashbrown 0.14.3",
  "indexmap 2.1.0",
@@ -3295,6 +3437,7 @@ dependencies = [
  "bigdecimal 0.4.1",
  "cairo-lang-starknet 2.4.0",
  "cairo-lang-starknet 2.5.4",
+ "cairo-lang-starknet-classes",
  "chrono",
  "clap",
  "clap_complete",
@@ -3318,7 +3461,7 @@ dependencies = [
  "serde_with",
  "shellexpand",
  "starknet",
- "starknet-crypto 0.6.1 (git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed)",
+ "starknet-crypto 0.6.1 (git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d)",
  "tempfile",
  "thiserror",
  "tokio",
@@ -3329,13 +3472,13 @@ dependencies = [
 
 [[package]]
 name = "starknet"
-version = "0.8.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed#c974e5cb42e8d8344cee910b76005ec46b4dd3ed"
+version = "0.9.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d#d980869d44ef86249b4077f4ec809165f470678d"
 dependencies = [
  "starknet-accounts",
  "starknet-contract",
  "starknet-core",
- "starknet-crypto 0.6.1 (git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed)",
+ "starknet-crypto 0.6.1 (git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d)",
  "starknet-ff 0.3.6",
  "starknet-macros",
  "starknet-providers",
@@ -3344,8 +3487,8 @@ dependencies = [
 
 [[package]]
 name = "starknet-accounts"
-version = "0.7.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed#c974e5cb42e8d8344cee910b76005ec46b4dd3ed"
+version = "0.8.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d#d980869d44ef86249b4077f4ec809165f470678d"
 dependencies = [
  "async-trait",
  "auto_impl",
@@ -3357,8 +3500,8 @@ dependencies = [
 
 [[package]]
 name = "starknet-contract"
-version = "0.7.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed#c974e5cb42e8d8344cee910b76005ec46b4dd3ed"
+version = "0.8.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d#d980869d44ef86249b4077f4ec809165f470678d"
 dependencies = [
  "serde",
  "serde_json",
@@ -3371,8 +3514,8 @@ dependencies = [
 
 [[package]]
 name = "starknet-core"
-version = "0.8.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed#c974e5cb42e8d8344cee910b76005ec46b4dd3ed"
+version = "0.9.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d#d980869d44ef86249b4077f4ec809165f470678d"
 dependencies = [
  "base64 0.21.2",
  "flate2",
@@ -3382,7 +3525,7 @@ dependencies = [
  "serde_json_pythonic",
  "serde_with",
  "sha3",
- "starknet-crypto 0.6.1 (git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed)",
+ "starknet-crypto 0.6.1 (git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d)",
  "starknet-ff 0.3.6",
 ]
 
@@ -3401,7 +3544,7 @@ dependencies = [
  "rfc6979",
  "sha2",
  "starknet-crypto-codegen 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "starknet-curve 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-curve 0.4.0",
  "starknet-ff 0.3.5",
  "zeroize",
 ]
@@ -3409,7 +3552,7 @@ dependencies = [
 [[package]]
 name = "starknet-crypto"
 version = "0.6.1"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed#c974e5cb42e8d8344cee910b76005ec46b4dd3ed"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d#d980869d44ef86249b4077f4ec809165f470678d"
 dependencies = [
  "crypto-bigint",
  "hex",
@@ -3419,8 +3562,8 @@ dependencies = [
  "num-traits 0.2.16",
  "rfc6979",
  "sha2",
- "starknet-crypto-codegen 0.3.2 (git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed)",
- "starknet-curve 0.4.0 (git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed)",
+ "starknet-crypto-codegen 0.3.2 (git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d)",
+ "starknet-curve 0.4.1",
  "starknet-ff 0.3.6",
  "zeroize",
 ]
@@ -3431,7 +3574,7 @@ version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af6527b845423542c8a16e060ea1bc43f67229848e7cd4c4d80be994a84220ce"
 dependencies = [
- "starknet-curve 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "starknet-curve 0.4.0",
  "starknet-ff 0.3.5",
  "syn 2.0.41",
 ]
@@ -3439,9 +3582,9 @@ dependencies = [
 [[package]]
 name = "starknet-crypto-codegen"
 version = "0.3.2"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed#c974e5cb42e8d8344cee910b76005ec46b4dd3ed"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d#d980869d44ef86249b4077f4ec809165f470678d"
 dependencies = [
- "starknet-curve 0.4.0 (git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed)",
+ "starknet-curve 0.4.1",
  "starknet-ff 0.3.6",
  "syn 2.0.41",
 ]
@@ -3457,8 +3600,8 @@ dependencies = [
 
 [[package]]
 name = "starknet-curve"
-version = "0.4.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed#c974e5cb42e8d8344cee910b76005ec46b4dd3ed"
+version = "0.4.1"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d#d980869d44ef86249b4077f4ec809165f470678d"
 dependencies = [
  "starknet-ff 0.3.6",
 ]
@@ -3478,7 +3621,7 @@ dependencies = [
 [[package]]
 name = "starknet-ff"
 version = "0.3.6"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed#c974e5cb42e8d8344cee910b76005ec46b4dd3ed"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d#d980869d44ef86249b4077f4ec809165f470678d"
 dependencies = [
  "ark-ff",
  "bigdecimal 0.3.1",
@@ -3491,8 +3634,8 @@ dependencies = [
 
 [[package]]
 name = "starknet-macros"
-version = "0.1.5"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed#c974e5cb42e8d8344cee910b76005ec46b4dd3ed"
+version = "0.1.6"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d#d980869d44ef86249b4077f4ec809165f470678d"
 dependencies = [
  "starknet-core",
  "syn 2.0.41",
@@ -3500,8 +3643,8 @@ dependencies = [
 
 [[package]]
 name = "starknet-providers"
-version = "0.8.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed#c974e5cb42e8d8344cee910b76005ec46b4dd3ed"
+version = "0.9.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d#d980869d44ef86249b4077f4ec809165f470678d"
 dependencies = [
  "async-trait",
  "auto_impl",
@@ -3519,8 +3662,8 @@ dependencies = [
 
 [[package]]
 name = "starknet-signers"
-version = "0.6.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed#c974e5cb42e8d8344cee910b76005ec46b4dd3ed"
+version = "0.7.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d#d980869d44ef86249b4077f4ec809165f470678d"
 dependencies = [
  "async-trait",
  "auto_impl",
@@ -3528,7 +3671,7 @@ dependencies = [
  "eth-keystore",
  "rand",
  "starknet-core",
- "starknet-crypto 0.6.1 (git+https://github.com/xJonathanLEI/starknet-rs?rev=c974e5cb42e8d8344cee910b76005ec46b4dd3ed)",
+ "starknet-crypto 0.6.1 (git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869d44ef86249b4077f4ec809165f470678d)",
  "thiserror",
 ]
 
