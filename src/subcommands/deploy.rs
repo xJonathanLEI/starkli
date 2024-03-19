@@ -140,7 +140,11 @@ impl Deploy {
             return Ok(());
         }
 
-        let deployment_tx = contract_deployment.send().await?.transaction_hash;
+        let deployment_tx = contract_deployment
+            .send()
+            .await
+            .map_err(account_error_mapper)?
+            .transaction_hash;
         eprintln!(
             "Contract deployment transaction: {}",
             format!("{:#064x}", deployment_tx).bright_yellow()

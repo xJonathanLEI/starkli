@@ -144,7 +144,11 @@ impl Invoke {
             return Ok(());
         }
 
-        let invoke_tx = execution.send().await?.transaction_hash;
+        let invoke_tx = execution
+            .send()
+            .await
+            .map_err(account_error_mapper)?
+            .transaction_hash;
         eprintln!(
             "Invoke transaction: {}",
             format!("{:#064x}", invoke_tx).bright_yellow()

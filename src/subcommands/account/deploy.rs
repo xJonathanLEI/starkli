@@ -275,7 +275,11 @@ impl Deploy {
         }
 
         // TODO: add option to check ETH balance before sending out tx
-        let account_deployment_tx = account_deployment.send().await?.transaction_hash;
+        let account_deployment_tx = account_deployment
+            .send()
+            .await
+            .map_err(account_factory_error_mapper)?
+            .transaction_hash;
         eprintln!(
             "Account deployment transaction: {}",
             format!("{:#064x}", account_deployment_tx).bright_yellow()

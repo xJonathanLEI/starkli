@@ -182,7 +182,14 @@ impl Declare {
                 return Ok(());
             }
 
-            (class_hash, declaration.send().await?.transaction_hash)
+            (
+                class_hash,
+                declaration
+                    .send()
+                    .await
+                    .map_err(account_error_mapper)?
+                    .transaction_hash,
+            )
         } else if let Ok(_) =
             serde_json::from_reader::<_, CompiledClass>(std::fs::File::open(&self.file)?)
         {
@@ -249,7 +256,14 @@ impl Declare {
                 return Ok(());
             }
 
-            (class_hash, declaration.send().await?.transaction_hash)
+            (
+                class_hash,
+                declaration
+                    .send()
+                    .await
+                    .map_err(account_error_mapper)?
+                    .transaction_hash,
+            )
         } else {
             anyhow::bail!("failed to parse contract artifact");
         };
