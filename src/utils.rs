@@ -34,7 +34,7 @@ where
 {
     loop {
         match provider.get_transaction_receipt(transaction_hash).await {
-            Ok(receipt) => match receipt.execution_result() {
+            Ok(receipt) => match receipt.receipt.execution_result() {
                 ExecutionResult::Succeeded => {
                     eprintln!(
                         "Transaction {} confirmed",

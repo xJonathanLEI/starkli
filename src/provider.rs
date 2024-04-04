@@ -220,22 +220,22 @@ impl ProviderArgs {
                 let url = match vendor {
                     FreeProviderVendor::Blast => {
                         if matched_network.chain_id == CHAIN_ID_MAINNET {
-                            Some("https://starknet-mainnet.public.blastapi.io/rpc/v0_6")
+                            Some("https://starknet-mainnet.public.blastapi.io/rpc/v0_7")
                         } else if matched_network.chain_id == CHAIN_ID_GOERLI {
-                            Some("https://starknet-testnet.public.blastapi.io/rpc/v0_6")
+                            Some("https://starknet-testnet.public.blastapi.io/rpc/v0_7")
                         } else if matched_network.chain_id == CHAIN_ID_SEPOLIA {
-                            Some("https://starknet-sepolia.public.blastapi.io/rpc/v0_6")
+                            Some("https://starknet-sepolia.public.blastapi.io/rpc/v0_7")
                         } else {
                             None
                         }
                     }
                     FreeProviderVendor::Nethermind => {
                         if matched_network.chain_id == CHAIN_ID_MAINNET {
-                            Some("https://free-rpc.nethermind.io/mainnet-juno/rpc/v0_6")
+                            Some("https://free-rpc.nethermind.io/mainnet-juno/rpc/v0_7")
                         } else if matched_network.chain_id == CHAIN_ID_GOERLI {
-                            Some("https://free-rpc.nethermind.io/goerli-juno/rpc/v0_6")
+                            Some("https://free-rpc.nethermind.io/goerli-juno/rpc/v0_7")
                         } else if matched_network.chain_id == CHAIN_ID_SEPOLIA {
-                            Some("https://free-rpc.nethermind.io/sepolia-juno/rpc/v0_6")
+                            Some("https://free-rpc.nethermind.io/sepolia-juno/rpc/v0_7")
                         } else {
                             None
                         }
@@ -327,6 +327,16 @@ impl Provider for ExtendedProvider {
         <AnyProvider as Provider>::get_block_with_txs(&self.provider, block_id).await
     }
 
+    async fn get_block_with_receipts<B>(
+        &self,
+        block_id: B,
+    ) -> Result<MaybePendingBlockWithReceipts, ProviderError>
+    where
+        B: AsRef<BlockId> + Send + Sync,
+    {
+        <AnyProvider as Provider>::get_block_with_receipts(&self.provider, block_id).await
+    }
+
     async fn get_state_update<B>(
         &self,
         block_id: B,
@@ -391,7 +401,7 @@ impl Provider for ExtendedProvider {
     async fn get_transaction_receipt<H>(
         &self,
         transaction_hash: H,
-    ) -> Result<MaybePendingTransactionReceipt, ProviderError>
+    ) -> Result<TransactionReceiptWithBlockInfo, ProviderError>
     where
         H: AsRef<FieldElement> + Send + Sync,
     {

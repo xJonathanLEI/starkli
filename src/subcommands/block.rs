@@ -11,6 +11,8 @@ pub struct Block {
     provider: ProviderArgs,
     #[clap(long, help = "Fetch full transactions instead of hashes only")]
     full: bool,
+    #[clap(long, help = "Fetch full receipts alongside transactions")]
+    receipts: bool,
     #[clap(
         default_value = "latest",
         help = "Block number, hash, or tag (latest/pending)"
@@ -28,7 +30,9 @@ impl Block {
 
         let block_id = parse_block_id(&self.block_id)?;
 
-        let block_json = if self.full {
+        let block_json = if self.receipts {
+            serde_json::to_value(provider.get_block_with_receipts(block_id).await?)?
+        } else if self.full {
             serde_json::to_value(provider.get_block_with_txs(block_id).await?)?
         } else {
             serde_json::to_value(provider.get_block_with_tx_hashes(block_id).await?)?
