@@ -21,7 +21,6 @@ use crate::{
 };
 
 const CHAIN_ID_MAINNET: FieldElement = short_string!("SN_MAIN");
-const CHAIN_ID_GOERLI: FieldElement = short_string!("SN_GOERLI");
 const CHAIN_ID_SEPOLIA: FieldElement = short_string!("SN_SEPOLIA");
 
 #[derive(Debug, Clone, Parser)]
@@ -36,16 +35,8 @@ pub struct ProviderArgs {
     network: Option<String>,
 }
 
-/// This type was created because integration network has the same chain ID as `goerli`. We would
-/// otherwise has no way of telling them apart. We could generally just ignore this, but it would
-/// actually cause issues when deciding what Sierra compiler version to use depending on network, so
-/// we still need this.
-///
-/// Now the type also internally stores the RPC version of the endpoint, which is useful for showing
-/// warnings whens using methods that contain breaking changes between versions.
 pub struct ExtendedProvider {
     provider: AnyProvider,
-    is_integration: bool,
     rpc_version: OnceCell<String>,
 }
 
@@ -54,7 +45,6 @@ impl ProviderArgs {
         Ok(match (self.rpc, self.network) {
             (Some(rpc), None) => ExtendedProvider::new(
                 AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc))),
-                false,
                 None,
             ),
             (Some(rpc), Some(_)) => {
@@ -68,7 +58,6 @@ impl ProviderArgs {
 
                 ExtendedProvider::new(
                     AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc))),
-                    false,
                     None,
                 )
             }
@@ -77,12 +66,12 @@ impl ProviderArgs {
                 eprintln!(
                     "{}",
                     "WARNING: you're using neither --rpc (STARKNET_RPC) nor --network \
-                    (STARKNET_NETWORK). The `goerli` network is used by default. See \
+                    (STARKNET_NETWORK). The `sepolia` network is used by default. See \
                     https://book.starkli.rs/providers for more details."
                         .bright_magenta()
                 );
 
-                Self::resolve_network("goerli")?
+                Self::resolve_network("sepolia")?
             }
         })
     }
@@ -168,14 +157,6 @@ impl ProviderArgs {
                                             &builtin_network,
                                         )),
                                     },
-                                    Network::Goerli => crate::profile::Network {
-                                        name: Some("Starknet Goerli Testnet".into()),
-                                        chain_id: CHAIN_ID_GOERLI,
-                                        is_integration: false,
-                                        provider: NetworkProvider::Free(choose_vendor(
-                                            &builtin_network,
-                                        )),
-                                    },
                                     Network::Sepolia => crate::profile::Network {
                                         name: Some("Starknet Sepolia Testnet".into()),
                                         chain_id: CHAIN_ID_SEPOLIA,
@@ -184,7 +165,7 @@ impl ProviderArgs {
                                             &builtin_network,
                                         )),
                                     },
-                                    Network::GoerliIntegration | Network::SepoliaIntegration => {
+                                    Network::SepoliaIntegration => {
                                         anyhow::bail!(
                                             "network {} cannot be used without being configured",
                                             network
@@ -221,8 +202,6 @@ impl ProviderArgs {
                     FreeProviderVendor::Blast => {
                         if matched_network.chain_id == CHAIN_ID_MAINNET {
                             Some("https://starknet-mainnet.public.blastapi.io/rpc/v0_6")
-                        } else if matched_network.chain_id == CHAIN_ID_GOERLI {
-                            Some("https://starknet-testnet.public.blastapi.io/rpc/v0_6")
                         } else if matched_network.chain_id == CHAIN_ID_SEPOLIA {
                             Some("https://starknet-sepolia.public.blastapi.io/rpc/v0_6")
                         } else {
@@ -232,8 +211,6 @@ impl ProviderArgs {
                     FreeProviderVendor::Nethermind => {
                         if matched_network.chain_id == CHAIN_ID_MAINNET {
                             Some("https://free-rpc.nethermind.io/mainnet-juno/rpc/v0_6")
-                        } else if matched_network.chain_id == CHAIN_ID_GOERLI {
-                            Some("https://free-rpc.nethermind.io/goerli-juno/rpc/v0_6")
                         } else if matched_network.chain_id == CHAIN_ID_SEPOLIA {
                             Some("https://free-rpc.nethermind.io/sepolia-juno/rpc/v0_6")
                         } else {
@@ -267,7 +244,6 @@ impl ProviderArgs {
 
         let provider = ExtendedProvider::new(
             AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc_url))),
-            matched_network.is_integration,
             rpc_version,
         );
 
@@ -280,10 +256,9 @@ impl ProviderArgs {
 }
 
 impl ExtendedProvider {
-    pub fn new(provider: AnyProvider, is_integration: bool, rpc_version: Option<String>) -> Self {
+    pub fn new(provider: AnyProvider, rpc_version: Option<String>) -> Self {
         Self {
             provider,
-            is_integration,
             rpc_version: match rpc_version {
                 Some(rpc_version) => OnceCell::from(rpc_version),
                 None => OnceCell::new(),
@@ -293,10 +268,6 @@ impl ExtendedProvider {
 
     pub fn is_rpc(&self) -> bool {
         matches!(self.provider, AnyProvider::JsonRpcHttp(_))
-    }
-
-    pub fn is_integration(&self) -> bool {
-        self.is_integration
     }
 }
 

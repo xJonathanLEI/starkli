@@ -16,9 +16,9 @@ There are two ways to specify a JSON-RPC provider, either [directly](#using-an-r
 
 > ℹ️ **Note**
 >
-> When no provider option is supplied, Starkli falls back to using the `goerli` network. If the network is not already defined, a [free RPC vendor](#free-rpc-vendors) is used.
+> When no provider option is supplied, Starkli falls back to using the `sepolia` network. If the network is not already defined, a [free RPC vendor](#free-rpc-vendors) is used.
 >
-> You're advised against relying on the fallback to use the `goerli` network, as the default network might change over time. Therefore, a warning is shown each time the fallback is used.
+> You're advised against relying on the fallback to use the `sepolia` network, as the default network might change over time. Therefore, a warning is shown each time the fallback is used.
 
 ## Using an RPC URL directly
 
@@ -88,7 +88,6 @@ Historically, the now-deprecated-and-removed sequencer gateway provider allowed 
 The following 3 networks are eligible for free RPC vendors:
 
 - `mainnet`
-- `goerli`
 - `sepolia`
 
 When using these networks, **and when the network is not already defined in the active profile**, a free vendor will be randomly chosen from below:

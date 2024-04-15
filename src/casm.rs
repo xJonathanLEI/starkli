@@ -72,11 +72,9 @@ impl CasmArgs {
                 match network {
                     Some(network) => {
                         let auto_version = match network {
-                            Network::Goerli
-                            | Network::Sepolia
-                            | Network::GoerliIntegration
-                            | Network::SepoliaIntegration
-                            | Network::Mainnet => CompilerVersion::V2_6_2,
+                            Network::Sepolia | Network::SepoliaIntegration | Network::Mainnet => {
+                                CompilerVersion::V2_6_2
+                            }
                         };
 
                         eprintln!(
