@@ -345,7 +345,7 @@ impl AccountArgs {
             }
 
             let account_config: AccountConfig =
-                serde_json::from_reader(&mut std::fs::File::open(&self.account)?)?;
+                serde_json::from_reader(&mut std::fs::File::open(&account)?)?;
 
             let account_address = match account_config.deployment {
                 DeploymentStatus::Undeployed(_) => anyhow::bail!("account not deployed"),
