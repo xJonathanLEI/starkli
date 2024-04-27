@@ -5,7 +5,7 @@ use clap::Parser;
 use colored::Colorize;
 use colored_json::{ColorMode, Output};
 use starknet::{
-    accounts::{Account, Call},
+    accounts::{Account, Call, ConnectedAccount},
     core::types::FieldElement,
     macros::felt,
 };
@@ -31,6 +31,8 @@ pub struct Invoke {
     fee: FeeArgs,
     #[clap(long, help = "Simulate the transaction only")]
     simulate: bool,
+    #[clap(long, help = "Print the raw transaction data")]
+    raw_tx: bool,
     #[clap(long, help = "Provide transaction nonce manually")]
     nonce: Option<FieldElement>,
     #[clap(long, short, help = "Wait for the transaction to confirm")]
@@ -55,6 +57,10 @@ impl Invoke {
         let fee_setting = self.fee.into_setting()?;
         if self.simulate && fee_setting.is_estimate_only() {
             anyhow::bail!("--simulate cannot be used with --estimate-only");
+        } else if self.simulate && self.raw_tx {
+            anyhow::bail!("--simulate cannot be used with --raw-tx");
+        } else if self.raw_tx && fee_setting.is_estimate_only() {
+            anyhow::bail!("--estimate-only cannot be used with --raw-tx");
         }
 
         let provider = Arc::new(self.provider.into_provider()?);
@@ -133,6 +139,20 @@ impl Invoke {
             None => execution,
         };
         let execution = execution.max_fee(max_fee);
+
+        if self.raw_tx {
+            let nonce = match self.nonce {
+                Some(nonce) => nonce,
+                None => account.get_nonce().await?,
+            };
+            let execution = execution.nonce(nonce);
+            let raw_tx = execution.prepared()?.get_invoke_request(true).await?;
+            let raw_tx_json = serde_json::to_value(raw_tx)?;
+            let raw_tx_json =
+                colored_json::to_colored_json(&raw_tx_json, ColorMode::Auto(Output::StdOut))?;
+            println!("{raw_tx_json}");
+            return Ok(());
+        }
 
         if self.simulate {
             let simulation = execution.simulate(false, false).await?;
