@@ -265,10 +265,6 @@ impl ExtendedProvider {
             },
         }
     }
-
-    pub fn is_rpc(&self) -> bool {
-        matches!(self.provider, AnyProvider::JsonRpcHttp(_))
-    }
 }
 
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]

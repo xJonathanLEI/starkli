@@ -22,6 +22,7 @@ pub struct Account {
     command: Subcommands,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Subcommand)]
 enum Subcommands {
     #[clap(about = "Fetch account config from an already deployed account contract")]

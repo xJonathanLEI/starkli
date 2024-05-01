@@ -3,7 +3,6 @@ use std::{io::Write, path::PathBuf, sync::Arc, time::Duration};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
-use colored_json::{ColorMode, Output};
 use starknet::{
     accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory},
     core::types::{BlockId, BlockTag, FieldElement},
@@ -19,10 +18,10 @@ use crate::{
     },
     account_factory::{AnyAccountFactory, BraavosAccountFactory},
     error::account_factory_error_mapper,
-    fee::{FeeArgs, FeeSetting},
+    fee::{FeeArgs, FeeSetting, FeeToken, TokenFeeSetting},
     path::ExpandedPathbufParser,
     signer::SignerArgs,
-    utils::watch_tx,
+    utils::{print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
@@ -55,6 +54,7 @@ pub struct Deploy {
     verbosity: VerbosityArgs,
 }
 
+#[derive(Debug, Clone, Copy)]
 enum MaxFeeType {
     Manual {
         max_fee: FieldElement,
@@ -189,97 +189,184 @@ impl Deploy {
             }
         };
 
-        let account_deployment = factory.deploy(undeployed_status.salt);
-
         let target_deployment_address = account.deploy_account_address()?;
 
-        // Sanity check. We don't really need to check again here actually
-        if account_deployment.address() != target_deployment_address {
-            panic!("Unexpected account deployment address mismatch");
-        }
+        let account_deployment_tx = match fee_setting {
+            FeeSetting::Eth(fee_setting) => {
+                let account_deployment = factory.deploy_v1(undeployed_status.salt);
+                let account_deployment = match self.nonce {
+                    Some(nonce) => account_deployment.nonce(nonce),
+                    None => account_deployment,
+                };
 
-        let max_fee = match fee_setting {
-            FeeSetting::Manual(fee) => MaxFeeType::Manual { max_fee: fee },
-            FeeSetting::EstimateOnly | FeeSetting::None => {
-                let estimated_fee = account_deployment
-                    .estimate_fee()
-                    .await
-                    .map_err(account_factory_error_mapper)?
-                    .overall_fee;
+                // Sanity check. We don't really need to check again here actually
+                if account_deployment.address() != target_deployment_address {
+                    panic!("Unexpected account deployment address mismatch");
+                }
 
-                // TODO: make buffer configurable
-                let estimated_fee_with_buffer = (estimated_fee * felt!("3")).floor_div(felt!("2"));
+                let (fee_type, account_deployment) = match fee_setting {
+                    TokenFeeSetting::Manual(fee) => (
+                        MaxFeeType::Manual {
+                            max_fee: fee.max_fee,
+                        },
+                        account_deployment.max_fee(fee.max_fee),
+                    ),
+                    TokenFeeSetting::EstimateOnly | TokenFeeSetting::None => {
+                        let estimated_fee = account_deployment
+                            .estimate_fee()
+                            .await
+                            .map_err(account_factory_error_mapper)?
+                            .overall_fee;
 
-                if fee_setting.is_estimate_only() {
-                    println!(
-                        "{} ETH",
-                        format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
-                    );
+                        if fee_setting.is_estimate_only() {
+                            println!(
+                                "{} ETH",
+                                format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                            );
+                            return Ok(());
+                        }
+
+                        // TODO: make buffer configurable
+                        let estimated_fee_with_buffer =
+                            (estimated_fee * felt!("3")).floor_div(felt!("2"));
+
+                        (
+                            MaxFeeType::Estimated {
+                                estimate: estimated_fee,
+                                estimate_with_buffer: estimated_fee_with_buffer,
+                            },
+                            account_deployment.max_fee(estimated_fee_with_buffer),
+                        )
+                    }
+                };
+
+                if self.simulate {
+                    print_colored_json(&account_deployment.simulate(false, false).await?)?;
                     return Ok(());
                 }
 
-                MaxFeeType::Estimated {
-                    estimate: estimated_fee,
-                    estimate_with_buffer: estimated_fee_with_buffer,
-                }
+                fee_prompt(fee_type, target_deployment_address, FeeToken::Eth)?;
+
+                account_deployment.send().await
             }
-        };
+            FeeSetting::Strk(fee_setting) => {
+                let account_deployment = factory.deploy_v3(undeployed_status.salt);
+                let account_deployment = match self.nonce {
+                    Some(nonce) => account_deployment.nonce(nonce),
+                    None => account_deployment,
+                };
 
-        if !self.simulate {
-            match max_fee {
-                MaxFeeType::Manual { max_fee } => {
-                    eprintln!(
-                        "You've manually specified the account deployment fee to be {}. \
-                        Therefore, fund at least:\n    {}",
-                        format!("{} ETH", max_fee.to_big_decimal(18)).bright_yellow(),
-                        format!("{} ETH", max_fee.to_big_decimal(18)).bright_yellow(),
-                    );
+                // Sanity check. We don't really need to check again here actually
+                if account_deployment.address() != target_deployment_address {
+                    panic!("Unexpected account deployment address mismatch");
                 }
-                MaxFeeType::Estimated {
-                    estimate,
-                    estimate_with_buffer,
-                } => {
-                    eprintln!(
-                        "The estimated account deployment fee is {}. \
-                        However, to avoid failure, fund at least:\n    {}",
-                        format!("{} ETH", estimate.to_big_decimal(18)).bright_yellow(),
-                        format!("{} ETH", estimate_with_buffer.to_big_decimal(18)).bright_yellow()
-                    );
+
+                let (fee_type, account_deployment) = match fee_setting {
+                    TokenFeeSetting::Manual(fee) => match (fee.gas, fee.gas_price) {
+                        // Fees fully specified
+                        (Some(gas), Some(gas_price)) => (
+                            MaxFeeType::Manual {
+                                max_fee: FieldElement::from(gas) * FieldElement::from(gas_price),
+                            },
+                            account_deployment.gas(gas).gas_price(gas_price),
+                        ),
+                        // `gas_price` only: fee estimation needed
+                        (None, Some(gas_price)) => {
+                            let estimated_fee = account_deployment
+                                .estimate_fee()
+                                .await
+                                .map_err(account_factory_error_mapper)?;
+
+                            // TODO: make buffer configurable
+                            let gas_with_buffer = (estimated_fee.gas_consumed
+                                * FieldElement::THREE)
+                                .floor_div(FieldElement::TWO);
+
+                            (
+                                MaxFeeType::Estimated {
+                                    estimate: estimated_fee.gas_consumed
+                                        * FieldElement::from(gas_price),
+                                    estimate_with_buffer: gas_with_buffer
+                                        * FieldElement::from(gas_price),
+                                },
+                                account_deployment
+                                    .gas(gas_with_buffer.try_into()?)
+                                    .gas_price(gas_price),
+                            )
+                        }
+                        // `gas` only: need to find gas price
+                        (Some(gas), None) => {
+                            let block = provider
+                                .get_block_with_tx_hashes(factory.block_id())
+                                .await?;
+
+                            // TODO: make buffer configurable
+                            let gas_price_with_buffer = (block.l1_gas_price().price_in_fri
+                                * FieldElement::THREE)
+                                .floor_div(FieldElement::TWO);
+
+                            (
+                                MaxFeeType::Estimated {
+                                    estimate: FieldElement::from(gas)
+                                        * block.l1_gas_price().price_in_fri,
+                                    estimate_with_buffer: FieldElement::from(gas)
+                                        * gas_price_with_buffer,
+                                },
+                                account_deployment
+                                    .gas(gas)
+                                    .gas_price(gas_price_with_buffer.try_into()?),
+                            )
+                        }
+                        (None, None) => unreachable!(),
+                    },
+                    TokenFeeSetting::EstimateOnly | TokenFeeSetting::None => {
+                        let estimated_fee = account_deployment
+                            .estimate_fee()
+                            .await
+                            .map_err(account_factory_error_mapper)?;
+
+                        if fee_setting.is_estimate_only() {
+                            println!(
+                                "{} STRK",
+                                format!("{}", estimated_fee.overall_fee.to_big_decimal(18))
+                                    .bright_yellow(),
+                            );
+                            return Ok(());
+                        }
+
+                        // TODO: make buffer configurable
+                        let gas = (estimated_fee.gas_consumed * FieldElement::THREE)
+                            .floor_div(FieldElement::TWO);
+                        let gas_price = (estimated_fee.gas_price * FieldElement::THREE)
+                            .floor_div(FieldElement::TWO);
+
+                        let estimated_fee_with_buffer = gas * gas_price;
+
+                        (
+                            MaxFeeType::Estimated {
+                                estimate: estimated_fee.overall_fee,
+                                estimate_with_buffer: estimated_fee_with_buffer,
+                            },
+                            account_deployment
+                                .gas(gas.try_into()?)
+                                .gas_price(gas_price.try_into()?),
+                        )
+                    }
+                };
+
+                if self.simulate {
+                    print_colored_json(&account_deployment.simulate(false, false).await?)?;
+                    return Ok(());
                 }
+
+                fee_prompt(fee_type, target_deployment_address, FeeToken::Strk)?;
+
+                account_deployment.send().await
             }
-
-            eprintln!(
-                "to the following address:\n    {}",
-                format!("{:#064x}", target_deployment_address).bright_yellow()
-            );
-
-            // TODO: add flag for skipping this manual confirmation step
-            eprint!("Press [ENTER] once you've funded the address.");
-            std::io::stdin().read_line(&mut String::new())?;
         }
+        .map_err(account_factory_error_mapper)?
+        .transaction_hash;
 
-        let account_deployment = match self.nonce {
-            Some(nonce) => account_deployment.nonce(nonce),
-            None => account_deployment,
-        };
-        let account_deployment = account_deployment.max_fee(max_fee.max_fee());
-
-        if self.simulate {
-            let simulation = account_deployment.simulate(false, false).await?;
-            let simulation_json = serde_json::to_value(simulation)?;
-
-            let simulation_json =
-                colored_json::to_colored_json(&simulation_json, ColorMode::Auto(Output::StdOut))?;
-            println!("{simulation_json}");
-            return Ok(());
-        }
-
-        // TODO: add option to check ETH balance before sending out tx
-        let account_deployment_tx = account_deployment
-            .send()
-            .await
-            .map_err(account_factory_error_mapper)?
-            .transaction_hash;
         eprintln!(
             "Account deployment transaction: {}",
             format!("{:#064x}", account_deployment_tx).bright_yellow()
@@ -324,14 +411,42 @@ impl Deploy {
     }
 }
 
-impl MaxFeeType {
-    pub fn max_fee(&self) -> FieldElement {
-        match self {
-            Self::Manual { max_fee } => *max_fee,
-            Self::Estimated {
-                estimate_with_buffer,
-                ..
-            } => *estimate_with_buffer,
+fn fee_prompt(
+    fee_type: MaxFeeType,
+    deployed_address: FieldElement,
+    fee_token: FeeToken,
+) -> Result<()> {
+    match fee_type {
+        MaxFeeType::Manual { max_fee } => {
+            eprintln!(
+                "You've manually specified the account deployment fee to be {}. \
+                Therefore, fund at least:\n    {}",
+                format!("{} {}", max_fee.to_big_decimal(18), fee_token).bright_yellow(),
+                format!("{} {}", max_fee.to_big_decimal(18), fee_token).bright_yellow(),
+            );
+        }
+        MaxFeeType::Estimated {
+            estimate,
+            estimate_with_buffer,
+        } => {
+            eprintln!(
+                "The estimated account deployment fee is {}. \
+                However, to avoid failure, fund at least:\n    {}",
+                format!("{} {}", estimate.to_big_decimal(18), fee_token).bright_yellow(),
+                format!("{} {}", estimate_with_buffer.to_big_decimal(18), fee_token)
+                    .bright_yellow()
+            );
         }
     }
+
+    eprintln!(
+        "to the following address:\n    {}",
+        format!("{:#064x}", deployed_address).bright_yellow()
+    );
+
+    // TODO: add flag for skipping this manual confirmation step
+    eprint!("Press [ENTER] once you've funded the address.");
+    std::io::stdin().read_line(&mut String::new())?;
+
+    Ok(())
 }

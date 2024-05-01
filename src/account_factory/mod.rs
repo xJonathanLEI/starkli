@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 use starknet::{
     accounts::{
-        AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory, RawAccountDeployment,
+        AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory, RawAccountDeploymentV1,
+        RawAccountDeploymentV3,
     },
     core::types::{BlockId, FieldElement},
     providers::Provider,
@@ -67,14 +68,25 @@ where
         }
     }
 
-    async fn sign_deployment(
+    async fn sign_deployment_v1(
         &self,
-        deployment: &RawAccountDeployment,
+        deployment: &RawAccountDeploymentV1,
     ) -> Result<Vec<FieldElement>, Self::SignError> {
         match self {
-            AnyAccountFactory::OpenZeppelin(inner) => inner.sign_deployment(deployment).await,
-            AnyAccountFactory::Argent(inner) => inner.sign_deployment(deployment).await,
-            AnyAccountFactory::Braavos(inner) => inner.sign_deployment(deployment).await,
+            AnyAccountFactory::OpenZeppelin(inner) => inner.sign_deployment_v1(deployment).await,
+            AnyAccountFactory::Argent(inner) => inner.sign_deployment_v1(deployment).await,
+            AnyAccountFactory::Braavos(inner) => inner.sign_deployment_v1(deployment).await,
+        }
+    }
+
+    async fn sign_deployment_v3(
+        &self,
+        deployment: &RawAccountDeploymentV3,
+    ) -> Result<Vec<FieldElement>, Self::SignError> {
+        match self {
+            AnyAccountFactory::OpenZeppelin(inner) => inner.sign_deployment_v3(deployment).await,
+            AnyAccountFactory::Argent(inner) => inner.sign_deployment_v3(deployment).await,
+            AnyAccountFactory::Braavos(inner) => inner.sign_deployment_v3(deployment).await,
         }
     }
 }

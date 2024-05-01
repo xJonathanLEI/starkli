@@ -3,11 +3,9 @@ use std::{sync::Arc, time::Duration};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
-use colored_json::{ColorMode, Output};
 use starknet::{
     accounts::{Account, Call},
     core::types::FieldElement,
-    macros::felt,
 };
 
 use crate::{
@@ -15,8 +13,8 @@ use crate::{
     address_book::AddressBookResolver,
     decode::FeltDecoder,
     error::account_error_mapper,
-    fee::{FeeArgs, FeeSetting},
-    utils::watch_tx,
+    fee::{FeeArgs, FeeSetting, TokenFeeSetting},
+    utils::{print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
@@ -104,51 +102,87 @@ impl Invoke {
 
         let account = self.account.into_account(provider.clone()).await?;
 
-        let execution = account.execute(calls).fee_estimate_multiplier(1.5f64);
+        let invoke_tx = match fee_setting {
+            FeeSetting::Eth(fee_setting) => {
+                let execution = account.execute_v1(calls).fee_estimate_multiplier(1.5f64);
+                let execution = match self.nonce {
+                    Some(nonce) => execution.nonce(nonce),
+                    None => execution,
+                };
 
-        let max_fee = match fee_setting {
-            FeeSetting::Manual(fee) => fee,
-            FeeSetting::EstimateOnly | FeeSetting::None => {
-                let estimated_fee = execution
-                    .estimate_fee()
-                    .await
-                    .map_err(account_error_mapper)?
-                    .overall_fee;
+                let execution = match fee_setting {
+                    TokenFeeSetting::EstimateOnly => {
+                        let estimated_fee = execution
+                            .estimate_fee()
+                            .await
+                            .map_err(account_error_mapper)?
+                            .overall_fee;
 
-                if fee_setting.is_estimate_only() {
-                    println!(
-                        "{} ETH",
-                        format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
-                    );
+                        println!(
+                            "{} ETH",
+                            format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                        );
+                        return Ok(());
+                    }
+                    TokenFeeSetting::Manual(fee) => execution.max_fee(fee.max_fee),
+                    TokenFeeSetting::None => execution,
+                };
+
+                if self.simulate {
+                    print_colored_json(&execution.simulate(false, false).await?)?;
                     return Ok(());
                 }
 
-                // TODO: make buffer configurable
-                (estimated_fee * felt!("3")).floor_div(felt!("2"))
+                execution.send().await
             }
-        };
+            FeeSetting::Strk(fee_setting) => {
+                let execution = account.execute_v3(calls);
+                let execution = match self.nonce {
+                    Some(nonce) => execution.nonce(nonce),
+                    None => execution,
+                };
 
-        let execution = match self.nonce {
-            Some(nonce) => execution.nonce(nonce),
-            None => execution,
-        };
-        let execution = execution.max_fee(max_fee);
+                let execution = match fee_setting {
+                    TokenFeeSetting::EstimateOnly => {
+                        let estimated_fee = execution
+                            .estimate_fee()
+                            .await
+                            .map_err(account_error_mapper)?;
 
-        if self.simulate {
-            let simulation = execution.simulate(false, false).await?;
-            let simulation_json = serde_json::to_value(simulation)?;
+                        println!(
+                            "{} STRK",
+                            format!("{}", estimated_fee.overall_fee.to_big_decimal(18))
+                                .bright_yellow(),
+                        );
+                        return Ok(());
+                    }
+                    TokenFeeSetting::Manual(fee) => {
+                        let execution = if let Some(gas) = fee.gas {
+                            execution.gas(gas)
+                        } else {
+                            execution
+                        };
 
-            let simulation_json =
-                colored_json::to_colored_json(&simulation_json, ColorMode::Auto(Output::StdOut))?;
-            println!("{simulation_json}");
-            return Ok(());
+                        if let Some(gas_price) = fee.gas_price {
+                            execution.gas_price(gas_price)
+                        } else {
+                            execution
+                        }
+                    }
+                    TokenFeeSetting::None => execution,
+                };
+
+                if self.simulate {
+                    print_colored_json(&execution.simulate(false, false).await?)?;
+                    return Ok(());
+                }
+
+                execution.send().await
+            }
         }
+        .map_err(account_error_mapper)?
+        .transaction_hash;
 
-        let invoke_tx = execution
-            .send()
-            .await
-            .map_err(account_error_mapper)?
-            .transaction_hash;
         eprintln!(
             "Invoke transaction: {}",
             format!("{:#064x}", invoke_tx).bright_yellow()

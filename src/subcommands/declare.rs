@@ -3,14 +3,12 @@ use std::{path::PathBuf, sync::Arc, time::Duration};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
-use colored_json::{ColorMode, Output};
 use starknet::{
     accounts::Account,
     core::types::{
         contract::{legacy::LegacyContractClass, CompiledClass, SierraClass},
         BlockId, BlockTag, FieldElement, StarknetError,
     },
-    macros::felt,
     providers::{Provider, ProviderError},
 };
 
@@ -18,9 +16,9 @@ use crate::{
     account::AccountArgs,
     casm::{CasmArgs, CasmHashSource},
     error::account_error_mapper,
-    fee::{FeeArgs, FeeSetting},
+    fee::{FeeArgs, FeeSetting, TokenFeeSetting},
     path::ExpandedPathbufParser,
-    utils::watch_tx,
+    utils::{print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
@@ -69,15 +67,6 @@ impl Declare {
         let provider = Arc::new(self.provider.into_provider()?);
 
         let account = self.account.into_account(provider.clone()).await?;
-
-        // Workaround for issue:
-        //   https://github.com/eqlabs/pathfinder/issues/1208
-        let (fee_multiplier_num, fee_multiplier_denom): (FieldElement, FieldElement) =
-            if provider.is_rpc() {
-                (felt!("5"), felt!("2"))
-            } else {
-                (felt!("3"), felt!("2"))
-            };
 
         // Working around a deserialization bug in `starknet-rs`:
         //   https://github.com/xJonathanLEI/starknet-rs/issues/392
@@ -139,57 +128,91 @@ impl Declare {
                 );
             }
 
-            // TODO: make buffer configurable
-            let declaration = account.declare(Arc::new(class.flatten()?), casm_class_hash);
+            let declare_tx = match fee_setting {
+                FeeSetting::Eth(fee_setting) => {
+                    let declaration = account
+                        .declare_v2(Arc::new(class.flatten()?), casm_class_hash)
+                        .fee_estimate_multiplier(1.5f64);
+                    let declaration = match self.nonce {
+                        Some(nonce) => declaration.nonce(nonce),
+                        None => declaration,
+                    };
 
-            let max_fee = match fee_setting {
-                FeeSetting::Manual(fee) => fee,
-                FeeSetting::EstimateOnly | FeeSetting::None => {
-                    let estimated_fee = declaration
-                        .estimate_fee()
-                        .await
-                        .map_err(account_error_mapper)?
-                        .overall_fee;
+                    let declaration = match fee_setting {
+                        TokenFeeSetting::EstimateOnly => {
+                            let estimated_fee = declaration
+                                .estimate_fee()
+                                .await
+                                .map_err(account_error_mapper)?
+                                .overall_fee;
 
-                    if fee_setting.is_estimate_only() {
-                        println!(
-                            "{} ETH",
-                            format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
-                        );
+                            println!(
+                                "{} ETH",
+                                format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                            );
+                            return Ok(());
+                        }
+                        TokenFeeSetting::Manual(fee) => declaration.max_fee(fee.max_fee),
+                        TokenFeeSetting::None => declaration,
+                    };
+
+                    if self.simulate {
+                        print_colored_json(&declaration.simulate(false, false).await?)?;
                         return Ok(());
                     }
 
-                    // TODO: make buffer configurable
-                    (estimated_fee * fee_multiplier_num).floor_div(fee_multiplier_denom)
+                    declaration.send().await
                 }
-            };
+                FeeSetting::Strk(fee_setting) => {
+                    let declaration =
+                        account.declare_v3(Arc::new(class.flatten()?), casm_class_hash);
+                    let declaration = match self.nonce {
+                        Some(nonce) => declaration.nonce(nonce),
+                        None => declaration,
+                    };
 
-            let declaration = match self.nonce {
-                Some(nonce) => declaration.nonce(nonce),
-                None => declaration,
-            };
-            let declaration = declaration.max_fee(max_fee);
+                    let declaration = match fee_setting {
+                        TokenFeeSetting::EstimateOnly => {
+                            let estimated_fee = declaration
+                                .estimate_fee()
+                                .await
+                                .map_err(account_error_mapper)?
+                                .overall_fee;
 
-            if self.simulate {
-                let simulation = declaration.simulate(false, false).await?;
-                let simulation_json = serde_json::to_value(simulation)?;
+                            println!(
+                                "{} STRK",
+                                format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                            );
+                            return Ok(());
+                        }
+                        TokenFeeSetting::Manual(fee) => {
+                            let declaration = if let Some(gas) = fee.gas {
+                                declaration.gas(gas)
+                            } else {
+                                declaration
+                            };
 
-                let simulation_json = colored_json::to_colored_json(
-                    &simulation_json,
-                    ColorMode::Auto(Output::StdOut),
-                )?;
-                println!("{simulation_json}");
-                return Ok(());
+                            if let Some(gas_price) = fee.gas_price {
+                                declaration.gas_price(gas_price)
+                            } else {
+                                declaration
+                            }
+                        }
+                        TokenFeeSetting::None => declaration,
+                    };
+
+                    if self.simulate {
+                        print_colored_json(&declaration.simulate(false, false).await?)?;
+                        return Ok(());
+                    }
+
+                    declaration.send().await
+                }
             }
+            .map_err(account_error_mapper)?
+            .transaction_hash;
 
-            (
-                class_hash,
-                declaration
-                    .send()
-                    .await
-                    .map_err(account_error_mapper)?
-                    .transaction_hash,
-            )
+            (class_hash, declare_tx)
         } else if let Ok(_) =
             serde_json::from_reader::<_, CompiledClass>(std::fs::File::open(&self.file)?)
         {
@@ -214,45 +237,37 @@ impl Declare {
             }
 
             // TODO: make buffer configurable
-            let declaration = account.declare_legacy(Arc::new(class));
+            let declaration = account
+                .declare_legacy(Arc::new(class))
+                .fee_estimate_multiplier(1.5f64);
+            let declaration = match self.nonce {
+                Some(nonce) => declaration.nonce(nonce),
+                None => declaration,
+            };
 
-            let max_fee = match fee_setting {
-                FeeSetting::Manual(fee) => fee,
-                FeeSetting::EstimateOnly | FeeSetting::None => {
+            let declaration = match fee_setting {
+                FeeSetting::Eth(TokenFeeSetting::EstimateOnly) => {
                     let estimated_fee = declaration
                         .estimate_fee()
                         .await
                         .map_err(account_error_mapper)?
                         .overall_fee;
 
-                    if fee_setting.is_estimate_only() {
-                        println!(
-                            "{} ETH",
-                            format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
-                        );
-                        return Ok(());
-                    }
-
-                    // TODO: make buffer configurable
-                    (estimated_fee * fee_multiplier_num).floor_div(fee_multiplier_denom)
+                    println!(
+                        "{} ETH",
+                        format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                    );
+                    return Ok(());
+                }
+                FeeSetting::Eth(TokenFeeSetting::Manual(fee)) => declaration.max_fee(fee.max_fee),
+                FeeSetting::Eth(TokenFeeSetting::None) => declaration,
+                FeeSetting::Strk(_) => {
+                    anyhow::bail!("Cairo 0 declaration transactions must not pay fees with STRK")
                 }
             };
 
-            let declaration = match self.nonce {
-                Some(nonce) => declaration.nonce(nonce),
-                None => declaration,
-            };
-            let declaration = declaration.max_fee(max_fee);
-
             if self.simulate {
-                let simulation = declaration.simulate(false, false).await?;
-                let simulation_json = serde_json::to_value(simulation)?;
-
-                let simulation_json = colored_json::to_colored_json(
-                    &simulation_json,
-                    ColorMode::Auto(Output::StdOut),
-                )?;
-                println!("{simulation_json}");
+                print_colored_json(&declaration.simulate(false, false).await?)?;
                 return Ok(());
             }
 

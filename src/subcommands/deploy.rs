@@ -3,18 +3,15 @@ use std::{sync::Arc, time::Duration};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
-use colored_json::{ColorMode, Output};
-use starknet::{
-    contract::ContractFactory, core::types::FieldElement, macros::felt, signers::SigningKey,
-};
+use starknet::{contract::ContractFactory, core::types::FieldElement, signers::SigningKey};
 
 use crate::{
     account::AccountArgs,
     address_book::AddressBookResolver,
     decode::FeltDecoder,
     error::account_error_mapper,
-    fee::{FeeArgs, FeeSetting},
-    utils::watch_tx,
+    fee::{FeeArgs, FeeSetting, TokenFeeSetting},
+    utils::{print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
@@ -89,62 +86,106 @@ impl Deploy {
         // TODO: allow custom UDC
         let factory = ContractFactory::new_with_udc(class_hash, account, DEFAULT_UDC_ADDRESS);
 
-        let contract_deployment = factory.deploy(ctor_args, salt, !self.not_unique);
-        let deployed_address = contract_deployment.deployed_address();
+        // Deployed address is the same regardless of v1 or v3 transaction is used
+        let deployed_address = factory
+            .deploy_v1(ctor_args.clone(), salt, !self.not_unique)
+            .deployed_address();
 
-        let max_fee = match fee_setting {
-            FeeSetting::Manual(fee) => fee,
-            FeeSetting::EstimateOnly | FeeSetting::None => {
-                let estimated_fee = contract_deployment
-                    .estimate_fee()
-                    .await
-                    .map_err(account_error_mapper)?
-                    .overall_fee;
+        if !fee_setting.is_estimate_only() {
+            eprintln!(
+                "Deploying class {} with salt {}...",
+                format!("{:#064x}", class_hash).bright_yellow(),
+                format!("{:#064x}", salt).bright_yellow()
+            );
+            eprintln!(
+                "The contract will be deployed at address {}",
+                format!("{:#064x}", deployed_address).bright_yellow()
+            );
+        }
 
-                if fee_setting.is_estimate_only() {
-                    eprintln!(
-                        "{} ETH",
-                        format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
-                    );
+        let deployment_tx = match fee_setting {
+            FeeSetting::Eth(fee_setting) => {
+                let contract_deployment = factory
+                    .deploy_v1(ctor_args, salt, !self.not_unique)
+                    .fee_estimate_multiplier(1.5f64);
+                let contract_deployment = match self.nonce {
+                    Some(nonce) => contract_deployment.nonce(nonce),
+                    None => contract_deployment,
+                };
+
+                let contract_deployment = match fee_setting {
+                    TokenFeeSetting::EstimateOnly => {
+                        let estimated_fee = contract_deployment
+                            .estimate_fee()
+                            .await
+                            .map_err(account_error_mapper)?
+                            .overall_fee;
+
+                        eprintln!(
+                            "{} ETH",
+                            format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                        );
+                        return Ok(());
+                    }
+                    TokenFeeSetting::Manual(fee) => contract_deployment.max_fee(fee.max_fee),
+                    TokenFeeSetting::None => contract_deployment,
+                };
+
+                if self.simulate {
+                    print_colored_json(&contract_deployment.simulate(false, false).await?)?;
                     return Ok(());
                 }
 
-                // TODO: make buffer configurable
-                (estimated_fee * felt!("3")).floor_div(felt!("2"))
+                contract_deployment.send().await
             }
-        };
+            FeeSetting::Strk(fee_setting) => {
+                let contract_deployment = factory.deploy_v3(ctor_args, salt, !self.not_unique);
+                let contract_deployment = match self.nonce {
+                    Some(nonce) => contract_deployment.nonce(nonce),
+                    None => contract_deployment,
+                };
 
-        eprintln!(
-            "Deploying class {} with salt {}...",
-            format!("{:#064x}", class_hash).bright_yellow(),
-            format!("{:#064x}", salt).bright_yellow()
-        );
-        eprintln!(
-            "The contract will be deployed at address {}",
-            format!("{:#064x}", deployed_address).bright_yellow()
-        );
+                let contract_deployment = match fee_setting {
+                    TokenFeeSetting::EstimateOnly => {
+                        let estimated_fee = contract_deployment
+                            .estimate_fee()
+                            .await
+                            .map_err(account_error_mapper)?
+                            .overall_fee;
 
-        let contract_deployment = match self.nonce {
-            Some(nonce) => contract_deployment.nonce(nonce),
-            None => contract_deployment,
-        };
-        let contract_deployment = contract_deployment.max_fee(max_fee);
+                        eprintln!(
+                            "{} STRK",
+                            format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                        );
+                        return Ok(());
+                    }
+                    TokenFeeSetting::Manual(fee) => {
+                        let contract_deployment = if let Some(gas) = fee.gas {
+                            contract_deployment.gas(gas)
+                        } else {
+                            contract_deployment
+                        };
 
-        if self.simulate {
-            let simulation = contract_deployment.simulate(false, false).await?;
-            let simulation_json = serde_json::to_value(simulation)?;
+                        if let Some(gas_price) = fee.gas_price {
+                            contract_deployment.gas_price(gas_price)
+                        } else {
+                            contract_deployment
+                        }
+                    }
+                    TokenFeeSetting::None => contract_deployment,
+                };
 
-            let simulation_json =
-                colored_json::to_colored_json(&simulation_json, ColorMode::Auto(Output::StdOut))?;
-            println!("{simulation_json}");
-            return Ok(());
+                if self.simulate {
+                    print_colored_json(&contract_deployment.simulate(false, false).await?)?;
+                    return Ok(());
+                }
+
+                contract_deployment.send().await
+            }
         }
+        .map_err(account_error_mapper)?
+        .transaction_hash;
 
-        let deployment_tx = contract_deployment
-            .send()
-            .await
-            .map_err(account_error_mapper)?
-            .transaction_hash;
         eprintln!(
             "Contract deployment transaction: {}",
             format!("{:#064x}", deployment_tx).bright_yellow()
