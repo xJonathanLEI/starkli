@@ -33,6 +33,8 @@ pub struct Declare {
     casm: CasmArgs,
     #[clap(flatten)]
     fee: FeeArgs,
+    #[clap(long, help = "Do not publish the ABI of the class")]
+    no_abi: bool,
     #[clap(long, help = "Simulate the transaction only")]
     simulate: bool,
     #[clap(long, help = "Provide transaction nonce manually")]
@@ -72,9 +74,13 @@ impl Declare {
         //   https://github.com/xJonathanLEI/starknet-rs/issues/392
 
         #[allow(clippy::redundant_pattern_matching)]
-        let (class_hash, declaration_tx_hash) = if let Ok(class) =
+        let (class_hash, declaration_tx_hash) = if let Ok(mut class) =
             serde_json::from_reader::<_, SierraClass>(std::fs::File::open(&self.file)?)
         {
+            if self.no_abi {
+                class.abi = vec![];
+            }
+
             // Declaring Cairo 1 class
             let class_hash = class.class_hash()?;
 
@@ -218,9 +224,13 @@ impl Declare {
         {
             // TODO: add more helpful instructions to fix this
             anyhow::bail!("unexpected CASM class");
-        } else if let Ok(class) =
+        } else if let Ok(mut class) =
             serde_json::from_reader::<_, LegacyContractClass>(std::fs::File::open(self.file)?)
         {
+            if self.no_abi {
+                class.abi = vec![];
+            }
+
             // Declaring Cairo 0 class
             let class_hash = class.class_hash()?;
 
