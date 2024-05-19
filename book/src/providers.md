@@ -49,7 +49,7 @@ which is the same as the running with the `--rpc` option.
 
 > 💡 **Tips**
 >
-> While using `--rpc` or `STARKNET_RPC` is convenient for one-off command invocations, using [predefined networks](#using-a-predefined-network) is recommended for more complicated use cases.
+> While using `--rpc` or `STARKNET_RPC` is convenient for one-off command invocations, using [predefined networks](#using-a-predefined-network) is recommended for more complicated use cases, including the use of custom HTTP headers.
 
 ## Using a predefined network
 

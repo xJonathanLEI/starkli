@@ -44,8 +44,14 @@ pub struct Network {
 
 #[derive(Debug)]
 pub enum NetworkProvider {
-    Rpc(Url),
+    Rpc(RpcProvider),
     Free(FreeProviderVendor),
+}
+
+#[derive(Debug, Clone)]
+pub struct RpcProvider {
+    pub url: Url,
+    pub headers: Vec<HttpHeader>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -53,6 +59,12 @@ pub enum NetworkProvider {
 pub enum FreeProviderVendor {
     Blast,
     Nethermind,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HttpHeader {
+    pub name: String,
+    pub value: String,
 }
 
 struct ChainIdVisitor;
@@ -161,7 +173,7 @@ impl Serialize for NetworkProvider {
         }
 
         match self {
-            Self::Rpc(value) => RpcVariant(value.as_ref()).serialize(serializer),
+            Self::Rpc(value) => RpcVariant(value.url.as_ref()).serialize(serializer),
             Self::Free(value) => FreeVariant {
                 r#type: "free",
                 vendor: value,
@@ -191,10 +203,12 @@ impl<'de> Deserialize<'de> for NetworkProvider {
         }
 
         #[derive(Deserialize)]
-        #[serde(deny_unknown_fields, transparent)]
+        #[serde(deny_unknown_fields)]
         struct RpcVariant {
             #[serde(deserialize_with = "deserialize_url")]
             url: Url,
+            #[serde(default, skip_serializing_if = "Vec::is_empty")]
+            headers: Vec<HttpHeader>,
         }
 
         #[derive(Deserialize)]
@@ -204,9 +218,15 @@ impl<'de> Deserialize<'de> for NetworkProvider {
         }
 
         Ok(match ShorthandOrTagged::deserialize(deserializer)? {
-            ShorthandOrTagged::Shorthand(value) => Self::Rpc(value),
+            ShorthandOrTagged::Shorthand(value) => Self::Rpc(RpcProvider {
+                url: value,
+                headers: vec![],
+            }),
             ShorthandOrTagged::Tagged(value) => match value {
-                Tagged::Rpc(value) => Self::Rpc(value.url),
+                Tagged::Rpc(value) => Self::Rpc(RpcProvider {
+                    url: value.url,
+                    headers: value.headers,
+                }),
                 Tagged::Free(value) => Self::Free(value.vendor),
             },
         })

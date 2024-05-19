@@ -16,7 +16,9 @@ use url::Url;
 
 use crate::{
     network::Network,
-    profile::{FreeProviderVendor, NetworkProvider, Profile, Profiles, DEFAULT_PROFILE_NAME},
+    profile::{
+        FreeProviderVendor, NetworkProvider, Profile, Profiles, RpcProvider, DEFAULT_PROFILE_NAME,
+    },
     JSON_RPC_VERSION,
 };
 
@@ -195,8 +197,8 @@ impl ProviderArgs {
             }
         };
 
-        let (rpc_url, rpc_version) = match &matched_network.provider {
-            NetworkProvider::Rpc(rpc) => (rpc.to_owned(), None),
+        let (rpc_config, rpc_version) = match &matched_network.provider {
+            NetworkProvider::Rpc(rpc) => (rpc.clone(), None),
             NetworkProvider::Free(vendor) => {
                 let url = match vendor {
                     FreeProviderVendor::Blast => {
@@ -235,15 +237,23 @@ impl ProviderArgs {
                 };
 
                 (
-                    url,
+                    RpcProvider {
+                        url,
+                        headers: vec![],
+                    },
                     // We always make sure to use the right version for free RPC vendors
                     Some(JSON_RPC_VERSION.into()),
                 )
             }
         };
 
+        let mut transport = HttpTransport::new(rpc_config.url);
+        for header in rpc_config.headers.iter() {
+            transport.add_header(header.name.clone(), header.value.clone());
+        }
+
         let provider = ExtendedProvider::new(
-            AnyProvider::JsonRpcHttp(JsonRpcClient::new(HttpTransport::new(rpc_url))),
+            AnyProvider::JsonRpcHttp(JsonRpcClient::new(transport)),
             rpc_version,
         );
 

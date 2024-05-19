@@ -36,8 +36,8 @@ serde = { version = "1.0.164", features = ["derive"] }
 serde_json = { version = "1.0.99", features = ["preserve_order"] }
 serde_with = "2.3.3"
 shellexpand = "3.1.0"
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "805b57b0258445c01a167cdc3cb43449ef078936" }
-starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "805b57b0258445c01a167cdc3cb43449ef078936" }
+starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "35a7843d58ba3c93e1a7691bc7022080b28c9ade" }
+starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "35a7843d58ba3c93e1a7691bc7022080b28c9ade" }
 tempfile = "3.8.0"
 thiserror = "1.0.40"
 tokio = { version = "1.28.2", default-features = false, features = ["macros", "rt-multi-thread"] }

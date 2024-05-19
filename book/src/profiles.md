@@ -44,10 +44,18 @@ The `provider` field can be either a `String` or an `Object`. When the `provider
 
 #### `rpc` provider variant
 
-| Field  | Mandatory | Type     | Description                  |
-| ------ | --------- | -------- | ---------------------------- |
-| `type` | Yes       | `String` | Value must be `rpc`          |
-| `url`  | Yes       | `String` | URL to the JSON-RPC endpoint |
+| Field     | Mandatory | Type     | Description                  |
+| --------- | --------- | -------- | ---------------------------- |
+| `type`    | Yes       | `String` | Value must be `rpc`          |
+| `url`     | Yes       | `String` | URL to the JSON-RPC endpoint |
+| `headers` | No        | `[]`     | Custom HTTP headers          |
+
+where `HttpHeader` is defined as:
+
+| Field   | Mandatory | Type     | Description       |
+| ------- | --------- | -------- | ----------------- |
+| `name`  | Yes       | `String` | HTTP header name  |
+| `value` | Yes       | `String` | HTTP header value |
 
 #### `free` provider variant
 
@@ -79,7 +87,7 @@ This section contains a few example network configurations.
 ```toml
 [default.networks.mainnet]
 chain_id = "SN_MAIN"
-provider = { type = "rpc", url = "https://example.com/" }
+provider = { type = "rpc", url = "https://example.com/", headers = [ { name = "Api-Key", value = "xxxx" } ] }
 ```
 
 #### Network with the RPC provider shorthand
