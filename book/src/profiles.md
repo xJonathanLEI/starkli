@@ -44,11 +44,11 @@ The `provider` field can be either a `String` or an `Object`. When the `provider
 
 #### `rpc` provider variant
 
-| Field     | Mandatory | Type     | Description                  |
-| --------- | --------- | -------- | ---------------------------- |
-| `type`    | Yes       | `String` | Value must be `rpc`          |
-| `url`     | Yes       | `String` | URL to the JSON-RPC endpoint |
-| `headers` | No        | `[]`     | Custom HTTP headers          |
+| Field     | Mandatory | Type           | Description                  |
+| --------- | --------- | -------------- | ---------------------------- |
+| `type`    | Yes       | `String`       | Value must be `rpc`          |
+| `url`     | Yes       | `String`       | URL to the JSON-RPC endpoint |
+| `headers` | No        | `HttpHeader[]` | Custom HTTP headers          |
 
 where `HttpHeader` is defined as:
 
