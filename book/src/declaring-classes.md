@@ -38,3 +38,29 @@ To come up with the _CASM hash_, Starkli compiles the Sierra class provided unde
 > ℹ️ **Note**
 >
 > For advanced users, it's possible to skip the Sierra-to-CASM compilation process by directly providing a `--casm-hash <CASM_HASH>`.
+
+## Redeclaring classes
+
+While the normal process of declaring a class involves getting the compiled contract artifact from the compiler and following the steps documented above, it's sometimes helpful to _redeclare_ a class you found from another network.
+
+Currently, Starkli does _not_ support directly declaring the class file fetched from a network. So **this would fail**:
+
+```console
+starkli class-by-hash --network sepolia SOME_CLASS_HASH_HERE > class.json
+starkli declare --network mainnet ./class.json
+```
+
+The above would fail as the JSON-RPC class format is different from compiler output. The fix is simple: just add `--parse` to the first command to instruct Starkli to recover the JSON-RPC-formatted class back into the original compiler output format:
+
+```console
+starkli class-by-hash --network sepolia SOME_CLASS_HASH_HERE --parse > class.json
+starkli declare --network mainnet ./class.json
+```
+
+Now the commands should execute successfully.
+
+> ℹ️ **Note**
+>
+> _Technically_, Starkli could support declaring JSON-RPC-formatted class files. It's just that the current Starkli implementation does not come with that capability. This might change in the future. For now you'll have to use the `--parse` flag when fetching the class.
+>
+> While `--parse` should work just fine most of the time, unfortunately, certain exotic classes might not be parsable. In these rare cases, Starkli cannot redeclare them until the aformentioned capability is implemented, which would remove the need of parsing.
