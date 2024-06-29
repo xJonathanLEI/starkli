@@ -347,7 +347,7 @@ impl AccountArgs {
                 ExecutionEncoding::New,
             )
         } else {
-            let signer = signer.resolve()?;
+            let signer = signer.resolve().await?;
             let account = PathBuf::from(shellexpand::tilde(&self.account).into_owned());
 
             if !account.exists() {

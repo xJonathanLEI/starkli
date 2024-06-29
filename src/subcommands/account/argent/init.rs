@@ -45,7 +45,7 @@ impl Init {
             anyhow::bail!("account config file already exists");
         }
 
-        let signer = self.signer.into_signer()?;
+        let signer = self.signer.into_signer().await?;
 
         // Too lazy to write random salt generation
         let salt = SigningKey::from_random().secret_scalar();

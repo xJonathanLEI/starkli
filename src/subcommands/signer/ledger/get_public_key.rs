@@ -9,7 +9,7 @@ pub struct GetPublicKey {
         help = "Display the public key on Ledger's screen for extra security"
     )]
     display: bool,
-    #[clap(help = "A HD wallet derivation path with EIP-2645 standard, such as \
+    #[clap(help = "An HD wallet derivation path with EIP-2645 standard, such as \
         \"m/2645'/1195502025'/1470455285'/0'/0'/0\"")]
     path: DerivationPath,
 }

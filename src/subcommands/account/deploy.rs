@@ -75,7 +75,7 @@ impl Deploy {
         }
 
         let provider = Arc::new(self.provider.into_provider()?);
-        let signer = Arc::new(self.signer.into_signer()?);
+        let signer = Arc::new(self.signer.into_signer().await?);
 
         if !self.file.exists() {
             anyhow::bail!("account config file not found");
