@@ -7,7 +7,7 @@ use starknet::{
     accounts::Account,
     core::types::{
         contract::{legacy::LegacyContractClass, CompiledClass, SierraClass},
-        BlockId, BlockTag, FieldElement, StarknetError,
+        BlockId, BlockTag, Felt, StarknetError,
     },
     providers::{Provider, ProviderError},
 };
@@ -18,7 +18,7 @@ use crate::{
     error::account_error_mapper,
     fee::{FeeArgs, FeeSetting, TokenFeeSetting},
     path::ExpandedPathbufParser,
-    utils::{print_colored_json, watch_tx},
+    utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
@@ -38,7 +38,7 @@ pub struct Declare {
     #[clap(long, help = "Simulate the transaction only")]
     simulate: bool,
     #[clap(long, help = "Provide transaction nonce manually")]
-    nonce: Option<FieldElement>,
+    nonce: Option<Felt>,
     #[clap(long, short, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(
@@ -154,7 +154,8 @@ impl Declare {
 
                             println!(
                                 "{} ETH",
-                                format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                                format!("{}", felt_to_bigdecimal(estimated_fee, 18))
+                                    .bright_yellow(),
                             );
                             return Ok(());
                         }
@@ -187,7 +188,8 @@ impl Declare {
 
                             println!(
                                 "{} STRK",
-                                format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                                format!("{}", felt_to_bigdecimal(estimated_fee, 18))
+                                    .bright_yellow(),
                             );
                             return Ok(());
                         }
@@ -265,7 +267,7 @@ impl Declare {
 
                     println!(
                         "{} ETH",
-                        format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                        format!("{}", felt_to_bigdecimal(estimated_fee, 18)).bright_yellow(),
                     );
                     return Ok(());
                 }
@@ -319,7 +321,7 @@ impl Declare {
         Ok(())
     }
 
-    async fn check_already_declared<P>(provider: P, class_hash: FieldElement) -> Result<bool>
+    async fn check_already_declared<P>(provider: P, class_hash: Felt) -> Result<bool>
     where
         P: Provider,
     {

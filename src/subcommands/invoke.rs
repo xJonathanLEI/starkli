@@ -5,7 +5,7 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::{
     accounts::{Account, Call},
-    core::types::FieldElement,
+    core::types::Felt,
 };
 
 use crate::{
@@ -14,7 +14,7 @@ use crate::{
     decode::FeltDecoder,
     error::account_error_mapper,
     fee::{FeeArgs, FeeSetting, TokenFeeSetting},
-    utils::{print_colored_json, watch_tx},
+    utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
@@ -30,7 +30,7 @@ pub struct Invoke {
     #[clap(long, help = "Simulate the transaction only")]
     simulate: bool,
     #[clap(long, help = "Provide transaction nonce manually")]
-    nonce: Option<FieldElement>,
+    nonce: Option<Felt>,
     #[clap(long, short, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(
@@ -120,7 +120,7 @@ impl Invoke {
 
                         println!(
                             "{} ETH",
-                            format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                            format!("{}", felt_to_bigdecimal(estimated_fee, 18)).bright_yellow(),
                         );
                         return Ok(());
                     }
@@ -151,7 +151,7 @@ impl Invoke {
 
                         println!(
                             "{} STRK",
-                            format!("{}", estimated_fee.overall_fee.to_big_decimal(18))
+                            format!("{}", felt_to_bigdecimal(estimated_fee.overall_fee, 18))
                                 .bright_yellow(),
                         );
                         return Ok(());

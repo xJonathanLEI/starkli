@@ -5,8 +5,8 @@ use bigdecimal::BigDecimal;
 use clap::Parser;
 use num_bigint::{BigUint, ToBigInt};
 use starknet::{
-    core::types::{BlockId, BlockTag, FieldElement, FunctionCall},
-    macros::selector,
+    core::types::{BlockId, BlockTag, Felt, FunctionCall},
+    macros::{felt, selector},
     providers::Provider,
 };
 
@@ -15,12 +15,8 @@ use crate::{
 };
 
 /// The default ETH address: 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7.
-const DEFAULT_ETH_ADDRESS: FieldElement = FieldElement::from_mont([
-    4380532846569209554,
-    17839402928228694863,
-    17240401758547432026,
-    418961398025637529,
-]);
+const DEFAULT_ETH_ADDRESS: Felt =
+    felt!("0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7");
 
 #[derive(Debug, Parser)]
 pub struct Balance {

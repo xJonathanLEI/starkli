@@ -4,13 +4,13 @@ use std::cell::OnceCell;
 
 use anyhow::Result;
 use starknet::{
-    core::{chain_id, types::FieldElement},
+    core::{chain_id, types::Felt},
     macros::{felt, short_string},
 };
 
 use crate::chain_id::ChainIdSource;
 
-const CHAIN_ID_KATANA: FieldElement = felt!("0x4b4154414e41");
+const CHAIN_ID_KATANA: Felt = felt!("0x4b4154414e41");
 
 pub const HARDCODED_ADDRESS_BOOK: [AddressBookEntry; 8] = [
     AddressBookEntry {
@@ -56,15 +56,15 @@ pub const HARDCODED_ADDRESS_BOOK: [AddressBookEntry; 8] = [
 ];
 
 pub struct AddressBookEntry {
-    pub chain_id: FieldElement,
+    pub chain_id: Felt,
     pub name: &'static str,
-    pub address: FieldElement,
+    pub address: Felt,
 }
 
 /// A resolver that lazily fetches chain id to avoid unnecessary network calls.
 pub struct AddressBookResolver<S> {
     chain_id_source: S,
-    chain_id: OnceCell<FieldElement>,
+    chain_id: OnceCell<Felt>,
 }
 
 impl<S> AddressBookResolver<S> {
@@ -80,7 +80,7 @@ impl<S> AddressBookResolver<S>
 where
     S: ChainIdSource,
 {
-    pub async fn resolve_name(&self, name: &str) -> Result<Option<FieldElement>> {
+    pub async fn resolve_name(&self, name: &str) -> Result<Option<Felt>> {
         let chain_id_cell = &self.chain_id;
 
         let chain_id = match chain_id_cell.get() {

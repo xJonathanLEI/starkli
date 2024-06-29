@@ -3,7 +3,7 @@ use std::{io::Read, path::PathBuf};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
-use starknet::{core::types::FieldElement, signers::SigningKey};
+use starknet::{core::types::Felt, signers::SigningKey};
 
 use crate::path::ExpandedPathbufParser;
 
@@ -48,7 +48,7 @@ impl FromKey {
         } else {
             rpassword::prompt_password("Enter private key: ")?
         };
-        let private_key = FieldElement::from_hex_be(private_key.trim())?;
+        let private_key = Felt::from_hex(private_key.trim())?;
 
         let password = if let Some(password) = self.password {
             password

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use colored_json::{ColorMode, Output};
-use starknet::{core::types::FieldElement, providers::Provider};
+use starknet::{core::types::Felt, providers::Provider};
 
 use crate::{verbosity::VerbosityArgs, ProviderArgs};
 
@@ -20,7 +20,7 @@ impl Transaction {
         self.verbosity.setup_logging();
 
         let provider = self.provider.into_provider()?;
-        let transaction_hash = FieldElement::from_hex_be(&self.hash)?;
+        let transaction_hash = Felt::from_hex(&self.hash)?;
 
         let transaction = provider.get_transaction_by_hash(transaction_hash).await?;
 

@@ -1,8 +1,11 @@
 use anyhow::Result;
 use num_bigint::BigUint;
-use starknet::core::{
-    types::FieldElement,
-    utils::{cairo_short_string_to_felt, get_selector_from_name, get_storage_var_address},
+use starknet::{
+    core::{
+        types::Felt,
+        utils::{cairo_short_string_to_felt, get_selector_from_name, get_storage_var_address},
+    },
+    macros::felt,
 };
 
 use crate::{address_book::AddressBookResolver, chain_id::ChainIdSource};
@@ -31,7 +34,7 @@ impl<S> FeltDecoder<S>
 where
     S: ChainIdSource,
 {
-    pub async fn decode_single_with_addr_fallback(&self, raw: &str) -> Result<FieldElement> {
+    pub async fn decode_single_with_addr_fallback(&self, raw: &str) -> Result<Felt> {
         let decoded = self.decode_inner(raw, FallbackOption::Address).await?;
 
         if decoded.len() == 1 {
@@ -44,7 +47,7 @@ where
         }
     }
 
-    pub async fn decode_single_with_selector_fallback(&self, raw: &str) -> Result<FieldElement> {
+    pub async fn decode_single_with_selector_fallback(&self, raw: &str) -> Result<Felt> {
         let decoded = self.decode_inner(raw, FallbackOption::Selector).await?;
 
         if decoded.len() == 1 {
@@ -57,7 +60,7 @@ where
         }
     }
 
-    pub async fn decode_single_with_storage_fallback(&self, raw: &str) -> Result<FieldElement> {
+    pub async fn decode_single_with_storage_fallback(&self, raw: &str) -> Result<Felt> {
         let decoded = self.decode_inner(raw, FallbackOption::Storage).await?;
 
         if decoded.len() == 1 {
@@ -70,15 +73,11 @@ where
         }
     }
 
-    pub async fn decode(&self, raw: &str) -> Result<Vec<FieldElement>> {
+    pub async fn decode(&self, raw: &str) -> Result<Vec<Felt>> {
         self.decode_inner(raw, FallbackOption::None).await
     }
 
-    async fn decode_inner(
-        &self,
-        raw: &str,
-        fallback_option: FallbackOption,
-    ) -> Result<Vec<FieldElement>> {
+    async fn decode_inner(&self, raw: &str, fallback_option: FallbackOption) -> Result<Vec<Felt>> {
         if let Some(addr_name) = raw.strip_prefix("addr:") {
             Ok(vec![self.resolve_addr(addr_name).await?])
         } else if let Some(u256_str) = raw.strip_prefix("u256:") {
@@ -115,8 +114,8 @@ where
             let low = &bigint % &u128_max_plus_1;
 
             // Unwrapping is safe as these are never out of range
-            let high = FieldElement::from_byte_slice_be(&high.to_bytes_be()).unwrap();
-            let low = FieldElement::from_byte_slice_be(&low.to_bytes_be()).unwrap();
+            let high = Felt::from_bytes_be_slice(&high.to_bytes_be());
+            let low = Felt::from_bytes_be_slice(&low.to_bytes_be());
 
             Ok(vec![low, high])
         } else if let Some(const_name) = raw.strip_prefix("const:") {
@@ -124,18 +123,12 @@ where
                 // `u256_max` is canonical and all others should be considered aliases.
                 "u256_max" | "u256-max" | "u256max" | "u256::max" | "uint256_max"
                 | "uint256-max" | "uint256max" | "uint256::max" => Ok(vec![
-                    FieldElement::from_byte_slice_be(&hex_literal::hex!(
-                        "ffffffffffffffffffffffffffffffff"
-                    ))
-                    .unwrap(),
-                    FieldElement::from_byte_slice_be(&hex_literal::hex!(
-                        "ffffffffffffffffffffffffffffffff"
-                    ))
-                    .unwrap(),
+                    felt!("0xffffffffffffffffffffffffffffffff"),
+                    felt!("0xffffffffffffffffffffffffffffffff"),
                 ]),
                 // `felt_max` is canonical and all others should be considered aliases.
                 "felt_max" | "felt-max" | "felt::max" | "felt252_max" | "felt252-max"
-                | "felt252::max" => Ok(vec![FieldElement::MAX]),
+                | "felt252::max" => Ok(vec![Felt::MAX]),
                 _ => Err(anyhow::anyhow!("unknown constant: {}", const_name)),
             }
         } else if let Some(short_string) = raw.strip_prefix("str:") {
@@ -148,7 +141,7 @@ where
             }
             Ok(vec![get_storage_var_address(storage, &[])?])
         } else {
-            match raw.parse::<FieldElement>() {
+            match raw.parse::<Felt>() {
                 Ok(value) => Ok(vec![value]),
                 Err(err) => match fallback_option {
                     FallbackOption::Address => match self.resolve_addr(raw).await {
@@ -168,7 +161,7 @@ where
         }
     }
 
-    async fn resolve_addr(&self, name: &str) -> Result<FieldElement> {
+    async fn resolve_addr(&self, name: &str) -> Result<Felt> {
         self.address_book_resolver
             .resolve_name(name)
             .await?

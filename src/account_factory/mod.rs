@@ -4,7 +4,7 @@ use starknet::{
         AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory, RawAccountDeploymentV1,
         RawAccountDeploymentV3,
     },
-    core::types::{BlockId, FieldElement},
+    core::types::{BlockId, Felt},
     providers::Provider,
     signers::Signer,
 };
@@ -28,7 +28,7 @@ where
     type Provider = P;
     type SignError = S::SignError;
 
-    fn class_hash(&self) -> FieldElement {
+    fn class_hash(&self) -> Felt {
         match self {
             AnyAccountFactory::OpenZeppelin(inner) => inner.class_hash(),
             AnyAccountFactory::Argent(inner) => inner.class_hash(),
@@ -36,7 +36,7 @@ where
         }
     }
 
-    fn calldata(&self) -> Vec<FieldElement> {
+    fn calldata(&self) -> Vec<Felt> {
         match self {
             AnyAccountFactory::OpenZeppelin(inner) => inner.calldata(),
             AnyAccountFactory::Argent(inner) => inner.calldata(),
@@ -44,7 +44,7 @@ where
         }
     }
 
-    fn chain_id(&self) -> FieldElement {
+    fn chain_id(&self) -> Felt {
         match self {
             AnyAccountFactory::OpenZeppelin(inner) => inner.chain_id(),
             AnyAccountFactory::Argent(inner) => inner.chain_id(),
@@ -60,6 +60,14 @@ where
         }
     }
 
+    fn is_signer_interactive(&self) -> bool {
+        match self {
+            AnyAccountFactory::OpenZeppelin(inner) => inner.is_signer_interactive(),
+            AnyAccountFactory::Argent(inner) => inner.is_signer_interactive(),
+            AnyAccountFactory::Braavos(inner) => inner.is_signer_interactive(),
+        }
+    }
+
     fn block_id(&self) -> BlockId {
         match self {
             AnyAccountFactory::OpenZeppelin(inner) => inner.block_id(),
@@ -71,22 +79,36 @@ where
     async fn sign_deployment_v1(
         &self,
         deployment: &RawAccountDeploymentV1,
-    ) -> Result<Vec<FieldElement>, Self::SignError> {
+        query_only: bool,
+    ) -> Result<Vec<Felt>, Self::SignError> {
         match self {
-            AnyAccountFactory::OpenZeppelin(inner) => inner.sign_deployment_v1(deployment).await,
-            AnyAccountFactory::Argent(inner) => inner.sign_deployment_v1(deployment).await,
-            AnyAccountFactory::Braavos(inner) => inner.sign_deployment_v1(deployment).await,
+            AnyAccountFactory::OpenZeppelin(inner) => {
+                inner.sign_deployment_v1(deployment, query_only).await
+            }
+            AnyAccountFactory::Argent(inner) => {
+                inner.sign_deployment_v1(deployment, query_only).await
+            }
+            AnyAccountFactory::Braavos(inner) => {
+                inner.sign_deployment_v1(deployment, query_only).await
+            }
         }
     }
 
     async fn sign_deployment_v3(
         &self,
         deployment: &RawAccountDeploymentV3,
-    ) -> Result<Vec<FieldElement>, Self::SignError> {
+        query_only: bool,
+    ) -> Result<Vec<Felt>, Self::SignError> {
         match self {
-            AnyAccountFactory::OpenZeppelin(inner) => inner.sign_deployment_v3(deployment).await,
-            AnyAccountFactory::Argent(inner) => inner.sign_deployment_v3(deployment).await,
-            AnyAccountFactory::Braavos(inner) => inner.sign_deployment_v3(deployment).await,
+            AnyAccountFactory::OpenZeppelin(inner) => {
+                inner.sign_deployment_v3(deployment, query_only).await
+            }
+            AnyAccountFactory::Argent(inner) => {
+                inner.sign_deployment_v3(deployment, query_only).await
+            }
+            AnyAccountFactory::Braavos(inner) => {
+                inner.sign_deployment_v3(deployment, query_only).await
+            }
         }
     }
 }

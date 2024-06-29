@@ -21,7 +21,7 @@ use cairo_starknet_2_6_2::{
 use clap::{builder::PossibleValue, ValueEnum};
 use starknet::core::types::{
     contract::{CompiledClass, SierraClass},
-    FieldElement,
+    Felt,
 };
 
 const MAX_BYTECODE_SIZE: usize = 180000;
@@ -49,7 +49,7 @@ impl BuiltInCompiler {
         self.version
     }
 
-    pub fn compile(&self, class: &SierraClass) -> Result<FieldElement> {
+    pub fn compile(&self, class: &SierraClass) -> Result<Felt> {
         // We do this because the Sierra doesn't need ABI anyways. Feeding it with the ABI could
         // actually cause unnecessary deserialization errors due to ABI structure changes between
         // compiler versions.
@@ -109,7 +109,7 @@ impl CompilerBinary {
         &self.path
     }
 
-    pub fn compile(&self, class: &SierraClass) -> Result<FieldElement> {
+    pub fn compile(&self, class: &SierraClass) -> Result<Felt> {
         // We do this because the Sierra doesn't need ABI anyways. Feeding it with the ABI could
         // actually cause unnecessary deserialization errors due to ABI structure changes between
         // compiler versions.

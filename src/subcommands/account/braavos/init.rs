@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    core::types::FieldElement,
+    core::types::Felt,
     macros::felt,
     signers::{Signer, SigningKey},
 };
@@ -20,9 +20,9 @@ use crate::{
 };
 
 /// Official hashes used as of extension version 3.37.4
-const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: FieldElement =
+const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: Felt =
     felt!("0x013bfe114fb1cf405bfc3a7f8dbe2d91db146c17521d40dcf57e16d6b59fa8e6");
-const BRAAVOS_ACCOUNT_CLASS_HASH: FieldElement =
+const BRAAVOS_ACCOUNT_CLASS_HASH: Felt =
     felt!("0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253");
 
 #[derive(Debug, Parser)]

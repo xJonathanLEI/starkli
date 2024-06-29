@@ -139,7 +139,7 @@ dependencies = [
  "digest",
  "itertools 0.10.5",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "paste",
  "rustc_version",
  "zeroize",
@@ -162,7 +162,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7abe79b0e4288889c4574159ab790824d0033b9fdcb2a112a3182fac2e514565"
 dependencies = [
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
@@ -185,7 +185,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94893f1e0c6eeab764ade8dc4c0db24caf4fe7cbbaafc0eba0a9030f447b5185"
 dependencies = [
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "rand",
 ]
 
@@ -218,7 +218,7 @@ checksum = "cc6dde6e4ed435a4c1ee4e73592f5ba9da2151af10076cc04858746af9352d09"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -268,18 +268,6 @@ checksum = "604178f6c5c21f02dc555784810edfb88d34ac2c73b2eae109655649ee73ce3d"
 
 [[package]]
 name = "bigdecimal"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6773ddc0eafc0e509fb60e48dff7f450f8e674a0686ae8605e8d9901bd5eefa"
-dependencies = [
- "num-bigint",
- "num-integer",
- "num-traits 0.2.16",
- "serde",
-]
-
-[[package]]
-name = "bigdecimal"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "454bca3db10617b88b566f205ed190aedb0e0e6dd4cad61d3988a72e8c5594cb"
@@ -288,7 +276,7 @@ dependencies = [
  "libm",
  "num-bigint",
  "num-integer",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
 ]
 
 [[package]]
@@ -372,7 +360,7 @@ dependencies = [
  "lazy_static",
  "num-bigint",
  "num-integer",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "serde",
 ]
 
@@ -385,7 +373,7 @@ dependencies = [
  "lazy_static",
  "num-bigint",
  "num-integer",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "serde",
 ]
 
@@ -397,7 +385,7 @@ dependencies = [
  "cairo-lang-utils 2.4.0",
  "indoc",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "parity-scale-codec",
  "parity-scale-codec-derive",
  "schemars",
@@ -413,7 +401,7 @@ dependencies = [
  "cairo-lang-utils 2.5.4",
  "indoc",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "parity-scale-codec",
  "serde",
 ]
@@ -426,7 +414,7 @@ dependencies = [
  "cairo-lang-utils 2.6.2",
  "indoc",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "parity-scale-codec",
  "serde",
 ]
@@ -616,7 +604,7 @@ dependencies = [
  "itertools 0.11.0",
  "log",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "once_cell",
  "salsa",
  "smol_str",
@@ -640,7 +628,7 @@ dependencies = [
  "itertools 0.11.0",
  "log",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "once_cell",
  "salsa",
  "smol_str",
@@ -659,7 +647,7 @@ dependencies = [
  "colored",
  "itertools 0.11.0",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "salsa",
  "smol_str",
  "unescaper",
@@ -678,7 +666,7 @@ dependencies = [
  "colored",
  "itertools 0.11.0",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "salsa",
  "smol_str",
  "unescaper",
@@ -727,7 +715,7 @@ source = "git+https://github.com/starkware-libs/cairo?tag=v2.4.0#a4de08fbd75fa1d
 dependencies = [
  "cairo-lang-debug 2.4.0",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -737,7 +725,7 @@ source = "git+https://github.com/starkware-libs/cairo?tag=v2.5.4#f42bf295a879271
 dependencies = [
  "cairo-lang-debug 2.5.4",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -784,7 +772,7 @@ dependencies = [
  "indoc",
  "itertools 0.11.0",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "once_cell",
  "salsa",
  "smol_str",
@@ -808,7 +796,7 @@ dependencies = [
  "indoc",
  "itertools 0.11.0",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "once_cell",
  "salsa",
  "smol_str",
@@ -828,7 +816,7 @@ dependencies = [
  "lalrpop",
  "lalrpop-util",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "regex",
  "salsa",
  "serde",
@@ -853,7 +841,7 @@ dependencies = [
  "lalrpop",
  "lalrpop-util",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "regex",
  "salsa",
  "serde",
@@ -878,7 +866,7 @@ dependencies = [
  "lalrpop",
  "lalrpop-util",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "regex",
  "salsa",
  "serde",
@@ -911,7 +899,7 @@ dependencies = [
  "cairo-lang-sierra-type-size 2.5.4",
  "cairo-lang-utils 2.5.4",
  "itertools 0.11.0",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "thiserror",
 ]
 
@@ -925,7 +913,7 @@ dependencies = [
  "cairo-lang-sierra-type-size 2.6.2",
  "cairo-lang-utils 2.6.2",
  "itertools 0.11.0",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "thiserror",
 ]
 
@@ -952,7 +940,7 @@ dependencies = [
  "cairo-lang-sierra-type-size 2.5.4",
  "cairo-lang-utils 2.5.4",
  "itertools 0.11.0",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "thiserror",
 ]
 
@@ -966,7 +954,7 @@ dependencies = [
  "cairo-lang-sierra-type-size 2.6.2",
  "cairo-lang-utils 2.6.2",
  "itertools 0.11.0",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "thiserror",
 ]
 
@@ -1031,7 +1019,7 @@ dependencies = [
  "indoc",
  "itertools 0.11.0",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "thiserror",
 ]
 
@@ -1051,7 +1039,7 @@ dependencies = [
  "indoc",
  "itertools 0.11.0",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "thiserror",
 ]
 
@@ -1071,7 +1059,7 @@ dependencies = [
  "indoc",
  "itertools 0.11.0",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "thiserror",
 ]
 
@@ -1128,7 +1116,7 @@ dependencies = [
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "once_cell",
  "serde",
  "serde_json",
@@ -1165,7 +1153,7 @@ dependencies = [
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "once_cell",
  "serde",
  "serde_json",
@@ -1189,7 +1177,7 @@ dependencies = [
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "once_cell",
  "serde",
  "serde_json",
@@ -1208,7 +1196,7 @@ dependencies = [
  "cairo-lang-filesystem 2.4.0",
  "cairo-lang-utils 2.4.0",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "salsa",
  "smol_str",
  "unescaper",
@@ -1223,7 +1211,7 @@ dependencies = [
  "cairo-lang-filesystem 2.5.4",
  "cairo-lang-utils 2.5.4",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "salsa",
  "smol_str",
  "unescaper",
@@ -1255,7 +1243,7 @@ dependencies = [
  "indexmap 2.1.0",
  "itertools 0.11.0",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "parity-scale-codec",
  "schemars",
  "serde",
@@ -1270,7 +1258,7 @@ dependencies = [
  "indexmap 2.1.0",
  "itertools 0.11.0",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "schemars",
  "serde",
 ]
@@ -1284,7 +1272,7 @@ dependencies = [
  "indexmap 2.1.0",
  "itertools 0.11.0",
  "num-bigint",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "schemars",
  "serde",
 ]
@@ -1314,7 +1302,7 @@ dependencies = [
  "android-tzdata",
  "iana-time-zone",
  "js-sys",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "serde",
  "time 0.1.45",
  "wasm-bindgen",
@@ -1372,7 +1360,7 @@ dependencies = [
  "heck 0.4.1",
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -1569,7 +1557,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "strsim",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -1580,7 +1568,7 @@ checksum = "836a9bbc7ad63342d6d6e7b815ccab164bc77a2d95d84bc3117a8c0d5c98e2d5"
 dependencies = [
  "darling_core",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -1869,7 +1857,7 @@ checksum = "89ca545a94061b6365f2c7355b4b32bd20df3ff95f02da9329b34ccc3bd6ee72"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -1917,7 +1905,7 @@ checksum = "d4cf186fea4af17825116f72932fe52cce9a13bae39ff63b4dc0cfdb3fb4bde1"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -2373,6 +2361,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "lambdaworks-crypto"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fb5d4f22241504f7c7b8d2c3a7d7835d7c07117f10bff2a7d96a9ef6ef217c3"
+dependencies = [
+ "lambdaworks-math",
+ "serde",
+ "sha2",
+ "sha3",
+]
+
+[[package]]
+name = "lambdaworks-math"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "358e172628e713b80a530a59654154bfc45783a6ed70ea284839800cebdf8f97"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2508,7 +2518,7 @@ dependencies = [
  "matrixmultiply",
  "num-complex",
  "num-integer",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "rawpointer",
 ]
 
@@ -2520,13 +2530,13 @@ checksum = "e4a24736216ec316047a1fc4252e27dabb04218aa4a3f37c6e7ddbf1f9782b54"
 
 [[package]]
 name = "num-bigint"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f93ab6289c7b344a8a9f60f88d80aa20032336fe78da341afc91c8a2341fc75f"
+checksum = "608e7659b5c3d7cba262d894801b9ec9d00de989e8a82bd4bef91d08da45cdc0"
 dependencies = [
  "autocfg",
  "num-integer",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "serde",
 ]
 
@@ -2537,7 +2547,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6b19411a9719e753aff12e5187b74d60d3dc449ec3f4dc21e3989c3f554bc95"
 dependencies = [
  "autocfg",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
 ]
 
 [[package]]
@@ -2547,7 +2557,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "225d3389fb3509a24c93f5c29eb6bde2586b98d9f016636dff58d7c6f7569cd9"
 dependencies = [
  "autocfg",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
 ]
 
 [[package]]
@@ -2556,14 +2566,14 @@ version = "0.1.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92e5113e9fd4cc14ded8e499429f396a20f98c772a47cc8622a736e1ec843c31"
 dependencies = [
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
 ]
 
 [[package]]
 name = "num-traits"
-version = "0.2.16"
+version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f30b0abd723be7e2ffca1272140fac1a2f084c77ec3e123c192b66af1ee9e6c2"
+checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
 ]
@@ -2818,18 +2828,18 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.70"
+version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39278fbbf5fb4f646ce651690877f89d1c5811a3d4acb27700c1cb3cdb78fd3b"
+checksum = "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.33"
+version = "1.0.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5267fca4496028628a95160fc423a33e8b2e6af8a5302579e322e4b520293cae"
+checksum = "0fa76aaf39101c457836aec0ce2316dbdc3ab723cdda1c6bd4e6ad4208acaca7"
 dependencies = [
  "proc-macro2",
 ]
@@ -3239,22 +3249,22 @@ checksum = "b0293b4b29daaf487284529cc2f5675b8e57c61f70167ba415a463651fd6a918"
 
 [[package]]
 name = "serde"
-version = "1.0.193"
+version = "1.0.203"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25dd9975e68d0cb5aa1120c288333fc98731bd1dd12f561e468ea4728c042b89"
+checksum = "7253ab4de971e72fb7be983802300c30b5a7f0c2e56fab8abfc6a214307c0094"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.193"
+version = "1.0.203"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43576ca501357b9b071ac53cdc7da8ef0cbd9493d8df094cd821777ea6e894d3"
+checksum = "500cbc0ebeb6f46627f50f3f5811ccf6bf00643be300b4c3eabc0ef55dc5b5ba"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -3337,7 +3347,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -3434,7 +3444,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "auto_impl",
- "bigdecimal 0.4.1",
+ "bigdecimal",
  "cairo-lang-starknet 2.4.0",
  "cairo-lang-starknet 2.5.4",
  "cairo-lang-starknet-classes",
@@ -3452,6 +3462,7 @@ dependencies = [
  "log",
  "num-bigint",
  "num-integer",
+ "num-traits 0.2.19",
  "rand",
  "rayon",
  "regex",
@@ -3461,7 +3472,7 @@ dependencies = [
  "serde_with",
  "shellexpand",
  "starknet",
- "starknet-crypto 0.6.2",
+ "starknet-crypto 0.7.1",
  "tempfile",
  "thiserror",
  "tokio",
@@ -3472,14 +3483,13 @@ dependencies = [
 
 [[package]]
 name = "starknet"
-version = "0.10.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=82bac8b196a59c340519249b92db410d0084d74d#82bac8b196a59c340519249b92db410d0084d74d"
+version = "0.11.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=838c612e445ae22af07beceaba862c708da2ab2d#838c612e445ae22af07beceaba862c708da2ab2d"
 dependencies = [
  "starknet-accounts",
  "starknet-contract",
  "starknet-core",
- "starknet-crypto 0.6.2",
- "starknet-ff 0.3.7",
+ "starknet-crypto 0.7.1",
  "starknet-macros",
  "starknet-providers",
  "starknet-signers",
@@ -3487,13 +3497,13 @@ dependencies = [
 
 [[package]]
 name = "starknet-accounts"
-version = "0.9.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=82bac8b196a59c340519249b92db410d0084d74d#82bac8b196a59c340519249b92db410d0084d74d"
+version = "0.10.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=838c612e445ae22af07beceaba862c708da2ab2d#838c612e445ae22af07beceaba862c708da2ab2d"
 dependencies = [
  "async-trait",
  "auto_impl",
  "starknet-core",
- "starknet-crypto 0.6.2",
+ "starknet-crypto 0.7.1",
  "starknet-providers",
  "starknet-signers",
  "thiserror",
@@ -3501,8 +3511,8 @@ dependencies = [
 
 [[package]]
 name = "starknet-contract"
-version = "0.9.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=82bac8b196a59c340519249b92db410d0084d74d#82bac8b196a59c340519249b92db410d0084d74d"
+version = "0.10.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=838c612e445ae22af07beceaba862c708da2ab2d#838c612e445ae22af07beceaba862c708da2ab2d"
 dependencies = [
  "serde",
  "serde_json",
@@ -3515,10 +3525,11 @@ dependencies = [
 
 [[package]]
 name = "starknet-core"
-version = "0.10.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=82bac8b196a59c340519249b92db410d0084d74d#82bac8b196a59c340519249b92db410d0084d74d"
+version = "0.11.1"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=838c612e445ae22af07beceaba862c708da2ab2d#838c612e445ae22af07beceaba862c708da2ab2d"
 dependencies = [
  "base64 0.21.2",
+ "crypto-bigint",
  "flate2",
  "hex",
  "serde",
@@ -3526,8 +3537,8 @@ dependencies = [
  "serde_json_pythonic",
  "serde_with",
  "sha3",
- "starknet-crypto 0.6.2",
- "starknet-ff 0.3.7",
+ "starknet-crypto 0.7.1",
+ "starknet-types-core",
 ]
 
 [[package]]
@@ -3541,31 +3552,31 @@ dependencies = [
  "hmac",
  "num-bigint",
  "num-integer",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "rfc6979",
  "sha2",
  "starknet-crypto-codegen 0.3.2",
  "starknet-curve 0.4.0",
- "starknet-ff 0.3.5",
+ "starknet-ff",
  "zeroize",
 ]
 
 [[package]]
 name = "starknet-crypto"
-version = "0.6.2"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=82bac8b196a59c340519249b92db410d0084d74d#82bac8b196a59c340519249b92db410d0084d74d"
+version = "0.7.1"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=838c612e445ae22af07beceaba862c708da2ab2d#838c612e445ae22af07beceaba862c708da2ab2d"
 dependencies = [
  "crypto-bigint",
  "hex",
  "hmac",
  "num-bigint",
  "num-integer",
- "num-traits 0.2.16",
+ "num-traits 0.2.19",
  "rfc6979",
  "sha2",
- "starknet-crypto-codegen 0.3.3",
- "starknet-curve 0.4.2",
- "starknet-ff 0.3.7",
+ "starknet-crypto-codegen 0.4.0",
+ "starknet-curve 0.5.0",
+ "starknet-types-core",
  "zeroize",
 ]
 
@@ -3576,18 +3587,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af6527b845423542c8a16e060ea1bc43f67229848e7cd4c4d80be994a84220ce"
 dependencies = [
  "starknet-curve 0.4.0",
- "starknet-ff 0.3.5",
- "syn 2.0.41",
+ "starknet-ff",
+ "syn 2.0.68",
 ]
 
 [[package]]
 name = "starknet-crypto-codegen"
-version = "0.3.3"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=82bac8b196a59c340519249b92db410d0084d74d#82bac8b196a59c340519249b92db410d0084d74d"
+version = "0.4.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=838c612e445ae22af07beceaba862c708da2ab2d#838c612e445ae22af07beceaba862c708da2ab2d"
 dependencies = [
- "starknet-curve 0.4.2",
- "starknet-ff 0.3.7",
- "syn 2.0.41",
+ "starknet-curve 0.5.0",
+ "starknet-types-core",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -3596,15 +3607,15 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a68a0d87ae56572abf83ddbfd44259a7c90dbeeee1629a1ffe223e7f9a8f3052"
 dependencies = [
- "starknet-ff 0.3.5",
+ "starknet-ff",
 ]
 
 [[package]]
 name = "starknet-curve"
-version = "0.4.2"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=82bac8b196a59c340519249b92db410d0084d74d#82bac8b196a59c340519249b92db410d0084d74d"
+version = "0.5.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=838c612e445ae22af07beceaba862c708da2ab2d#838c612e445ae22af07beceaba862c708da2ab2d"
 dependencies = [
- "starknet-ff 0.3.7",
+ "starknet-types-core",
 ]
 
 [[package]]
@@ -3620,37 +3631,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "starknet-ff"
-version = "0.3.7"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=82bac8b196a59c340519249b92db410d0084d74d#82bac8b196a59c340519249b92db410d0084d74d"
-dependencies = [
- "ark-ff",
- "bigdecimal 0.3.1",
- "crypto-bigint",
- "getrandom",
- "hex",
- "num-bigint",
- "serde",
-]
-
-[[package]]
 name = "starknet-macros"
-version = "0.1.7"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=82bac8b196a59c340519249b92db410d0084d74d#82bac8b196a59c340519249b92db410d0084d74d"
+version = "0.2.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=838c612e445ae22af07beceaba862c708da2ab2d#838c612e445ae22af07beceaba862c708da2ab2d"
 dependencies = [
  "starknet-core",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
 name = "starknet-providers"
-version = "0.10.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=82bac8b196a59c340519249b92db410d0084d74d#82bac8b196a59c340519249b92db410d0084d74d"
+version = "0.11.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=838c612e445ae22af07beceaba862c708da2ab2d#838c612e445ae22af07beceaba862c708da2ab2d"
 dependencies = [
  "async-trait",
  "auto_impl",
  "ethereum-types",
  "flate2",
+ "getrandom",
  "log",
  "reqwest",
  "serde",
@@ -3663,17 +3661,32 @@ dependencies = [
 
 [[package]]
 name = "starknet-signers"
-version = "0.8.0"
-source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=82bac8b196a59c340519249b92db410d0084d74d#82bac8b196a59c340519249b92db410d0084d74d"
+version = "0.9.0"
+source = "git+https://github.com/xJonathanLEI/starknet-rs?rev=838c612e445ae22af07beceaba862c708da2ab2d#838c612e445ae22af07beceaba862c708da2ab2d"
 dependencies = [
  "async-trait",
  "auto_impl",
  "crypto-bigint",
  "eth-keystore",
+ "getrandom",
  "rand",
  "starknet-core",
- "starknet-crypto 0.6.2",
+ "starknet-crypto 0.7.1",
  "thiserror",
+]
+
+[[package]]
+name = "starknet-types-core"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65799574816ba83cb04b21a3cb16f791b9882687cd9093415fd1b3821dbac29d"
+dependencies = [
+ "lambdaworks-crypto",
+ "lambdaworks-math",
+ "num-bigint",
+ "num-integer",
+ "num-traits 0.2.19",
+ "serde",
 ]
 
 [[package]]
@@ -3720,9 +3733,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.41"
+version = "2.0.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44c8b28c477cc3bf0e7966561e3460130e1255f7a1cf71931075f1c5e7a7e269"
+checksum = "901fa70d88b9d6c98022e23b4136f9f3e54e4662c3bc1bd1d84a42a9a0f0c1e9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3785,7 +3798,7 @@ checksum = "266b2e40bc00e5a6c09c3584011e08b06f123c00362c92b975ba9843aaaa14b8"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -3879,7 +3892,7 @@ checksum = "630bdcf245f78637c13ec01ffae6187cca34625e8c63150d424b59e55af2675e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -4142,7 +4155,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
  "wasm-bindgen-shared",
 ]
 
@@ -4176,7 +4189,7 @@ checksum = "54681b18a46765f095758388f2d0cf16eb8d4169b639ab575a8f5693af210c7b"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -4453,7 +4466,7 @@ checksum = "9ce1b18ccd8e73a9321186f97e46f9f04b778851177567b1975109d26a08d2a6"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]
 
 [[package]]
@@ -4473,5 +4486,5 @@ checksum = "ce36e65b0d2999d2aafac989fb249189a141aee1f53c612c1f37d72631959f69"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.41",
+ "syn 2.0.68",
 ]

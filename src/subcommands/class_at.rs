@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use starknet::{
-    core::types::{BlockId, BlockTag, ContractClass, FieldElement},
+    core::types::{BlockId, BlockTag, ContractClass, Felt},
     providers::Provider,
 };
 
@@ -31,7 +31,7 @@ impl ClassAt {
         self.verbosity.setup_logging();
 
         let provider = self.provider.into_provider()?;
-        let address = FieldElement::from_hex_be(&self.address)?;
+        let address = Felt::from_hex(&self.address)?;
 
         // TODO: allow custom block
         let class = provider

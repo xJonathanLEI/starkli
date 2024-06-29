@@ -4,17 +4,17 @@ use starknet::{
         AccountFactory, PreparedAccountDeploymentV1, PreparedAccountDeploymentV3,
         RawAccountDeploymentV1, RawAccountDeploymentV3,
     },
-    core::types::{BlockId, BlockTag, FieldElement},
+    core::types::{BlockId, BlockTag, Felt},
     providers::Provider,
     signers::Signer,
 };
 use starknet_crypto::poseidon_hash_many;
 
 pub struct BraavosAccountFactory<S, P> {
-    class_hash: FieldElement,
-    base_class_hash: FieldElement,
-    chain_id: FieldElement,
-    signer_public_key: FieldElement,
+    class_hash: Felt,
+    base_class_hash: Felt,
+    chain_id: Felt,
+    signer_public_key: Felt,
     signer: S,
     provider: P,
     block_id: BlockId,
@@ -25,9 +25,9 @@ where
     S: Signer,
 {
     pub async fn new(
-        class_hash: FieldElement,
-        base_class_hash: FieldElement,
-        chain_id: FieldElement,
+        class_hash: Felt,
+        base_class_hash: Felt,
+        chain_id: Felt,
         signer: S,
         provider: P,
     ) -> Result<Self, S::GetPublicKeyError> {
@@ -60,20 +60,24 @@ where
     type SignError = S::SignError;
 
     #[allow(clippy::misnamed_getters)]
-    fn class_hash(&self) -> FieldElement {
+    fn class_hash(&self) -> Felt {
         self.base_class_hash
     }
 
-    fn calldata(&self) -> Vec<FieldElement> {
+    fn calldata(&self) -> Vec<Felt> {
         vec![self.signer_public_key]
     }
 
-    fn chain_id(&self) -> FieldElement {
+    fn chain_id(&self) -> Felt {
         self.chain_id
     }
 
     fn provider(&self) -> &Self::Provider {
         &self.provider
+    }
+
+    fn is_signer_interactive(&self) -> bool {
+        self.signer.is_interactive()
     }
 
     fn block_id(&self) -> BlockId {
@@ -83,9 +87,10 @@ where
     async fn sign_deployment_v1(
         &self,
         deployment: &RawAccountDeploymentV1,
-    ) -> Result<Vec<FieldElement>, Self::SignError> {
-        let tx_hash =
-            PreparedAccountDeploymentV1::from_raw(deployment.clone(), self).transaction_hash();
+        query_only: bool,
+    ) -> Result<Vec<Felt>, Self::SignError> {
+        let tx_hash = PreparedAccountDeploymentV1::from_raw(deployment.clone(), self)
+            .transaction_hash(query_only);
 
         let signature = self.signer.sign_hash(&tx_hash).await?;
 
@@ -93,23 +98,23 @@ where
             // account_implementation
             self.class_hash,
             // signer_type
-            FieldElement::ZERO,
+            Felt::ZERO,
             // secp256r1_signer.x.low
-            FieldElement::ZERO,
+            Felt::ZERO,
             // secp256r1_signer.x.high
-            FieldElement::ZERO,
+            Felt::ZERO,
             // secp256r1_signer.y.low
-            FieldElement::ZERO,
+            Felt::ZERO,
             // secp256r1_signer.y.high
-            FieldElement::ZERO,
+            Felt::ZERO,
             // multisig_threshold
-            FieldElement::ZERO,
+            Felt::ZERO,
             // withdrawal_limit_low
-            FieldElement::ZERO,
+            Felt::ZERO,
             // fee_rate
-            FieldElement::ZERO,
+            Felt::ZERO,
             // stark_fee_rate
-            FieldElement::ZERO,
+            Felt::ZERO,
             // chain_id
             self.chain_id,
         ];
@@ -129,9 +134,10 @@ where
     async fn sign_deployment_v3(
         &self,
         deployment: &RawAccountDeploymentV3,
-    ) -> Result<Vec<FieldElement>, Self::SignError> {
-        let tx_hash =
-            PreparedAccountDeploymentV3::from_raw(deployment.clone(), self).transaction_hash();
+        query_only: bool,
+    ) -> Result<Vec<Felt>, Self::SignError> {
+        let tx_hash = PreparedAccountDeploymentV3::from_raw(deployment.clone(), self)
+            .transaction_hash(query_only);
 
         let signature = self.signer.sign_hash(&tx_hash).await?;
 
@@ -139,23 +145,23 @@ where
             // account_implementation
             self.class_hash,
             // signer_type
-            FieldElement::ZERO,
+            Felt::ZERO,
             // secp256r1_signer.x.low
-            FieldElement::ZERO,
+            Felt::ZERO,
             // secp256r1_signer.x.high
-            FieldElement::ZERO,
+            Felt::ZERO,
             // secp256r1_signer.y.low
-            FieldElement::ZERO,
+            Felt::ZERO,
             // secp256r1_signer.y.high
-            FieldElement::ZERO,
+            Felt::ZERO,
             // multisig_threshold
-            FieldElement::ZERO,
+            Felt::ZERO,
             // withdrawal_limit_low
-            FieldElement::ZERO,
+            Felt::ZERO,
             // fee_rate
-            FieldElement::ZERO,
+            Felt::ZERO,
             // stark_fee_rate
-            FieldElement::ZERO,
+            Felt::ZERO,
             // chain_id
             self.chain_id,
         ];

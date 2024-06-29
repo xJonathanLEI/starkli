@@ -9,29 +9,29 @@ use std::{
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
+use hex_literal::hex;
+use num_traits::FromPrimitive;
 use rand::{rngs::StdRng, RngCore, SeedableRng};
 use rayon::prelude::*;
-use starknet::core::{
-    crypto::{compute_hash_on_elements, pedersen_hash},
-    types::FieldElement,
-    utils::{normalize_address, UdcUniqueSettings, UdcUniqueness},
+use starknet::{
+    core::{
+        crypto::{compute_hash_on_elements, pedersen_hash},
+        types::{Felt, NonZeroFelt},
+        utils::{normalize_address, UdcUniqueSettings, UdcUniqueness},
+    },
+    macros::felt,
 };
 
 /// The default UDC address: 0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf.
-const DEFAULT_UDC_ADDRESS: FieldElement = FieldElement::from_mont([
-    15144800532519055890,
-    15685625669053253235,
-    9333317513348225193,
-    121672436446604875,
-]);
+const DEFAULT_UDC_ADDRESS: Felt =
+    felt!("0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf");
+
+/// All Starknet addresses must be smaller than this bound: 2 ** 251 - 256.
+const ADDR_BOUND: [u8; 32] =
+    hex!("07ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00");
 
 // Cairo string of "STARKNET_CONTRACT_ADDRESS"
-const CONTRACT_ADDRESS_PREFIX: FieldElement = FieldElement::from_mont([
-    3829237882463328880,
-    17289941567720117366,
-    8635008616843941496,
-    533439743893157637,
-]);
+const CONTRACT_ADDRESS_PREFIX: Felt = felt!("0x535441524b4e45545f434f4e54524143545f41444452455353");
 
 #[derive(Debug, Parser)]
 pub struct MineUdcSalt {
@@ -48,30 +48,30 @@ pub struct MineUdcSalt {
         long,
         help = "Deployer address. Needed if and only if not using --no-unique"
     )]
-    deployer_address: Option<FieldElement>,
+    deployer_address: Option<Felt>,
     #[clap(long, default_value = "1", help = "The number of parallel jobs to run")]
     jobs: u32,
     #[clap(help = "Class hash")]
-    class_hash: FieldElement,
+    class_hash: Felt,
     #[clap(help = "Raw constructor arguments (argument resolution not supported yet)")]
-    ctor_args: Vec<FieldElement>,
+    ctor_args: Vec<Felt>,
 }
 
 struct Miner {
     udc_uniqueness: UdcUniqueness,
-    class_hash: FieldElement,
-    ctor_hash: FieldElement,
+    class_hash: Felt,
+    ctor_hash: Felt,
     bloom: [bool; 252],
     prefix_length: usize,
     suffix_length: usize,
-    start_nonce: FieldElement,
+    start_nonce: Felt,
     cancellation_token: Arc<AtomicBool>,
 }
 
 #[derive(Debug)]
 struct MineResult {
-    nonce: FieldElement,
-    deployed_address: FieldElement,
+    nonce: Felt,
+    deployed_address: Felt,
 }
 
 impl MineUdcSalt {
@@ -151,13 +151,15 @@ impl MineUdcSalt {
         rng.fill_bytes(&mut nonce_offset[1..]);
 
         // We only filled 31 bytes so this value is always in range.
-        let nonce_offset = FieldElement::from_bytes_be(&nonce_offset).unwrap();
+        let nonce_offset = Felt::from_bytes_be(&nonce_offset);
 
         let result = (0..self.jobs)
             .into_par_iter()
             .map(|job_id| {
-                let start_nonce = FieldElement::MAX.floor_div(self.jobs.into())
-                    * FieldElement::from(job_id)
+                let start_nonce = Felt::MAX.floor_div(&NonZeroFelt::try_from(
+                    // This is safe to unwrap as `u32` is always in range
+                    Felt::from_u32(self.jobs).unwrap(),
+                )?) * Felt::from(job_id)
                     + nonce_offset;
 
                 let miner = Miner {
@@ -216,7 +218,15 @@ impl MineUdcSalt {
             })
             .collect::<Vec<_>>();
 
-        FieldElement::from_byte_slice_be(&bytes)?;
+        // Make sure the bloom filter is not impossible to reach by checking address bound
+        for ind in 0..ADDR_BOUND.len() {
+            #[allow(clippy::comparison_chain)]
+            if bytes[ind] > ADDR_BOUND[ind] {
+                anyhow::bail!("address is impossible to mine");
+            } else if bytes[ind] < ADDR_BOUND[ind] {
+                return Ok(());
+            }
+        }
 
         Ok(())
     }
@@ -232,7 +242,7 @@ impl Miner {
 
         while !self.cancellation_token.load(Ordering::Relaxed) {
             let (effective_salt, effective_deployer) = match &self.udc_uniqueness {
-                UdcUniqueness::NotUnique => (nonce, FieldElement::ZERO),
+                UdcUniqueness::NotUnique => (nonce, Felt::ZERO),
                 UdcUniqueness::Unique(settings) => (
                     pedersen_hash(&settings.deployer_address, &nonce),
                     settings.udc_contract_address,
@@ -258,7 +268,7 @@ impl Miner {
                 });
             }
 
-            nonce += FieldElement::ONE;
+            nonce += Felt::ONE;
         }
 
         Err(anyhow::anyhow!("job cancelled"))

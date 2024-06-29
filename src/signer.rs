@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    core::{crypto::Signature, types::FieldElement},
+    core::{crypto::Signature, types::Felt},
     signers::{LocalWallet, Signer, SigningKey, VerifyingKey},
 };
 
@@ -85,11 +85,17 @@ impl Signer for AnySigner {
         }
     }
 
-    async fn sign_hash(&self, hash: &FieldElement) -> Result<Signature, Self::SignError> {
+    async fn sign_hash(&self, hash: &Felt) -> Result<Signature, Self::SignError> {
         match self {
             Self::LocalWallet(inner) => Ok(<LocalWallet as Signer>::sign_hash(inner, hash)
                 .await
                 .map_err(Self::SignError::LocalWallet)?),
+        }
+    }
+
+    fn is_interactive(&self) -> bool {
+        match self {
+            Self::LocalWallet(inner) => <LocalWallet as Signer>::is_interactive(inner),
         }
     }
 }
@@ -263,7 +269,7 @@ impl PrivateKeyTaskContent {
             );
         }
 
-        let private_key = FieldElement::from_hex_be(&self.key)?;
+        let private_key = Felt::from_hex(&self.key)?;
         let key = SigningKey::from_secret_scalar(private_key);
 
         Ok(AnySigner::LocalWallet(LocalWallet::from_signing_key(key)))

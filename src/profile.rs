@@ -9,7 +9,7 @@ use etcetera::{choose_base_strategy, BaseStrategy};
 use indexmap::IndexMap;
 use serde::{de::Visitor, Deserialize, Serialize};
 use starknet::core::{
-    types::FieldElement,
+    types::Felt,
     utils::{cairo_short_string_to_felt, parse_cairo_short_string},
 };
 use url::Url;
@@ -36,7 +36,7 @@ pub struct Network {
         serialize_with = "serialize_chain_id",
         deserialize_with = "deserialize_chain_id"
     )]
-    pub chain_id: FieldElement,
+    pub chain_id: Felt,
     #[serde(default, skip_serializing_if = "is_false")]
     pub is_integration: bool,
     pub provider: NetworkProvider,
@@ -243,7 +243,7 @@ impl Display for FreeProviderVendor {
 }
 
 impl<'de> Visitor<'de> for ChainIdVisitor {
-    type Value = FieldElement;
+    type Value = Felt;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(formatter, "string")
@@ -279,7 +279,7 @@ impl<'de> Visitor<'de> for UrlVisitor {
     }
 }
 
-fn serialize_chain_id<S>(value: &FieldElement, serializer: S) -> Result<S::Ok, S::Error>
+fn serialize_chain_id<S>(value: &Felt, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
 {
@@ -289,7 +289,7 @@ where
     )
 }
 
-fn deserialize_chain_id<'de, D>(deserializer: D) -> Result<FieldElement, D::Error>
+fn deserialize_chain_id<'de, D>(deserializer: D) -> Result<Felt, D::Error>
 where
     D: serde::Deserializer<'de>,
 {

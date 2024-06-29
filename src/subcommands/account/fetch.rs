@@ -3,8 +3,9 @@ use std::{io::Write, path::PathBuf};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
+use num_traits::ToPrimitive;
 use starknet::{
-    core::types::{BlockId, BlockTag, FieldElement, FunctionCall},
+    core::types::{BlockId, BlockTag, Felt, FunctionCall},
     macros::selector,
     providers::Provider,
 };
@@ -51,7 +52,7 @@ impl Fetch {
         }
 
         let provider = self.provider.into_provider()?;
-        let address = FieldElement::from_hex_be(&self.address)?;
+        let address = Felt::from_hex(&self.address)?;
 
         let class_hash = provider
             .get_class_hash_at(BlockId::Tag(BlockTag::Pending), address)
@@ -178,12 +179,14 @@ impl Fetch {
                 let signers = {
                     let mut buffer = vec![];
 
-                    let num_signers = TryInto::<u64>::try_into(signers[0])? as usize;
+                    let num_signers = signers[0]
+                        .to_usize()
+                        .ok_or_else(|| anyhow::anyhow!("signer count overflow"))?;
 
                     for ind_signer in 0..num_signers {
                         let base_offset = ind_signer * 8 + 1;
 
-                        if Into::<FieldElement>::into(ind_signer as u64) != signers[base_offset] {
+                        if Into::<Felt>::into(ind_signer as u64) != signers[base_offset] {
                             anyhow::bail!("unable to decode Braavos signers: index mismatch");
                         }
 
@@ -196,11 +199,13 @@ impl Fetch {
                     buffer
                 };
 
-                let multisig = if multisig == FieldElement::ZERO {
+                let multisig = if multisig == Felt::ZERO {
                     BraavosMultisigConfig::Off
                 } else {
                     BraavosMultisigConfig::On {
-                        num_signers: TryInto::<u64>::try_into(multisig)? as usize,
+                        num_signers: multisig
+                            .to_usize()
+                            .ok_or_else(|| anyhow::anyhow!("signer count overflow"))?,
                     }
                 };
 
@@ -267,7 +272,9 @@ impl Fetch {
                 // - secp256r1: Array<felt252>,
                 // - webauthn: Array<felt252>,
                 let signers = {
-                    let num_signers = TryInto::<u64>::try_into(signers[0])? as usize;
+                    let num_signers = signers[0]
+                        .to_usize()
+                        .ok_or_else(|| anyhow::anyhow!("signer count overflow"))?;
                     if signers.len() < 1 + num_signers {
                         anyhow::bail!("unexpected end of signers array");
                     }
@@ -278,11 +285,13 @@ impl Fetch {
                         .collect()
                 };
 
-                let multisig = if multisig == FieldElement::ZERO {
+                let multisig = if multisig == Felt::ZERO {
                     BraavosMultisigConfig::Off
                 } else {
                     BraavosMultisigConfig::On {
-                        num_signers: TryInto::<u64>::try_into(multisig)? as usize,
+                        num_signers: multisig
+                            .to_usize()
+                            .ok_or_else(|| anyhow::anyhow!("signer count overflow"))?,
                     }
                 };
 

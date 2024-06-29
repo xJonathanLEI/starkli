@@ -8,7 +8,7 @@ use starknet::{
     accounts::{ExecutionEncoding, SingleOwnerAccount},
     core::{
         serde::unsigned_field_element::UfeHex,
-        types::{BlockId, BlockTag, FieldElement},
+        types::{BlockId, BlockTag, Felt},
         utils::get_contract_address,
     },
     macros::{felt, selector},
@@ -18,7 +18,7 @@ use starknet::{
 
 use crate::signer::{AnySigner, SignerArgs, SignerResolutionTask};
 
-const BRAAVOS_SIGNER_TYPE_STARK: FieldElement = FieldElement::ONE;
+const BRAAVOS_SIGNER_TYPE_STARK: Felt = Felt::ONE;
 
 pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 16] = [
     KnownAccountClass {
@@ -201,7 +201,7 @@ pub enum DeploymentStatus {
 }
 
 pub struct KnownAccountClass {
-    pub class_hash: FieldElement,
+    pub class_hash: Felt,
     pub variant: AccountVariantType,
     pub description: &'static str,
 }
@@ -210,8 +210,8 @@ pub struct KnownAccountClass {
 pub struct BuiltinAccount {
     pub id: &'static str,
     pub aliases: &'static [&'static str],
-    pub address: FieldElement,
-    pub private_key: FieldElement,
+    pub address: Felt,
+    pub private_key: Felt,
 }
 
 pub enum AccountVariantType {
@@ -228,7 +228,7 @@ pub enum AccountVariantType {
 pub struct OzAccountConfig {
     pub version: u64,
     #[serde_as(as = "UfeHex")]
-    pub public_key: FieldElement,
+    pub public_key: Felt,
     #[serde(default = "true_as_default")]
     pub legacy: bool,
 }
@@ -239,13 +239,13 @@ pub struct ArgentAccountConfig {
     pub version: u64,
     #[serde_as(as = "Option<UfeHex>")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub implementation: Option<FieldElement>,
+    pub implementation: Option<Felt>,
     #[serde_as(as = "UfeHex")]
     // Old account files use `signer`
     #[serde(alias = "signer")]
-    pub owner: FieldElement,
+    pub owner: Felt,
     #[serde_as(as = "UfeHex")]
-    pub guardian: FieldElement,
+    pub guardian: Felt,
 }
 
 #[serde_as]
@@ -254,7 +254,7 @@ pub struct BraavosAccountConfig {
     pub version: u64,
     #[serde_as(as = "Option<UfeHex>")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub implementation: Option<FieldElement>,
+    pub implementation: Option<Felt>,
     pub multisig: BraavosMultisigConfig,
     pub signers: Vec<BraavosSigner>,
 }
@@ -277,16 +277,16 @@ pub enum BraavosSigner {
 #[derive(Serialize, Deserialize)]
 pub struct BraavosStarkSigner {
     #[serde_as(as = "UfeHex")]
-    pub public_key: FieldElement,
+    pub public_key: Felt,
 }
 
 #[serde_as]
 #[derive(Serialize, Deserialize)]
 pub struct UndeployedStatus {
     #[serde_as(as = "UfeHex")]
-    pub class_hash: FieldElement,
+    pub class_hash: Felt,
     #[serde_as(as = "UfeHex")]
-    pub salt: FieldElement,
+    pub salt: Felt,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context: Option<DeploymentContext>,
 }
@@ -295,9 +295,9 @@ pub struct UndeployedStatus {
 #[derive(Serialize, Deserialize)]
 pub struct DeployedStatus {
     #[serde_as(as = "UfeHex")]
-    pub class_hash: FieldElement,
+    pub class_hash: Felt,
     #[serde_as(as = "UfeHex")]
-    pub address: FieldElement,
+    pub address: Felt,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -312,7 +312,7 @@ pub struct BraavosDeploymentContext {
     // Old account files use `mock_implementation`
     #[serde(alias = "mock_implementation")]
     #[serde_as(as = "UfeHex")]
-    pub base_account_class_hash: FieldElement,
+    pub base_account_class_hash: Felt,
 }
 
 impl AccountArgs {
@@ -380,7 +380,7 @@ impl AccountArgs {
 }
 
 impl AccountConfig {
-    pub fn deploy_account_address(&self) -> Result<FieldElement> {
+    pub fn deploy_account_address(&self) -> Result<Felt> {
         let undeployed_status = match &self.deployment {
             DeploymentStatus::Undeployed(value) => value,
             DeploymentStatus::Deployed(_) => {
@@ -393,7 +393,7 @@ impl AccountConfig {
                 undeployed_status.salt,
                 undeployed_status.class_hash,
                 &[oz.public_key],
-                FieldElement::ZERO,
+                Felt::ZERO,
             )),
             AccountVariant::Argent(argent) => match argent.implementation {
                 Some(implementation) => {
@@ -404,11 +404,11 @@ impl AccountConfig {
                         &[
                             implementation,          // implementation
                             selector!("initialize"), // selector
-                            FieldElement::TWO,       // calldata_len
+                            Felt::TWO,               // calldata_len
                             argent.owner,            // calldata[0]: signer
                             argent.guardian,         // calldata[1]: guardian
                         ],
-                        FieldElement::ZERO,
+                        Felt::ZERO,
                     ))
                 }
                 None => {
@@ -417,7 +417,7 @@ impl AccountConfig {
                         undeployed_status.salt,
                         undeployed_status.class_hash,
                         &[argent.owner, argent.guardian],
-                        FieldElement::ZERO,
+                        Felt::ZERO,
                     ))
                 }
             },
@@ -441,7 +441,7 @@ impl AccountConfig {
                                     &[
                                         stark_signer.public_key, // calldata[0]: public_key
                                     ],
-                                    FieldElement::ZERO,
+                                    Felt::ZERO,
                                 ))
                             } // Reject other variants as we add more types
                         }
@@ -482,7 +482,7 @@ impl AccountVariant {
 }
 
 impl BraavosSigner {
-    pub fn decode(raw_signer_model: &[FieldElement]) -> Result<Self> {
+    pub fn decode(raw_signer_model: &[Felt]) -> Result<Self> {
         let raw_signer_type = raw_signer_model
             .get(4)
             .ok_or_else(|| anyhow::anyhow!("unable to read `type` field"))?;

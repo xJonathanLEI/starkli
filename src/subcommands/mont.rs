@@ -14,7 +14,7 @@ pub struct Mont {
 impl Mont {
     pub fn run(self) -> Result<()> {
         let felt = parse_felt_value(&self.felt)?;
-        let mont = felt.into_mont();
+        let mont = felt.to_raw_reversed();
 
         let mut output = String::new();
 

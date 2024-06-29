@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    core::types::FieldElement,
+    core::types::Felt,
     macros::felt,
     signers::{Signer, SigningKey},
 };
@@ -18,7 +18,7 @@ use crate::{
 };
 
 /// Official hashes used as of extension version 5.13.1
-const ARGENT_CLASS_HASH: FieldElement =
+const ARGENT_CLASS_HASH: Felt =
     felt!("0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b");
 
 #[derive(Debug, Parser)]
@@ -56,7 +56,7 @@ impl Init {
                 version: 1,
                 implementation: None,
                 owner: signer.get_public_key().await?.scalar(),
-                guardian: FieldElement::ZERO,
+                guardian: Felt::ZERO,
             }),
             deployment: DeploymentStatus::Undeployed(UndeployedStatus {
                 class_hash: ARGENT_CLASS_HASH,

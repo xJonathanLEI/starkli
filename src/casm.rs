@@ -5,7 +5,7 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::core::types::{
     contract::{CompiledClass, SierraClass},
-    FieldElement,
+    Felt,
 };
 
 use crate::{
@@ -39,7 +39,7 @@ pub enum CasmHashSource {
     BuiltInCompiler(BuiltInCompiler),
     CompilerBinary(CompilerBinary),
     CasmFile(PathBuf),
-    Hash(FieldElement),
+    Hash(Felt),
 }
 
 impl CasmArgs {
@@ -109,7 +109,7 @@ impl CasmArgs {
 }
 
 impl CasmHashSource {
-    pub fn get_casm_hash(&self, sierra_class: &SierraClass) -> Result<FieldElement> {
+    pub fn get_casm_hash(&self, sierra_class: &SierraClass) -> Result<Felt> {
         match self {
             Self::BuiltInCompiler(compiler) => compiler.compile(sierra_class),
             Self::CompilerBinary(compiler) => compiler.compile(sierra_class),

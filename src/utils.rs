@@ -5,6 +5,7 @@ use bigdecimal::{BigDecimal, Zero};
 use colored::Colorize;
 use colored_json::{ColorMode, ColoredFormatter, Output};
 use flate2::read::GzDecoder;
+use num_bigint::{BigInt, Sign};
 use num_integer::Integer;
 use regex::Regex;
 use serde::Serialize;
@@ -18,17 +19,13 @@ use starknet::{
             },
             AbiEntry, SierraClass, SierraClassDebugInfo,
         },
-        BlockId, BlockTag, CompressedLegacyContractClass, ExecutionResult, FieldElement,
+        BlockId, BlockTag, CompressedLegacyContractClass, ExecutionResult, Felt,
         FlattenedSierraClass, LegacyContractEntryPoint, StarknetError,
     },
     providers::{Provider, ProviderError},
 };
 
-pub async fn watch_tx<P>(
-    provider: P,
-    transaction_hash: FieldElement,
-    poll_interval: Duration,
-) -> Result<()>
+pub async fn watch_tx<P>(provider: P, transaction_hash: Felt, poll_interval: Duration) -> Result<()>
 where
     P: Provider,
 {
@@ -67,22 +64,33 @@ pub fn parse_block_id(id: &str) -> Result<BlockId> {
     } else if regex_block_number.is_match(id) {
         Ok(BlockId::Number(id.parse::<u64>()?))
     } else {
-        Ok(BlockId::Hash(FieldElement::from_hex_be(id)?))
+        Ok(BlockId::Hash(Felt::from_hex(id)?))
     }
 }
 
-pub fn parse_felt_value(felt: &str) -> Result<FieldElement> {
+pub fn parse_felt_value(felt: &str) -> Result<Felt> {
     let regex_dec_number = Regex::new("^[0-9]{1,}$").unwrap();
 
     if regex_dec_number.is_match(felt) {
-        Ok(FieldElement::from_dec_str(felt)?)
+        Ok(Felt::from_dec_str(felt)?)
     } else {
-        Ok(FieldElement::from_hex_be(felt)?)
+        Ok(Felt::from_hex(felt)?)
     }
 }
 
+pub fn felt_to_bigdecimal<F, D>(felt: F, decimals: D) -> BigDecimal
+where
+    F: AsRef<Felt>,
+    D: Into<i64>,
+{
+    BigDecimal::new(
+        BigInt::from_bytes_be(Sign::Plus, &felt.as_ref().to_bytes_be()),
+        decimals.into(),
+    )
+}
+
 #[allow(clippy::comparison_chain)]
-pub fn bigdecimal_to_felt<D>(dec: &BigDecimal, decimals: D) -> Result<FieldElement>
+pub fn bigdecimal_to_felt<D>(dec: &BigDecimal, decimals: D) -> Result<Felt>
 where
     D: Into<i64>,
 {
@@ -110,7 +118,7 @@ where
         }
     }
 
-    Ok(FieldElement::from_byte_slice_be(&biguint.to_bytes_be())?)
+    Ok(Felt::from_bytes_be_slice(&biguint.to_bytes_be()))
 }
 
 /// Prints colored JSON for any serializable value. This is better then directly calling

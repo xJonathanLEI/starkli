@@ -22,8 +22,8 @@ use crate::{
     JSON_RPC_VERSION,
 };
 
-const CHAIN_ID_MAINNET: FieldElement = short_string!("SN_MAIN");
-const CHAIN_ID_SEPOLIA: FieldElement = short_string!("SN_SEPOLIA");
+const CHAIN_ID_MAINNET: Felt = short_string!("SN_MAIN");
+const CHAIN_ID_SEPOLIA: Felt = short_string!("SN_SEPOLIA");
 
 #[derive(Debug, Clone, Parser)]
 pub struct ProviderArgs {
@@ -329,10 +329,10 @@ impl Provider for ExtendedProvider {
         contract_address: A,
         key: K,
         block_id: B,
-    ) -> Result<FieldElement, ProviderError>
+    ) -> Result<Felt, ProviderError>
     where
-        A: AsRef<FieldElement> + Send + Sync,
-        K: AsRef<FieldElement> + Send + Sync,
+        A: AsRef<Felt> + Send + Sync,
+        K: AsRef<Felt> + Send + Sync,
         B: AsRef<BlockId> + Send + Sync,
     {
         <AnyProvider as Provider>::get_storage_at(&self.provider, contract_address, key, block_id)
@@ -344,7 +344,7 @@ impl Provider for ExtendedProvider {
         transaction_hash: H,
     ) -> Result<TransactionStatus, ProviderError>
     where
-        H: AsRef<FieldElement> + Send + Sync,
+        H: AsRef<Felt> + Send + Sync,
     {
         <AnyProvider as Provider>::get_transaction_status(&self.provider, transaction_hash).await
     }
@@ -354,7 +354,7 @@ impl Provider for ExtendedProvider {
         transaction_hash: H,
     ) -> Result<Transaction, ProviderError>
     where
-        H: AsRef<FieldElement> + Send + Sync,
+        H: AsRef<Felt> + Send + Sync,
     {
         <AnyProvider as Provider>::get_transaction_by_hash(&self.provider, transaction_hash).await
     }
@@ -380,7 +380,7 @@ impl Provider for ExtendedProvider {
         transaction_hash: H,
     ) -> Result<TransactionReceiptWithBlockInfo, ProviderError>
     where
-        H: AsRef<FieldElement> + Send + Sync,
+        H: AsRef<Felt> + Send + Sync,
     {
         <AnyProvider as Provider>::get_transaction_receipt(&self.provider, transaction_hash).await
     }
@@ -392,7 +392,7 @@ impl Provider for ExtendedProvider {
     ) -> Result<ContractClass, ProviderError>
     where
         B: AsRef<BlockId> + Send + Sync,
-        H: AsRef<FieldElement> + Send + Sync,
+        H: AsRef<Felt> + Send + Sync,
     {
         <AnyProvider as Provider>::get_class(&self.provider, block_id, class_hash).await
     }
@@ -401,10 +401,10 @@ impl Provider for ExtendedProvider {
         &self,
         block_id: B,
         contract_address: A,
-    ) -> Result<FieldElement, ProviderError>
+    ) -> Result<Felt, ProviderError>
     where
         B: AsRef<BlockId> + Send + Sync,
-        A: AsRef<FieldElement> + Send + Sync,
+        A: AsRef<Felt> + Send + Sync,
     {
         <AnyProvider as Provider>::get_class_hash_at(&self.provider, block_id, contract_address)
             .await
@@ -417,7 +417,7 @@ impl Provider for ExtendedProvider {
     ) -> Result<ContractClass, ProviderError>
     where
         B: AsRef<BlockId> + Send + Sync,
-        A: AsRef<FieldElement> + Send + Sync,
+        A: AsRef<Felt> + Send + Sync,
     {
         <AnyProvider as Provider>::get_class_at(&self.provider, block_id, contract_address).await
     }
@@ -429,7 +429,7 @@ impl Provider for ExtendedProvider {
         <AnyProvider as Provider>::get_block_transaction_count(&self.provider, block_id).await
     }
 
-    async fn call<R, B>(&self, request: R, block_id: B) -> Result<Vec<FieldElement>, ProviderError>
+    async fn call<R, B>(&self, request: R, block_id: B) -> Result<Vec<Felt>, ProviderError>
     where
         R: AsRef<FunctionCall> + Send + Sync,
         B: AsRef<BlockId> + Send + Sync,
@@ -497,7 +497,7 @@ impl Provider for ExtendedProvider {
         <AnyProvider as Provider>::block_hash_and_number(&self.provider).await
     }
 
-    async fn chain_id(&self) -> Result<FieldElement, ProviderError> {
+    async fn chain_id(&self) -> Result<Felt, ProviderError> {
         <AnyProvider as Provider>::chain_id(&self.provider).await
     }
 
@@ -520,14 +520,10 @@ impl Provider for ExtendedProvider {
         .await
     }
 
-    async fn get_nonce<B, A>(
-        &self,
-        block_id: B,
-        contract_address: A,
-    ) -> Result<FieldElement, ProviderError>
+    async fn get_nonce<B, A>(&self, block_id: B, contract_address: A) -> Result<Felt, ProviderError>
     where
         B: AsRef<BlockId> + Send + Sync,
-        A: AsRef<FieldElement> + Send + Sync,
+        A: AsRef<Felt> + Send + Sync,
     {
         <AnyProvider as Provider>::get_nonce(&self.provider, block_id, contract_address).await
     }
@@ -572,7 +568,7 @@ impl Provider for ExtendedProvider {
         transaction_hash: H,
     ) -> Result<TransactionTrace, ProviderError>
     where
-        H: AsRef<FieldElement> + Send + Sync,
+        H: AsRef<Felt> + Send + Sync,
     {
         <AnyProvider as Provider>::trace_transaction(&self.provider, transaction_hash).await
     }

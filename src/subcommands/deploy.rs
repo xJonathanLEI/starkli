@@ -3,7 +3,7 @@ use std::{sync::Arc, time::Duration};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
-use starknet::{contract::ContractFactory, core::types::FieldElement, signers::SigningKey};
+use starknet::{contract::ContractFactory, core::types::Felt, macros::felt, signers::SigningKey};
 
 use crate::{
     account::AccountArgs,
@@ -11,18 +11,14 @@ use crate::{
     decode::FeltDecoder,
     error::account_error_mapper,
     fee::{FeeArgs, FeeSetting, TokenFeeSetting},
-    utils::{print_colored_json, watch_tx},
+    utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
 
 /// The default UDC address: 0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf.
-const DEFAULT_UDC_ADDRESS: FieldElement = FieldElement::from_mont([
-    15144800532519055890,
-    15685625669053253235,
-    9333317513348225193,
-    121672436446604875,
-]);
+const DEFAULT_UDC_ADDRESS: Felt =
+    felt!("0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf");
 
 #[derive(Debug, Parser)]
 pub struct Deploy {
@@ -39,7 +35,7 @@ pub struct Deploy {
     #[clap(long, help = "Use the given salt to compute contract deploy address")]
     salt: Option<String>,
     #[clap(long, help = "Provide transaction nonce manually")]
-    nonce: Option<FieldElement>,
+    nonce: Option<Felt>,
     #[clap(long, short, help = "Wait for the transaction to confirm")]
     watch: bool,
     #[clap(
@@ -69,14 +65,14 @@ impl Deploy {
         let provider = Arc::new(self.provider.into_provider()?);
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
 
-        let class_hash = FieldElement::from_hex_be(&self.class_hash)?;
+        let class_hash = Felt::from_hex(&self.class_hash)?;
         let mut ctor_args = vec![];
         for element in self.ctor_args.iter() {
             ctor_args.append(&mut felt_decoder.decode(element).await?);
         }
 
         let salt = if let Some(s) = self.salt {
-            FieldElement::from_hex_be(&s)?
+            Felt::from_hex(&s)?
         } else {
             SigningKey::from_random().secret_scalar()
         };
@@ -123,7 +119,7 @@ impl Deploy {
 
                         eprintln!(
                             "{} ETH",
-                            format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                            format!("{}", felt_to_bigdecimal(estimated_fee, 18)).bright_yellow(),
                         );
                         return Ok(());
                     }
@@ -155,7 +151,7 @@ impl Deploy {
 
                         eprintln!(
                             "{} STRK",
-                            format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                            format!("{}", felt_to_bigdecimal(estimated_fee, 18)).bright_yellow(),
                         );
                         return Ok(());
                     }

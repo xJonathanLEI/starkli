@@ -3,7 +3,8 @@ use std::fmt::{Display, Formatter};
 use anyhow::Result;
 use bigdecimal::BigDecimal;
 use clap::{builder::PossibleValue, Parser, ValueEnum};
-use starknet::{core::types::FieldElement, macros::felt};
+use num_traits::ToPrimitive;
+use starknet::{core::types::Felt, macros::felt};
 
 use crate::utils::bigdecimal_to_felt;
 
@@ -18,16 +19,16 @@ pub struct FeeArgs {
     #[clap(long, help = "Maximum transaction fee in Ether (18 decimals)")]
     max_fee: Option<BigDecimal>,
     #[clap(long, help = "Maximum transaction fee in Wei")]
-    max_fee_raw: Option<FieldElement>,
+    max_fee_raw: Option<Felt>,
     #[clap(long, help = "Maximum L1 gas amount (only for STRK fee payment)")]
-    gas: Option<FieldElement>,
+    gas: Option<Felt>,
     #[clap(
         long,
         help = "Maximum L1 gas price in STRK (18 decimals) (only for STRK fee payment)"
     )]
     gas_price: Option<BigDecimal>,
     #[clap(long, help = "Maximum L1 gas price in Fri (only for STRK fee payment)")]
-    gas_price_raw: Option<FieldElement>,
+    gas_price_raw: Option<Felt>,
     #[clap(
         long,
         help = "Only estimate transaction fee without sending transaction"
@@ -56,7 +57,7 @@ pub enum TokenFeeSetting<M> {
 
 #[derive(Debug)]
 pub struct EthManualFeeSetting {
-    pub max_fee: FieldElement,
+    pub max_fee: Felt,
 }
 
 #[derive(Debug)]
@@ -156,20 +157,18 @@ impl FeeArgs {
 
                     Ok(FeeSetting::Strk(TokenFeeSetting::EstimateOnly))
                 } else {
-                    let gas_override =
-                        match self.gas {
-                            Some(gas) => Some(TryInto::<u64>::try_into(gas).map_err(|err| {
-                                anyhow::anyhow!("gas amount out of range: {}", err)
-                            })?),
-                            None => None,
-                        };
+                    let gas_override = match self.gas {
+                        Some(gas) => Some(
+                            gas.to_u64()
+                                .ok_or_else(|| anyhow::anyhow!("gas amount out of range"))?,
+                        ),
+                        None => None,
+                    };
                     let gas_price_override = match (self.gas_price, self.gas_price_raw) {
                         (Some(gas_price), None) => {
-                            let gas_price =
-                                TryInto::<u128>::try_into(bigdecimal_to_felt(&gas_price, 18)?)
-                                    .map_err(|err| {
-                                        anyhow::anyhow!("gas price out of range: {}", err)
-                                    })?;
+                            let gas_price = bigdecimal_to_felt(&gas_price, 18)?
+                                .to_u128()
+                                .ok_or_else(|| anyhow::anyhow!("gas price out of range"))?;
 
                             // The user is most likely making a mistake for using a gas price higher
                             // than 1 STRK
@@ -185,10 +184,9 @@ impl FeeArgs {
                             Some(gas_price)
                         }
                         (None, Some(gas_price_raw)) => {
-                            let gas_price =
-                                TryInto::<u128>::try_into(gas_price_raw).map_err(|err| {
-                                    anyhow::anyhow!("gas price out of range: {}", err)
-                                })?;
+                            let gas_price = gas_price_raw
+                                .to_u128()
+                                .ok_or_else(|| anyhow::anyhow!("gas price out of range"))?;
 
                             Some(gas_price)
                         }

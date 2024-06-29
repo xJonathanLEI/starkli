@@ -3,10 +3,10 @@ use std::{io::Write, path::PathBuf, sync::Arc, time::Duration};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
+use num_traits::ToPrimitive;
 use starknet::{
     accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory},
-    core::types::{BlockId, BlockTag, FieldElement},
-    macros::felt,
+    core::types::{BlockId, BlockTag, Felt, NonZeroFelt},
     providers::Provider,
     signers::Signer,
 };
@@ -21,7 +21,7 @@ use crate::{
     fee::{FeeArgs, FeeSetting, FeeToken, TokenFeeSetting},
     path::ExpandedPathbufParser,
     signer::SignerArgs,
-    utils::{print_colored_json, watch_tx},
+    utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
@@ -37,7 +37,7 @@ pub struct Deploy {
     #[clap(long, help = "Simulate the transaction only")]
     simulate: bool,
     #[clap(long, help = "Provide transaction nonce manually")]
-    nonce: Option<FieldElement>,
+    nonce: Option<Felt>,
     #[clap(
         long,
         env = "STARKNET_POLL_INTERVAL",
@@ -57,11 +57,11 @@ pub struct Deploy {
 #[derive(Debug, Clone, Copy)]
 enum MaxFeeType {
     Manual {
-        max_fee: FieldElement,
+        max_fee: Felt,
     },
     Estimated {
-        estimate: FieldElement,
-        estimate_with_buffer: FieldElement,
+        estimate: Felt,
+        estimate_with_buffer: Felt,
     },
 }
 
@@ -138,7 +138,7 @@ impl Deploy {
                 let mut factory = ArgentAccountFactory::new(
                     undeployed_status.class_hash,
                     chain_id,
-                    FieldElement::ZERO,
+                    Felt::ZERO,
                     signer.clone(),
                     provider.clone(),
                 )
@@ -221,14 +221,15 @@ impl Deploy {
                         if fee_setting.is_estimate_only() {
                             println!(
                                 "{} ETH",
-                                format!("{}", estimated_fee.to_big_decimal(18)).bright_yellow(),
+                                format!("{}", felt_to_bigdecimal(estimated_fee, 18))
+                                    .bright_yellow(),
                             );
                             return Ok(());
                         }
 
                         // TODO: make buffer configurable
                         let estimated_fee_with_buffer =
-                            (estimated_fee * felt!("3")).floor_div(felt!("2"));
+                            (estimated_fee * Felt::THREE).floor_div(&NonZeroFelt::TWO);
 
                         (
                             MaxFeeType::Estimated {
@@ -266,7 +267,7 @@ impl Deploy {
                         // Fees fully specified
                         (Some(gas), Some(gas_price)) => (
                             MaxFeeType::Manual {
-                                max_fee: FieldElement::from(gas) * FieldElement::from(gas_price),
+                                max_fee: Felt::from(gas) * Felt::from(gas_price),
                             },
                             account_deployment.gas(gas).gas_price(gas_price),
                         ),
@@ -278,19 +279,20 @@ impl Deploy {
                                 .map_err(account_factory_error_mapper)?;
 
                             // TODO: make buffer configurable
-                            let gas_with_buffer = (estimated_fee.gas_consumed
-                                * FieldElement::THREE)
-                                .floor_div(FieldElement::TWO);
+                            let gas_with_buffer = (estimated_fee.gas_consumed * Felt::THREE)
+                                .floor_div(&NonZeroFelt::TWO);
 
                             (
                                 MaxFeeType::Estimated {
-                                    estimate: estimated_fee.gas_consumed
-                                        * FieldElement::from(gas_price),
-                                    estimate_with_buffer: gas_with_buffer
-                                        * FieldElement::from(gas_price),
+                                    estimate: estimated_fee.gas_consumed * Felt::from(gas_price),
+                                    estimate_with_buffer: gas_with_buffer * Felt::from(gas_price),
                                 },
                                 account_deployment
-                                    .gas(gas_with_buffer.try_into()?)
+                                    .gas(
+                                        gas_with_buffer.to_u64().ok_or_else(|| {
+                                            anyhow::anyhow!("gas amount overflow")
+                                        })?,
+                                    )
                                     .gas_price(gas_price),
                             )
                         }
@@ -302,19 +304,19 @@ impl Deploy {
 
                             // TODO: make buffer configurable
                             let gas_price_with_buffer = (block.l1_gas_price().price_in_fri
-                                * FieldElement::THREE)
-                                .floor_div(FieldElement::TWO);
+                                * Felt::THREE)
+                                .floor_div(&NonZeroFelt::TWO);
 
                             (
                                 MaxFeeType::Estimated {
-                                    estimate: FieldElement::from(gas)
-                                        * block.l1_gas_price().price_in_fri,
-                                    estimate_with_buffer: FieldElement::from(gas)
-                                        * gas_price_with_buffer,
+                                    estimate: Felt::from(gas) * block.l1_gas_price().price_in_fri,
+                                    estimate_with_buffer: Felt::from(gas) * gas_price_with_buffer,
                                 },
-                                account_deployment
-                                    .gas(gas)
-                                    .gas_price(gas_price_with_buffer.try_into()?),
+                                account_deployment.gas(gas).gas_price(
+                                    gas_price_with_buffer
+                                        .to_u128()
+                                        .ok_or_else(|| anyhow::anyhow!("gas price overflow"))?,
+                                ),
                             )
                         }
                         (None, None) => unreachable!(),
@@ -328,17 +330,17 @@ impl Deploy {
                         if fee_setting.is_estimate_only() {
                             println!(
                                 "{} STRK",
-                                format!("{}", estimated_fee.overall_fee.to_big_decimal(18))
+                                format!("{}", felt_to_bigdecimal(estimated_fee.overall_fee, 18))
                                     .bright_yellow(),
                             );
                             return Ok(());
                         }
 
                         // TODO: make buffer configurable
-                        let gas = (estimated_fee.gas_consumed * FieldElement::THREE)
-                            .floor_div(FieldElement::TWO);
-                        let gas_price = (estimated_fee.gas_price * FieldElement::THREE)
-                            .floor_div(FieldElement::TWO);
+                        let gas =
+                            (estimated_fee.gas_consumed * Felt::THREE).floor_div(&NonZeroFelt::TWO);
+                        let gas_price =
+                            (estimated_fee.gas_price * Felt::THREE).floor_div(&NonZeroFelt::TWO);
 
                         let estimated_fee_with_buffer = gas * gas_price;
 
@@ -348,8 +350,15 @@ impl Deploy {
                                 estimate_with_buffer: estimated_fee_with_buffer,
                             },
                             account_deployment
-                                .gas(gas.try_into()?)
-                                .gas_price(gas_price.try_into()?),
+                                .gas(
+                                    gas.to_u64()
+                                        .ok_or_else(|| anyhow::anyhow!("gas amount overflow"))?,
+                                )
+                                .gas_price(
+                                    gas_price
+                                        .to_u128()
+                                        .ok_or_else(|| anyhow::anyhow!("gas price overflow"))?,
+                                ),
                         )
                     }
                 };
@@ -411,18 +420,14 @@ impl Deploy {
     }
 }
 
-fn fee_prompt(
-    fee_type: MaxFeeType,
-    deployed_address: FieldElement,
-    fee_token: FeeToken,
-) -> Result<()> {
+fn fee_prompt(fee_type: MaxFeeType, deployed_address: Felt, fee_token: FeeToken) -> Result<()> {
     match fee_type {
         MaxFeeType::Manual { max_fee } => {
             eprintln!(
                 "You've manually specified the account deployment fee to be {}. \
                 Therefore, fund at least:\n    {}",
-                format!("{} {}", max_fee.to_big_decimal(18), fee_token).bright_yellow(),
-                format!("{} {}", max_fee.to_big_decimal(18), fee_token).bright_yellow(),
+                format!("{} {}", felt_to_bigdecimal(max_fee, 18), fee_token).bright_yellow(),
+                format!("{} {}", felt_to_bigdecimal(max_fee, 18), fee_token).bright_yellow(),
             );
         }
         MaxFeeType::Estimated {
@@ -432,9 +437,13 @@ fn fee_prompt(
             eprintln!(
                 "The estimated account deployment fee is {}. \
                 However, to avoid failure, fund at least:\n    {}",
-                format!("{} {}", estimate.to_big_decimal(18), fee_token).bright_yellow(),
-                format!("{} {}", estimate_with_buffer.to_big_decimal(18), fee_token)
-                    .bright_yellow()
+                format!("{} {}", felt_to_bigdecimal(estimate, 18), fee_token).bright_yellow(),
+                format!(
+                    "{} {}",
+                    felt_to_bigdecimal(estimate_with_buffer, 18),
+                    fee_token
+                )
+                .bright_yellow()
             );
         }
     }
