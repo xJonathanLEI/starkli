@@ -1,6 +1,6 @@
 FROM rust:alpine AS build
 
-RUN apk add --update alpine-sdk
+RUN apk add --update alpine-sdk linux-headers
 
 COPY . /src
 WORKDIR /src

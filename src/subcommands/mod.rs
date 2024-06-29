@@ -61,7 +61,7 @@ pub use storage::Storage;
 mod state_update;
 pub use state_update::StateUpdate;
 
-mod signer;
+pub mod signer;
 pub use signer::Signer;
 
 mod account;

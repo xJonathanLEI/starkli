@@ -117,6 +117,8 @@ enum Subcommands {
     //
     #[clap(about = "Signer management commands")]
     Signer(Signer),
+    #[clap(about = "Shortcut for `starkli signer ledger`")]
+    Ledger(crate::subcommands::signer::ledger::Ledger),
     //
     // Account management
     //
@@ -196,7 +198,8 @@ async fn run_command(cli: Cli) -> Result<()> {
             Subcommands::ClassAt(cmd) => cmd.run().await,
             Subcommands::Syncing(cmd) => cmd.run().await,
             Subcommands::SpecVersion(cmd) => cmd.run().await,
-            Subcommands::Signer(cmd) => cmd.run(),
+            Subcommands::Signer(cmd) => cmd.run().await,
+            Subcommands::Ledger(cmd) => cmd.run().await,
             Subcommands::Account(cmd) => cmd.run().await,
             Subcommands::Invoke(cmd) => cmd.run().await,
             Subcommands::Declare(cmd) => cmd.run().await,

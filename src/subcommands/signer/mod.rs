@@ -4,6 +4,9 @@ use clap::{Parser, Subcommand};
 mod keystore;
 use keystore::Keystore;
 
+pub mod ledger;
+use ledger::Ledger;
+
 mod gen_keypair;
 use gen_keypair::GenKeypair;
 
@@ -17,14 +20,17 @@ pub struct Signer {
 enum Subcommands {
     #[clap(about = "Keystore management commands")]
     Keystore(Keystore),
+    #[clap(about = "Ledger hardware wallet management commands")]
+    Ledger(Ledger),
     #[clap(about = "Randomly generate a new key pair")]
     GenKeypair(GenKeypair),
 }
 
 impl Signer {
-    pub fn run(self) -> Result<()> {
+    pub async fn run(self) -> Result<()> {
         match self.command {
             Subcommands::Keystore(cmd) => cmd.run(),
+            Subcommands::Ledger(cmd) => cmd.run().await,
             Subcommands::GenKeypair(cmd) => cmd.run(),
         }
     }
