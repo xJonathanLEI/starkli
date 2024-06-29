@@ -15,7 +15,7 @@ use crate::{
     signer::SignerArgs,
 };
 
-/// OpenZeppelin account contract v0.13.0 compiled with cairo v2.6.3
+/// OpenZeppelin account contract v0.14.0 compiled with cairo v2.6.4
 const OZ_ACCOUNT_CLASS_HASH: Felt =
     felt!("0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6");
 
