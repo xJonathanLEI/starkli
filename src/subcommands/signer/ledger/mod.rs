@@ -4,6 +4,9 @@ use clap::{Parser, Subcommand};
 mod get_public_key;
 use get_public_key::GetPublicKey;
 
+mod app_version;
+use app_version::AppVersion;
+
 #[derive(Debug, Parser)]
 pub struct Ledger {
     #[clap(subcommand)]
@@ -14,12 +17,15 @@ pub struct Ledger {
 enum Subcommands {
     #[clap(about = "Retrieve public key from a Ledger device")]
     GetPublicKey(GetPublicKey),
+    #[clap(about = "Retrieve the Starknet app version on a Ledger device")]
+    AppVersion(AppVersion),
 }
 
 impl Ledger {
     pub async fn run(self) -> Result<()> {
         match self.command {
             Subcommands::GetPublicKey(cmd) => cmd.run().await,
+            Subcommands::AppVersion(cmd) => cmd.run().await,
         }
     }
 }
