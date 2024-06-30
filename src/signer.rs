@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 
 use anyhow::Result;
 use async_trait::async_trait;
@@ -9,7 +9,7 @@ use starknet::{
     signers::{DerivationPath, LedgerSigner, LocalWallet, Signer, SigningKey, VerifyingKey},
 };
 
-use crate::hd_path::DerivationPathParser;
+use crate::hd_path::{DerivationPathParser, Eip2645Path};
 
 #[derive(Debug)]
 pub enum AnySigner {
@@ -164,7 +164,9 @@ impl SignerArgs {
         let ledger_path = match self.ledger_path {
             Some(value) => Some(DerivationPathValue::FromCommandLine(value)),
             None => match std::env::var("STARKNET_LEDGER_PATH") {
-                Ok(value) => Some(DerivationPathValue::FromEnvVar(value.parse()?)),
+                Ok(value) => Some(DerivationPathValue::FromEnvVar(
+                    Eip2645Path::from_str(&value)?.into(),
+                )),
                 Err(_) => None,
             },
         };
