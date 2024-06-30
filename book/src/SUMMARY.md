@@ -15,6 +15,8 @@
 - [Accounts](./accounts.md)
 - [Transaction fees](./transaction-fees.md)
 - [Argument resolution](./argument-resolution.md)
+- [EIP-2645 HD paths](./eip-2645-hd-paths.md)
+- [Ledger hardware wallet](./ledger.md)
 
 # Cookbooks
 

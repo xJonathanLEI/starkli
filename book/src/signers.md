@@ -2,12 +2,21 @@
 
 Starkli uses "signers" to sign transactions. Technically speaking, a signer can be anything that can provide valid signatures for transactions. In practice, the following signer types are currently supported:
 
+- [Ledger hardware wallet](#ledger-hardware-wallet)
 - [encrypted keystores](#encrypted-keystores)
 - [plain text private keys](#plain-text-private-keys)
 
-More signer types will be supported as they become available. As of this writing, the most secure signer type is encrypted keystores.
+More signer types will be supported as they become available. As of this writing, the most secure signer type is _Ledger hardware wallets_.
 
-Signers can be created and managed through the `starkli signer` command.
+Signers can be managed, or in some cases, created, through the `starkli signer` command.
+
+## Ledger hardware wallet
+
+This book has a dedicated page for Ledger wallets. Learn more about managing and using Ledger with Starkli in the [Ledger page](./ledger.md).
+
+> 💡 **Tips**
+>
+> As with any other blockchain networks, it's highly recommended to use Ledger for accounts that hold a significant amount of funds.
 
 ## Encrypted keystores
 
