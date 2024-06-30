@@ -13,6 +13,9 @@ const EIP_2645_PURPOSE: u32 = 0x80000a55;
 #[derive(Clone)]
 pub struct DerivationPathParser;
 
+#[derive(Clone)]
+pub struct Eip2645PathParser;
+
 /// An EIP-2645 HD path, required by the Starknet Ledger app. This type allows users to write hash-
 /// based segments in text, instead of manually finding out the lowest 31 bits of the hash or such
 /// texts.
@@ -34,7 +37,8 @@ pub struct DerivationPathParser;
 /// allow those to be hashes too, enabling use cases like:
 ///
 /// `m/2645'/starknet'/starkli'/dapp_xyz'/my_first_address'/0`
-struct Eip2645Path {
+#[derive(Debug, Clone)]
+pub struct Eip2645Path {
     layer: Eip2645Level,
     application: Eip2645Level,
     eth_address_1: Eip2645Level,
@@ -42,11 +46,13 @@ struct Eip2645Path {
     index: Eip2645Level,
 }
 
+#[derive(Debug, Clone)]
 enum Eip2645Level {
     Hash(HashLevel),
     Raw(u32),
 }
 
+#[derive(Debug, Clone)]
 struct HashLevel {
     text: String,
     hardened: bool,
@@ -87,6 +93,40 @@ impl TypedValueParser for DerivationPathParser {
     }
 }
 
+impl TypedValueParser for Eip2645PathParser {
+    type Value = Eip2645Path;
+
+    fn parse_ref(
+        &self,
+        cmd: &Command,
+        _arg: Option<&Arg>,
+        value: &std::ffi::OsStr,
+    ) -> Result<Self::Value, Error> {
+        if value.is_empty() {
+            Err(cmd
+                .clone()
+                .error(ErrorKind::InvalidValue, "empty Ledger derivation path"))
+        } else {
+            match value.to_str() {
+                Some(value) => match Eip2645Path::from_str(value) {
+                    Ok(value) => Ok(value),
+                    Err(err) => Err(cmd.clone().error(
+                        ErrorKind::InvalidValue,
+                        format!(
+                            "invalid Ledger derivation path: {}. Learn more about using \
+                            Ledger with Starkli at https://book.starkli.rs/ledger",
+                            err
+                        ),
+                    )),
+                },
+                None => Err(cmd.clone().error(
+                    ErrorKind::InvalidValue,
+                    "invalid Ledger derivation path: not UTF-8",
+                )),
+            }
+        }
+    }
+}
 impl FromStr for Eip2645Path {
     type Err = anyhow::Error;
 
@@ -213,6 +253,26 @@ impl Eip2645Level {
         match self {
             Self::Hash(hash) => hash.hardened,
             Self::Raw(raw) => raw & 0x80000000 > 0,
+        }
+    }
+}
+
+impl std::fmt::Display for Eip2645Path {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "m/2645'/{}/{}/{}/{}/{}",
+            self.layer, self.application, self.eth_address_1, self.eth_address_2, self.index
+        )
+    }
+}
+
+impl std::fmt::Display for Eip2645Level {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.is_hardened() {
+            write!(f, "{}'", u32::from(self) & 0x7fffffff)
+        } else {
+            write!(f, "{}", u32::from(self))
         }
     }
 }

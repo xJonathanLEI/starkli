@@ -120,6 +120,8 @@ enum Subcommands {
     Signer(Signer),
     #[clap(about = "Shortcut for `starkli signer ledger`")]
     Ledger(crate::subcommands::signer::ledger::Ledger),
+    #[clap(aliases = ["erc2645"], about = "EIP-2645 helper commands")]
+    Eip2645(Eip2645),
     //
     // Account management
     //
@@ -201,6 +203,7 @@ async fn run_command(cli: Cli) -> Result<()> {
             Subcommands::SpecVersion(cmd) => cmd.run().await,
             Subcommands::Signer(cmd) => cmd.run().await,
             Subcommands::Ledger(cmd) => cmd.run().await,
+            Subcommands::Eip2645(cmd) => cmd.run(),
             Subcommands::Account(cmd) => cmd.run().await,
             Subcommands::Invoke(cmd) => cmd.run().await,
             Subcommands::Declare(cmd) => cmd.run().await,

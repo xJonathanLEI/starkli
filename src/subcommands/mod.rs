@@ -64,6 +64,9 @@ pub use state_update::StateUpdate;
 pub mod signer;
 pub use signer::Signer;
 
+pub mod eip2645;
+pub use eip2645::Eip2645;
+
 mod account;
 pub use account::Account;
 
