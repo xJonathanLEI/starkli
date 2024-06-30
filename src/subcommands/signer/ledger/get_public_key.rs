@@ -2,6 +2,8 @@ use anyhow::Result;
 use clap::Parser;
 use starknet::signers::{ledger::LedgerStarknetApp, DerivationPath};
 
+use crate::hd_path::DerivationPathParser;
+
 #[derive(Debug, Parser)]
 pub struct GetPublicKey {
     #[clap(
@@ -9,8 +11,11 @@ pub struct GetPublicKey {
         help = "Display the public key on Ledger's screen for extra security"
     )]
     display: bool,
-    #[clap(help = "An HD wallet derivation path with EIP-2645 standard, such as \
-        \"m/2645'/1195502025'/1470455285'/0'/0'/0\"")]
+    #[clap(
+        value_parser = DerivationPathParser,
+        help = "An HD wallet derivation path with EIP-2645 standard, such as \
+        \"m/2645'/starknet'/starkli'/0'/0'/0\""
+    )]
     path: DerivationPath,
 }
 

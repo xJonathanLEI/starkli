@@ -9,6 +9,8 @@ use starknet::{
     signers::{DerivationPath, LedgerSigner, LocalWallet, Signer, SigningKey, VerifyingKey},
 };
 
+use crate::hd_path::DerivationPathParser;
+
 #[derive(Debug)]
 pub enum AnySigner {
     LocalWallet(LocalWallet),
@@ -40,7 +42,11 @@ pub struct SignerArgs {
     keystore_password: Option<String>,
     #[clap(long, help = private_key_help())]
     private_key: Option<String>,
-    #[clap(long, help = ledger_path_help())]
+    #[clap(
+        long,
+        value_parser = DerivationPathParser,
+        help = ledger_path_help()
+    )]
     ledger_path: Option<DerivationPath>,
 }
 
@@ -368,7 +374,7 @@ fn private_key_help() -> String {
 fn ledger_path_help() -> String {
     format!(
         "For using Ledger hardware wallets, an HD wallet derivation path with EIP-2645 \
-        standard, such as \"m/2645'/1195502025'/1470455285'/0'/0'/0\" \
+        standard, such as \"m/2645'/starknet'/starkli'/0'/0'/0\" \
         [env: STARKNET_LEDGER_PATH={}]",
         std::env::var("STARKNET_LEDGER_PATH").unwrap_or_default()
     )

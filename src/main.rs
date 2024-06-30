@@ -13,6 +13,7 @@ mod compiler;
 mod decode;
 mod error;
 mod fee;
+mod hd_path;
 mod network;
 mod path;
 mod profile;

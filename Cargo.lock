@@ -3806,6 +3806,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
+ "sha2",
  "shellexpand",
  "starknet",
  "starknet-crypto 0.7.1",

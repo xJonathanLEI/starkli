@@ -6,12 +6,15 @@ use starknet::{
     signers::{ledger::LedgerStarknetApp, DerivationPath},
 };
 
+use crate::hd_path::DerivationPathParser;
+
 #[derive(Debug, Parser)]
 pub struct SignHash {
     #[clap(
         long,
+        value_parser = DerivationPathParser,
         help = "An HD wallet derivation path with EIP-2645 standard, such as \
-        \"m/2645'/1195502025'/1470455285'/0'/0'/0\""
+        \"m/2645'/starknet'/starkli'/0'/0'/0\""
     )]
     path: DerivationPath,
     #[clap(help = "The raw hash to be signed")]
