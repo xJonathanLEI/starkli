@@ -12,7 +12,7 @@ use crate::chain_id::ChainIdSource;
 
 const CHAIN_ID_KATANA: Felt = felt!("0x4b4154414e41");
 
-pub const HARDCODED_ADDRESS_BOOK: [AddressBookEntry; 8] = [
+pub const HARDCODED_ADDRESS_BOOK: [AddressBookEntry; 9] = [
     AddressBookEntry {
         chain_id: chain_id::MAINNET,
         name: "eth",
@@ -22,6 +22,11 @@ pub const HARDCODED_ADDRESS_BOOK: [AddressBookEntry; 8] = [
         chain_id: chain_id::MAINNET,
         name: "strk",
         address: felt!("0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"),
+    },
+    AddressBookEntry {
+        chain_id: chain_id::MAINNET,
+        name: "usdc",
+        address: felt!("0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8"),
     },
     AddressBookEntry {
         chain_id: short_string!("SN_SEPOLIA"),
