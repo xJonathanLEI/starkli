@@ -1,19 +1,20 @@
 use anyhow::Result;
 use clap::Parser;
 use colored_json::{ColorMode, Output};
-use starknet::providers::Provider;
+use starknet::{core::types::BlockId, providers::Provider};
 
-use crate::{utils::parse_block_id, verbosity::VerbosityArgs, ProviderArgs};
+use crate::{block_id::BlockIdParser, verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct BlockTraces {
     #[clap(flatten)]
     provider: ProviderArgs,
     #[clap(
+        value_parser = BlockIdParser,
         default_value = "latest",
         help = "Block number, hash, or tag (latest/pending)"
     )]
-    block_id: String,
+    block_id: BlockId,
     #[clap(flatten)]
     verbosity: VerbosityArgs,
 }
@@ -24,9 +25,8 @@ impl BlockTraces {
 
         let provider = self.provider.into_provider()?;
 
-        let block_id = parse_block_id(&self.block_id)?;
-
-        let traces_json = serde_json::to_value(provider.trace_block_transactions(block_id).await?)?;
+        let traces_json =
+            serde_json::to_value(provider.trace_block_transactions(self.block_id).await?)?;
 
         let traces_json =
             colored_json::to_colored_json(&traces_json, ColorMode::Auto(Output::StdOut))?;

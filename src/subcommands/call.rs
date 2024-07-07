@@ -3,19 +3,26 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use starknet::{
-    core::types::{BlockId, BlockTag, FunctionCall},
+    core::types::{BlockId, FunctionCall},
     providers::Provider,
 };
 
 use crate::{
-    address_book::AddressBookResolver, decode::FeltDecoder, error::provider_error_mapper,
-    verbosity::VerbosityArgs, ProviderArgs,
+    address_book::AddressBookResolver, block_id::BlockIdParser, decode::FeltDecoder,
+    error::provider_error_mapper, verbosity::VerbosityArgs, ProviderArgs,
 };
 
 #[derive(Debug, Parser)]
 pub struct Call {
     #[clap(flatten)]
     provider: ProviderArgs,
+    #[clap(
+        long,
+        value_parser = BlockIdParser,
+        default_value = "pending",
+        help = "Block number, hash, or tag (latest/pending)"
+    )]
+    block: BlockId,
     #[clap(help = "Contract address")]
     contract_address: String,
     #[clap(help = "Name of the function being called")]
@@ -52,7 +59,7 @@ impl Call {
                     entry_point_selector: selector,
                     calldata,
                 },
-                BlockId::Tag(BlockTag::Pending),
+                self.block,
             )
             .await
             .map_err(provider_error_mapper)?;

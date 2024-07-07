@@ -1,9 +1,12 @@
 use anyhow::Result;
 use chrono::{TimeZone, Utc};
 use clap::Parser;
-use starknet::{core::types::MaybePendingBlockWithTxHashes, providers::Provider};
+use starknet::{
+    core::types::{BlockId, MaybePendingBlockWithTxHashes},
+    providers::Provider,
+};
 
-use crate::{utils::parse_block_id, verbosity::VerbosityArgs, ProviderArgs};
+use crate::{block_id::BlockIdParser, verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct BlockTime {
@@ -22,10 +25,11 @@ pub struct BlockTime {
     )]
     rfc2822: bool,
     #[clap(
+        value_parser = BlockIdParser,
         default_value = "latest",
         help = "Block number, hash, or tag (latest/pending)"
     )]
-    block_id: String,
+    block_id: BlockId,
     #[clap(flatten)]
     verbosity: VerbosityArgs,
 }
@@ -36,9 +40,7 @@ impl BlockTime {
 
         let provider = self.provider.into_provider()?;
 
-        let block_id = parse_block_id(&self.block_id)?;
-
-        let block = provider.get_block_with_tx_hashes(block_id).await?;
+        let block = provider.get_block_with_tx_hashes(self.block_id).await?;
         let timestamp = match block {
             MaybePendingBlockWithTxHashes::Block(block) => block.timestamp,
             MaybePendingBlockWithTxHashes::PendingBlock(block) => block.timestamp,

@@ -1,9 +1,9 @@
 use anyhow::Result;
 use clap::Parser;
 use colored_json::{ColorMode, Output};
-use starknet::providers::Provider;
+use starknet::{core::types::BlockId, providers::Provider};
 
-use crate::{utils::parse_block_id, verbosity::VerbosityArgs, ProviderArgs};
+use crate::{block_id::BlockIdParser, verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct Block {
@@ -14,10 +14,11 @@ pub struct Block {
     #[clap(long, help = "Fetch receipts alongside transactions")]
     receipts: bool,
     #[clap(
+        value_parser = BlockIdParser,
         default_value = "latest",
         help = "Block number, hash, or tag (latest/pending)"
     )]
-    block_id: String,
+    block_id: BlockId,
     #[clap(flatten)]
     verbosity: VerbosityArgs,
 }
@@ -28,14 +29,12 @@ impl Block {
 
         let provider = self.provider.into_provider()?;
 
-        let block_id = parse_block_id(&self.block_id)?;
-
         let block_json = if self.receipts {
-            serde_json::to_value(provider.get_block_with_receipts(block_id).await?)?
+            serde_json::to_value(provider.get_block_with_receipts(self.block_id).await?)?
         } else if self.full {
-            serde_json::to_value(provider.get_block_with_txs(block_id).await?)?
+            serde_json::to_value(provider.get_block_with_txs(self.block_id).await?)?
         } else {
-            serde_json::to_value(provider.get_block_with_tx_hashes(block_id).await?)?
+            serde_json::to_value(provider.get_block_with_tx_hashes(self.block_id).await?)?
         };
 
         let block_json =
