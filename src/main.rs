@@ -59,6 +59,8 @@ enum Subcommands {
     Selector(Selector),
     #[clap(about = "Calculate class hash from any contract artifacts (Sierra, casm, legacy)")]
     ClassHash(ClassHash),
+    #[clap(about = "Extract contract ABI from a class artifact (Sierra or legacy)")]
+    Abi(Abi),
     #[clap(about = "Encode string into felt with the Cairo short string representation")]
     ToCairoString(ToCairoString),
     #[clap(about = "Decode string from felt with the Cairo short string representation")]
@@ -179,6 +181,7 @@ async fn run_command(cli: Cli) -> Result<()> {
         (false, Some(command)) => match command {
             Subcommands::Selector(cmd) => cmd.run(),
             Subcommands::ClassHash(cmd) => cmd.run(),
+            Subcommands::Abi(cmd) => cmd.run(),
             Subcommands::ToCairoString(cmd) => cmd.run(),
             Subcommands::ParseCairoString(cmd) => cmd.run(),
             Subcommands::Mont(cmd) => cmd.run(),

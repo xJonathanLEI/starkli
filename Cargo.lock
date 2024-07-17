@@ -3805,6 +3805,7 @@ dependencies = [
  "rpassword",
  "serde",
  "serde_json",
+ "serde_json_pythonic",
  "serde_with",
  "sha2",
  "shellexpand",
