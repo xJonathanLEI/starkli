@@ -8,13 +8,14 @@ STARKLI_BIN_DIR="$STARKLI_DIR/bin"
 STARKLI_MAN_DIR="$STARKLI_DIR/share/man/man1"
 
 STARKLI_BASH_COMPLETIONS_DIR="$STARKLI_DIR/share/bash-completions"
+STARKLI_FISH_COMPLETIONS_DIR="$STARKLI_DIR/share/fish-completions"
 STARKLI_ZSH_COMPLETIONS_DIR="$STARKLI_DIR/share/zsh-completions"
 
 STARKLI_BIN_PATH="${STARKLI_BIN_DIR}/starkli"
 
 # This MUST be updated whenever this file is changed.
 # TODO: add CI check to ensure this.
-STARKLIUP_VERSION="2023-08-30"
+STARKLIUP_VERSION="2024-07-30"
 
 # Fancy color setup:
 #   https://unix.stackexchange.com/questions/9957/how-to-check-if-bash-can-print-colors
@@ -133,6 +134,10 @@ completions() {
 
     printf -- "- Bash ..."
     $STARKLI_BIN_PATH completions bash > "${STARKLI_BASH_COMPLETIONS_DIR}/starkli"
+    echo " ${cyan}Done${normal}"
+
+    printf -- "- Fish ..."
+    $STARKLI_BIN_PATH completions fish > "${STARKLI_FISH_COMPLETIONS_DIR}/starkli"
     echo " ${cyan}Done${normal}"
 
     printf -- "- Zsh ..."

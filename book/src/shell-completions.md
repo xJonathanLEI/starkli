@@ -11,6 +11,7 @@ Automatic shell completions are critical to good user experience for CLI tools. 
 When [installing with `starkliup`](./installation.md#using-starkliup), shell completions are automatically set up for the following shells:
 
 - _bash_
+- _fish_
 - _zsh_
 
 and you don't need to configure them yourself.
