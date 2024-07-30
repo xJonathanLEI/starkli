@@ -82,11 +82,6 @@ else
                 . ${STARKLI_BASH_COMPLETIONS_DIR}/starkli
             fi
             ;;
-        */zsh)
-            eval "fpath=(${STARKLI_ZSH_COMPLETIONS_DIR} \$fpath)"
-            autoload -U compinit
-            compinit
-            ;;
     esac
 fi
 EOF
@@ -122,9 +117,6 @@ case $SHELL in
         IS_FISH_SHELL="1"
         ;;
     */ash)
-        IS_SUPPORTED_SHELL="1"
-        ;;
-    */zsh)
         IS_SUPPORTED_SHELL="1"
         ;;
 esac
