@@ -17,9 +17,9 @@ use crate::{
     signer::SignerArgs,
 };
 
-/// Official hashes used as of extension version 5.13.1
+/// Official hashes used as of extension version 5.16.3 compiled with cairo v2.6.3
 const ARGENT_CLASS_HASH: Felt =
-    felt!("0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b");
+    felt!("0x036078334509b514626504edc9fb252328d1a240e4e948bef8d0c08dff45927f");
 
 #[derive(Debug, Parser)]
 pub struct Init {
