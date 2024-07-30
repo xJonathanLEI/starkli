@@ -72,7 +72,7 @@ esac
 
 # Loads completions based on shell
 if [ -n "\$ZSH_NAME" ]; then
-    fpath=(${STARKLI_ZSH_COMPLETIONS_DIR} \$fpath)
+    eval "fpath=(${STARKLI_ZSH_COMPLETIONS_DIR} \$fpath)"
     autoload -U compinit
     compinit
 else
@@ -83,7 +83,7 @@ else
             fi
             ;;
         */zsh)
-            fpath=(${STARKLI_ZSH_COMPLETIONS_DIR} \$fpath)
+            eval "fpath=(${STARKLI_ZSH_COMPLETIONS_DIR} \$fpath)"
             autoload -U compinit
             compinit
             ;;
