@@ -6,17 +6,13 @@ use std::{
 };
 
 use anyhow::Result;
-use cairo_starknet_2_4_0::{
-    casm_contract_class::CasmContractClass as Cairo240CasmClass,
-    contract_class::ContractClass as Cairo240Class,
+use cairo_starknet_2_6_4::{
+    casm_contract_class::CasmContractClass as Cairo264CasmClass,
+    contract_class::ContractClass as Cairo264Class,
 };
-use cairo_starknet_2_5_4::{
-    casm_contract_class::CasmContractClass as Cairo253CasmClass,
-    contract_class::ContractClass as Cairo253Class,
-};
-use cairo_starknet_2_6_2::{
-    casm_contract_class::CasmContractClass as Cairo262CasmClass,
-    contract_class::ContractClass as Cairo262Class,
+use cairo_starknet_2_7_0::{
+    casm_contract_class::CasmContractClass as Cairo270CasmClass,
+    contract_class::ContractClass as Cairo270Class,
 };
 use clap::{builder::PossibleValue, ValueEnum};
 use starknet::core::types::{
@@ -39,9 +35,8 @@ pub struct CompilerBinary {
 // TODO: separate known compiler versions with linked versions
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompilerVersion {
-    V2_4_0,
-    V2_5_4,
-    V2_6_2,
+    V2_6_4,
+    V2_7_0,
 }
 
 impl BuiltInCompiler {
@@ -59,33 +54,27 @@ impl BuiltInCompiler {
         let sierra_class_json = serde_json::to_string(&class)?;
 
         let casm_class_json = match self.version {
-            CompilerVersion::V2_4_0 => {
+            CompilerVersion::V2_6_4 => {
                 // TODO: directly convert type without going through JSON
-                let contract_class: Cairo240Class = serde_json::from_str(&sierra_class_json)?;
+                let contract_class: Cairo264Class = serde_json::from_str(&sierra_class_json)?;
 
                 // TODO: implement the `validate_compatible_sierra_version` call
 
-                let casm_contract = Cairo240CasmClass::from_contract_class(contract_class, false)?;
+                let casm_contract = Cairo264CasmClass::from_contract_class(
+                    contract_class,
+                    false,
+                    MAX_BYTECODE_SIZE,
+                )?;
 
                 serde_json::to_string(&casm_contract)?
             }
-            CompilerVersion::V2_5_4 => {
+            CompilerVersion::V2_7_0 => {
                 // TODO: directly convert type without going through JSON
-                let contract_class: Cairo253Class = serde_json::from_str(&sierra_class_json)?;
+                let contract_class: Cairo270Class = serde_json::from_str(&sierra_class_json)?;
 
                 // TODO: implement the `validate_compatible_sierra_version` call
 
-                let casm_contract = Cairo253CasmClass::from_contract_class(contract_class, false)?;
-
-                serde_json::to_string(&casm_contract)?
-            }
-            CompilerVersion::V2_6_2 => {
-                // TODO: directly convert type without going through JSON
-                let contract_class: Cairo262Class = serde_json::from_str(&sierra_class_json)?;
-
-                // TODO: implement the `validate_compatible_sierra_version` call
-
-                let casm_contract = Cairo262CasmClass::from_contract_class(
+                let casm_contract = Cairo270CasmClass::from_contract_class(
                     contract_class,
                     false,
                     MAX_BYTECODE_SIZE,
@@ -147,20 +136,19 @@ impl CompilerBinary {
 
 impl Default for CompilerVersion {
     fn default() -> Self {
-        Self::V2_5_4
+        Self::V2_6_4
     }
 }
 
 impl ValueEnum for CompilerVersion {
     fn value_variants<'a>() -> &'a [Self] {
-        &[Self::V2_4_0, Self::V2_5_4, Self::V2_6_2]
+        &[Self::V2_6_4, Self::V2_7_0]
     }
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         match self {
-            Self::V2_4_0 => Some(PossibleValue::new("2.4.0").alias("v2.4.0")),
-            Self::V2_5_4 => Some(PossibleValue::new("2.5.4").alias("v2.5.4")),
-            Self::V2_6_2 => Some(PossibleValue::new("2.6.2").alias("v2.6.2")),
+            Self::V2_6_4 => Some(PossibleValue::new("2.6.4").alias("v2.6.4")),
+            Self::V2_7_0 => Some(PossibleValue::new("2.7.0").alias("v2.7.0")),
         }
     }
 }
@@ -170,9 +158,8 @@ impl FromStr for CompilerVersion {
 
     fn from_str(s: &str) -> Result<Self> {
         match s {
-            "2.4.0" | "v2.4.0" => Ok(Self::V2_4_0),
-            "2.5.4" | "v2.5.4" => Ok(Self::V2_5_4),
-            "2.6.2" | "v2.6.2" => Ok(Self::V2_6_2),
+            "2.6.4" | "v2.6.4" => Ok(Self::V2_6_4),
+            "2.7.0" | "v2.7.0" => Ok(Self::V2_7_0),
             _ => Err(anyhow::anyhow!("unknown version: {}", s)),
         }
     }
@@ -181,9 +168,8 @@ impl FromStr for CompilerVersion {
 impl Display for CompilerVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CompilerVersion::V2_4_0 => write!(f, "2.4.0"),
-            CompilerVersion::V2_5_4 => write!(f, "2.5.4"),
-            CompilerVersion::V2_6_2 => write!(f, "2.6.2"),
+            CompilerVersion::V2_6_4 => write!(f, "2.6.4"),
+            CompilerVersion::V2_7_0 => write!(f, "2.7.0"),
         }
     }
 }
