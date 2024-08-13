@@ -30,6 +30,8 @@ pub struct Init {
         help = "Overwrite the account config file if it already exists"
     )]
     force: bool,
+    #[clap(long, short, help = "Custom account class hash")]
+    class_hash: Option<Felt>,
     #[clap(
         value_parser = ExpandedPathbufParser,
         help = "Path to save the account config file"
@@ -42,6 +44,21 @@ impl Init {
         if self.output.exists() && !self.force {
             anyhow::bail!("account config file already exists");
         }
+
+        let class_hash = match self.class_hash {
+            Some(custom_hash) => {
+                eprintln!(
+                    "{}",
+                    "WARNING: you're using a custom account class hash. \
+                            The deployed account may not work as expected. \
+                            Fetching custom accounts is currently not supported."
+                        .bright_magenta()
+                );
+
+                custom_hash
+            }
+            None => OZ_ACCOUNT_CLASS_HASH,
+        };
 
         let signer = self.signer.into_signer().await?;
 
@@ -56,7 +73,7 @@ impl Init {
                 legacy: false,
             }),
             deployment: DeploymentStatus::Undeployed(UndeployedStatus {
-                class_hash: OZ_ACCOUNT_CLASS_HASH,
+                class_hash,
                 salt,
                 context: None,
             }),
