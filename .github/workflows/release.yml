@@ -249,7 +249,7 @@ jobs:
           cd ..
           git clone https://github.com/termux/termux-packages
           cd termux-packages
-          git checkout 20755dfcf892009eed162e54d9a025dcb51eca49
+          git checkout be322af79ad54a6bac8b7f988b4aca8c5ef7d1e8
 
       - name: "Setup local repository"
         run: |
