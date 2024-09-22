@@ -147,8 +147,18 @@ impl ValueEnum for CompilerVersion {
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         match self {
-            Self::V2_6_4 => Some(PossibleValue::new("2.6.4").alias("v2.6.4")),
-            Self::V2_7_1 => Some(PossibleValue::new("2.7.1").alias("v2.7.1")),
+            Self::V2_6_4 => Some(
+                PossibleValue::new("2.6.4")
+                    .alias("v2.6.4")
+                    .alias("2.6")
+                    .alias("v2.6"),
+            ),
+            Self::V2_7_1 => Some(
+                PossibleValue::new("2.7.1")
+                    .alias("v2.7.1")
+                    .alias("2.7")
+                    .alias("v2.7"),
+            ),
         }
     }
 }
@@ -158,8 +168,8 @@ impl FromStr for CompilerVersion {
 
     fn from_str(s: &str) -> Result<Self> {
         match s {
-            "2.6.4" | "v2.6.4" => Ok(Self::V2_6_4),
-            "2.7.1" | "v2.7.1" => Ok(Self::V2_7_1),
+            "2.6.4" | "v2.6.4" | "2.6" | "v2.6" => Ok(Self::V2_6_4),
+            "2.7.1" | "v2.7.1" | "2.7" | "v2.7" => Ok(Self::V2_7_1),
             _ => Err(anyhow::anyhow!("unknown version: {}", s)),
         }
     }
