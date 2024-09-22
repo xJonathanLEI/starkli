@@ -29,14 +29,14 @@ impl TypedValueParser for BlockIdParser {
                         Ok(BlockId::Number(value.parse::<u64>().map_err(|err| {
                             cmd.clone().error(
                                 ErrorKind::InvalidValue,
-                                &format!("invalid block number: {}", err),
+                                format!("invalid block number: {}", err),
                             )
                         })?))
                     } else {
                         Ok(BlockId::Hash(Felt::from_hex(value).map_err(|err| {
                             cmd.clone().error(
                                 ErrorKind::InvalidValue,
-                                &format!("invalid block hash: {}", err),
+                                format!("invalid block hash: {}", err),
                             )
                         })?))
                     }
