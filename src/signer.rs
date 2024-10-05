@@ -35,10 +35,7 @@ pub enum AnySignerSignError {
 pub struct SignerArgs {
     #[clap(long, help = keystore_help())]
     keystore: Option<String>,
-    #[clap(
-        long,
-        help = "Supply keystore password from command line option instead of prompt"
-    )]
+    #[clap(long, help = keystore_password_help())]
     keystore_password: Option<String>,
     #[clap(long, help = private_key_help())]
     private_key: Option<String>,
@@ -154,6 +151,13 @@ impl SignerArgs {
                 Err(_) => None,
             },
         };
+        let keystore_password = match self.keystore_password {
+            Some(value) => Some(StringValue::FromCommandLine(value)),
+            None => match std::env::var("STARKNET_KEYSTORE_PASSWORD") {
+                Ok(value) => Some(StringValue::FromEnvVar(value)),
+                Err(_) => None,
+            },
+        };
         let private_key = match self.private_key {
             Some(value) => Some(StringValue::FromCommandLine(value)),
             None => match std::env::var("STARKNET_PRIVATE_KEY") {
@@ -171,107 +175,143 @@ impl SignerArgs {
             },
         };
 
-        let task = match (keystore, self.keystore_password, private_key, ledger_path) {
-            // Options:
-            //   Keystore: from command line
-            //   Private key: from env var or not supplied at all
-            //   Ledger path: from env var or not supplied at all
-            // Resolution: use keystore
-            (
-                Some(StringValue::FromCommandLine(keystore)),
-                keystore_password,
-                Some(StringValue::FromEnvVar(_)) | None,
-                Some(DerivationPathValue::FromEnvVar(_)) | None,
-            ) => SignerResolutionTask::Strong(SignerResolutionTaskContent::Keystore(
-                KeystoreTaskContent {
-                    keystore,
+        let task =
+            match (keystore, &keystore_password, private_key, ledger_path) {
+                // Options:
+                //   Keystore: from command line
+                //   Keystore password: any
+                //   Private key: from env var or not supplied at all
+                //   Ledger path: from env var or not supplied at all
+                // Resolution: use keystore
+                (
+                    Some(StringValue::FromCommandLine(keystore)),
                     keystore_password,
-                },
-            )),
-            // Options:
-            //   Keystore: from env var or not supplied at all
-            //   Private key: from command line
-            //   Ledger path: from env var or not supplied at all
-            // Resolution: use private key
-            (
-                Some(StringValue::FromEnvVar(_)) | None,
-                None,
-                Some(StringValue::FromCommandLine(private_key)),
-                Some(DerivationPathValue::FromEnvVar(_)) | None,
-            ) => SignerResolutionTask::Strong(SignerResolutionTaskContent::PrivateKey(
-                PrivateKeyTaskContent { key: private_key },
-            )),
-            // Options:
-            //   Keystore: from env var or not supplied at all
-            //   Private key: from env var or not supplied at all
-            //   Ledger path: from command line
-            // Resolution: use Ledger
-            (
-                Some(StringValue::FromEnvVar(_)) | None,
-                None,
-                Some(StringValue::FromEnvVar(_)) | None,
-                Some(DerivationPathValue::FromCommandLine(ledger_path)),
-            ) => SignerResolutionTask::Strong(SignerResolutionTaskContent::Ledger(
-                LedgerTaskContent { path: ledger_path },
-            )),
-            // Options:
-            //   Keystore: from env var
-            //   Private key: not supplied at all
-            //   Ledger path: not supplied at all
-            // Resolution: use keystore (weak)
-            (Some(StringValue::FromEnvVar(keystore)), keystore_password, None, None) => {
-                SignerResolutionTask::Weak(SignerResolutionTaskContent::Keystore(
+                    Some(StringValue::FromEnvVar(_)) | None,
+                    Some(DerivationPathValue::FromEnvVar(_)) | None,
+                ) => SignerResolutionTask::Strong(SignerResolutionTaskContent::Keystore(
                     KeystoreTaskContent {
                         keystore,
-                        keystore_password,
+                        keystore_password: keystore_password
+                            .as_ref()
+                            .map(|password| password.value().to_owned()),
                     },
-                ))
-            }
-            // Options:
-            //   Keystore: not supplied at all
-            //   Private key: from env var
-            //   Ledger path: not supplied at all
-            // Resolution: use private key (weak)
-            (None, None, Some(StringValue::FromEnvVar(private_key)), None) => {
-                SignerResolutionTask::Weak(SignerResolutionTaskContent::PrivateKey(
+                )),
+                // Options:
+                //   Keystore: from env var
+                //   Keystore password: from command line
+                //   Private key: from env var or not supplied at all
+                //   Ledger path: from env var or not supplied at all
+                // Resolution: use keystore
+                (
+                    Some(StringValue::FromEnvVar(keystore)),
+                    Some(StringValue::FromCommandLine(keystore_password)),
+                    Some(StringValue::FromEnvVar(_)) | None,
+                    Some(DerivationPathValue::FromEnvVar(_)) | None,
+                ) => SignerResolutionTask::Strong(SignerResolutionTaskContent::Keystore(
+                    KeystoreTaskContent {
+                        keystore,
+                        keystore_password: Some(keystore_password.to_owned()),
+                    },
+                )),
+                // Options:
+                //   Keystore: from env var or not supplied at all
+                //   Keystore password: from env var or not supplied at all
+                //   Private key: from command line
+                //   Ledger path: from env var or not supplied at all
+                // Resolution: use private key
+                (
+                    Some(StringValue::FromEnvVar(_)) | None,
+                    Some(StringValue::FromEnvVar(_)) | None,
+                    Some(StringValue::FromCommandLine(private_key)),
+                    Some(DerivationPathValue::FromEnvVar(_)) | None,
+                ) => SignerResolutionTask::Strong(SignerResolutionTaskContent::PrivateKey(
                     PrivateKeyTaskContent { key: private_key },
-                ))
-            }
-            // Options:
-            //   Keystore: not supplied at all
-            //   Private key: not supplied at all
-            //   Ledger path: from env var
-            // Resolution: use Ledger (weak)
-            (None, None, None, Some(DerivationPathValue::FromEnvVar(ledger_path))) => {
-                SignerResolutionTask::Weak(SignerResolutionTaskContent::Ledger(LedgerTaskContent {
-                    path: ledger_path,
-                }))
-            }
-            // Options:
-            //   Keystore: from env var
-            //   Private key: from env var
-            //   Ledger path: from env var
-            // Resolution: conflict
-            // (We don't really need this branch, but it's nice to show a case-specific warning.)
-            (
-                Some(StringValue::FromEnvVar(_)),
-                _,
-                Some(StringValue::FromEnvVar(_)),
-                Some(DerivationPathValue::FromEnvVar(_)),
-            ) => {
-                return Err(anyhow::anyhow!(
-                    "using STARKNET_KEYSTORE, STARKNET_PRIVATE_KEY, STARKNET_LEDGER_PATH \
+                )),
+                // Options:
+                //   Keystore: from env var or not supplied at all
+                //   Keystore password: from env var or not supplied at all
+                //   Private key: from env var or not supplied at all
+                //   Ledger path: from command line
+                // Resolution: use Ledger
+                (
+                    Some(StringValue::FromEnvVar(_)) | None,
+                    Some(StringValue::FromEnvVar(_)) | None,
+                    Some(StringValue::FromEnvVar(_)) | None,
+                    Some(DerivationPathValue::FromCommandLine(ledger_path)),
+                ) => SignerResolutionTask::Strong(SignerResolutionTaskContent::Ledger(
+                    LedgerTaskContent { path: ledger_path },
+                )),
+                // Options:
+                //   Keystore: from env var
+                //   Keystore password: from env var or not supplied at all
+                //   Private key: not supplied at all
+                //   Ledger path: not supplied at all
+                // Resolution: use keystore (weak)
+                (
+                    Some(StringValue::FromEnvVar(keystore)),
+                    Some(StringValue::FromEnvVar(_)) | None,
+                    None,
+                    None,
+                ) => SignerResolutionTask::Weak(SignerResolutionTaskContent::Keystore(
+                    KeystoreTaskContent {
+                        keystore,
+                        keystore_password: keystore_password
+                            .map(|password| password.value().to_owned()),
+                    },
+                )),
+                // Options:
+                //   Keystore: not supplied at all
+                //   Keystore password: from env var or not supplied at all
+                //   Private key: from env var
+                //   Ledger path: not supplied at all
+                // Resolution: use private key (weak)
+                (
+                    None,
+                    Some(StringValue::FromEnvVar(_)) | None,
+                    Some(StringValue::FromEnvVar(private_key)),
+                    None,
+                ) => SignerResolutionTask::Weak(SignerResolutionTaskContent::PrivateKey(
+                    PrivateKeyTaskContent { key: private_key },
+                )),
+                // Options:
+                //   Keystore: not supplied at all
+                //   Keystore password: from env var or not supplied at all
+                //   Private key: not supplied at all
+                //   Ledger path: from env var
+                // Resolution: use Ledger (weak)
+                (
+                    None,
+                    Some(StringValue::FromEnvVar(_)) | None,
+                    None,
+                    Some(DerivationPathValue::FromEnvVar(ledger_path)),
+                ) => SignerResolutionTask::Weak(SignerResolutionTaskContent::Ledger(
+                    LedgerTaskContent { path: ledger_path },
+                )),
+                // Options:
+                //   Keystore: from env var
+                //   Private key: from env var
+                //   Ledger path: from env var
+                // Resolution: conflict
+                // (We don't really need this branch, but it's nice to show a case-specific warning.)
+                (
+                    Some(StringValue::FromEnvVar(_)),
+                    _,
+                    Some(StringValue::FromEnvVar(_)),
+                    Some(DerivationPathValue::FromEnvVar(_)),
+                ) => {
+                    return Err(anyhow::anyhow!(
+                        "using STARKNET_KEYSTORE, STARKNET_PRIVATE_KEY, STARKNET_LEDGER_PATH \
                     at the same time is not allowed"
-                ))
-            }
-            (None, None, None, None) => SignerResolutionTask::None,
-            _ => {
-                return Err(anyhow::anyhow!(
-                    "invalid signer option combination. \
+                    ))
+                }
+                (None, None, None, None) => SignerResolutionTask::None,
+                _ => {
+                    return Err(anyhow::anyhow!(
+                        "invalid signer option combination. \
                     Do not mix options of different signer sources."
-                ))
-            }
-        };
+                    ))
+                }
+            };
 
         Ok(task)
     }
@@ -305,8 +345,8 @@ impl KeystoreTaskContent {
         if self.keystore_password.is_some() {
             eprintln!(
                 "{}",
-                "WARNING: setting keystore passwords via --password is generally \
-                        considered insecure, as they will be stored in your shell history or other \
+                "WARNING: setting keystore passwords via --password or env var is generally \
+                        considered insecure, as they might be stored in your shell history or other \
                         log files."
                     .bright_magenta()
             );
@@ -359,10 +399,27 @@ impl LedgerTaskContent {
     }
 }
 
+impl StringValue {
+    fn value(&self) -> &str {
+        match self {
+            StringValue::FromCommandLine(value) => value,
+            StringValue::FromEnvVar(value) => value,
+        }
+    }
+}
+
 fn keystore_help() -> String {
     format!(
         "Path to keystore JSON file [env: STARKNET_KEYSTORE={}]",
         std::env::var("STARKNET_KEYSTORE").unwrap_or_default()
+    )
+}
+
+fn keystore_password_help() -> String {
+    format!(
+        "Supply keystore password from command line option instead of prompt \
+        [env: STARKNET_KEYSTORE_PASSWORD={}]",
+        std::env::var("STARKNET_KEYSTORE_PASSWORD").unwrap_or_default()
     )
 }
 
