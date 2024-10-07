@@ -51,3 +51,26 @@ cargo install --locked --git https://github.com/xJonathanLEI/starkli
 > It's not recommended to install Starkli from [crates.io](https://crates.io/), as Starkli is no longer published there there after v0.1.8.
 >
 > This is because Starkli uses Git dependencies due to the need to bundle multiple SemVer-compatible versions of the Sierra compiler.
+
+## Install via asdf
+
+[asdf](ttps://asdf-vm.comttps://asdf-vm.com) is a CLI tool that can manage multiple language runtime versions on a per-project basis.
+
+- Run the following to add the `starkli` plugin
+```console
+asdf plugin add starkli
+```
+- Show all installable versions:
+```console
+asdf list-all starkli
+```
+- Install latest version:
+```console
+asdf install starkli latest
+```
+- Install specific version:
+```console
+asdf install starkli 0.3.5
+```
+
+Check [asdf guide](https://asdf-vm.com/guide/getting-started.html) for more instructions on how to install & manage versions.
