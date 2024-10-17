@@ -9,7 +9,7 @@ use starknet::{
 
 use crate::{
     address_book::AddressBookResolver, block_id::BlockIdParser, decode::FeltDecoder,
-    error::provider_error_mapper, verbosity::VerbosityArgs, ProviderArgs,
+    error::provider_error_mapper, provider::ProviderArgs, verbosity::VerbosityArgs,
 };
 
 #[derive(Debug, Parser)]
