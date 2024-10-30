@@ -67,7 +67,7 @@ enum MaxFeeType {
 
 impl Deploy {
     pub async fn run(self) -> Result<()> {
-        self.verbosity.setup_logging();
+        // self.verbosity.setup_logging();
 
         let fee_setting = self.fee.into_setting()?;
         if self.simulate && fee_setting.is_estimate_only() {
