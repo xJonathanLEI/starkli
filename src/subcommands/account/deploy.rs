@@ -454,8 +454,8 @@ fn fee_prompt(fee_type: MaxFeeType, deployed_address: Felt, fee_token: FeeToken)
     );
 
     // TODO: add flag for skipping this manual confirmation step
-    eprint!("Press [ENTER] once you've funded the address.");
-    std::io::stdin().read_line(&mut String::new())?;
+    // eprint!("Press [ENTER] once you've funded the address.");
+    // std::io::stdin().read_line(&mut String::new())?;
 
     Ok(())
 }
