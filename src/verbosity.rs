@@ -6,16 +6,19 @@ use log::LevelFilter;
 pub struct VerbosityArgs {
     #[clap(long, help = "Log raw request/response traffic of providers")]
     log_traffic: bool,
+    #[clap(long, help = "Use if a logger is already initialized")]
+    persist_logger: bool,
 }
 
 impl VerbosityArgs {
     pub fn setup_logging(&self) {
-        let mut builder = Builder::new();
+        if !self.persist_logger {
+            let mut builder = Builder::new();
+            if self.log_traffic {
+                builder.filter_module("starknet_providers", LevelFilter::Trace);
+            }
 
-        if self.log_traffic {
-            builder.filter_module("starknet_providers", LevelFilter::Trace);
+            builder.init();
         }
-
-        builder.init();
     }
 }
