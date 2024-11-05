@@ -20,10 +20,10 @@ use crate::{
     error::account_factory_error_mapper,
     fee::{FeeArgs, FeeSetting, FeeToken, TokenFeeSetting},
     path::ExpandedPathbufParser,
+    provider::ProviderArgs,
     signer::SignerArgs,
     utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
-    ProviderArgs,
 };
 
 #[derive(Debug, Parser)]

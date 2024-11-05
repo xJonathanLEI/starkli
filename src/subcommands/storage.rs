@@ -8,7 +8,8 @@ use starknet::{
 };
 
 use crate::{
-    address_book::AddressBookResolver, decode::FeltDecoder, verbosity::VerbosityArgs, ProviderArgs,
+    address_book::AddressBookResolver, decode::FeltDecoder, provider::ProviderArgs,
+    verbosity::VerbosityArgs,
 };
 
 #[derive(Debug, Parser)]
