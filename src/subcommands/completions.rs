@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::{CommandFactory, Parser};
 use clap_complete::{generate, Shell};
 
-use crate::Cli;
+use crate::utils::Cli;
 
 #[derive(Debug, Parser)]
 pub struct Completions {

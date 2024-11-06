@@ -6,7 +6,7 @@ use starknet::{
     providers::Provider,
 };
 
-use crate::{block_id::BlockIdParser, verbosity::VerbosityArgs, ProviderArgs};
+use crate::{block_id::BlockIdParser, provider::ProviderArgs, verbosity::VerbosityArgs};
 
 #[derive(Debug, Parser)]
 pub struct BlockTime {

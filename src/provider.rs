@@ -19,7 +19,7 @@ use crate::{
     profile::{
         FreeProviderVendor, NetworkProvider, Profile, Profiles, RpcProvider, DEFAULT_PROFILE_NAME,
     },
-    JSON_RPC_VERSION,
+    utils::JSON_RPC_VERSION,
 };
 
 const CHAIN_ID_MAINNET: Felt = short_string!("SN_MAIN");

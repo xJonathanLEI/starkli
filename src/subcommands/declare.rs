@@ -19,9 +19,9 @@ use crate::{
     error::account_error_mapper,
     fee::{FeeArgs, FeeSetting, TokenFeeSetting},
     path::ExpandedPathbufParser,
+    provider::ProviderArgs,
     utils::{felt_to_bigdecimal, parse_compressed_legacy_class, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
-    ProviderArgs,
 };
 
 #[derive(Debug, Parser)]

@@ -3,7 +3,7 @@ use clap::Parser;
 use colored_json::{ColorMode, Output};
 use starknet::{core::types::Felt, providers::Provider};
 
-use crate::{verbosity::VerbosityArgs, ProviderArgs};
+use crate::{provider::ProviderArgs, verbosity::VerbosityArgs};
 
 #[derive(Debug, Parser)]
 pub struct TransactionReceipt {

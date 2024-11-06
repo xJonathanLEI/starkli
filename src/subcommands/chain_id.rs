@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use starknet::{core::utils::parse_cairo_short_string, providers::Provider};
 
-use crate::{verbosity::VerbosityArgs, ProviderArgs};
+use crate::{provider::ProviderArgs, verbosity::VerbosityArgs};
 
 #[derive(Debug, Parser)]
 pub struct ChainId {

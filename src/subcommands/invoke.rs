@@ -14,9 +14,9 @@ use crate::{
     decode::FeltDecoder,
     error::account_error_mapper,
     fee::{FeeArgs, FeeSetting, TokenFeeSetting},
+    provider::ProviderArgs,
     utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
-    ProviderArgs,
 };
 
 #[derive(Debug, Parser)]

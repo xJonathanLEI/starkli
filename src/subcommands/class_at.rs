@@ -6,9 +6,9 @@ use starknet::{
 };
 
 use crate::{
+    provider::ProviderArgs,
     utils::{parse_compressed_legacy_class, parse_flattened_sierra_class, print_colored_json},
     verbosity::VerbosityArgs,
-    ProviderArgs,
 };
 
 #[derive(Debug, Parser)]
