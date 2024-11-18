@@ -20,7 +20,7 @@ use crate::signer::{AnySigner, SignerArgs, SignerResolutionTask};
 
 const BRAAVOS_SIGNER_TYPE_STARK: Felt = Felt::ONE;
 
-pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 18] = [
+pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 22] = [
     KnownAccountClass {
         class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
         variant: AccountVariantType::OpenZeppelinLegacy,
@@ -110,6 +110,28 @@ pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 18] = [
         class_hash: felt!("0x04343194a4a6082192502e132d9e7834b5d9bfc7a0c1dd990e95b66f85a66d46"),
         variant: AccountVariantType::OpenZeppelin,
         description: "OpenZeppelin account contract v0.14.0 compiled with cairo v2.6.4",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x005b8b908d16497cd347642c1ab43015b5956e2085aa4c8bb21f0b073015a1c9"),
+        variant: AccountVariantType::OpenZeppelin,
+        // Same hash as v0.15.0
+        description: "OpenZeppelin account contract v0.15.1 compiled with cairo v2.7.0",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x0358a1635f95aaaa840ec3b47219a354d5dfe6b01f0bca38ae6b2ff397490348"),
+        variant: AccountVariantType::OpenZeppelin,
+        description: "OpenZeppelin account contract v0.16.0 compiled with cairo v2.8.0",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x06d4b80c0f3c3ea9e98252403a83f8a6bacf7f7362e9ac0a8824854dca31f8a8"),
+        variant: AccountVariantType::OpenZeppelin,
+        description: "OpenZeppelin account contract v0.17.0 compiled with cairo v2.8.2",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x04a444ef8caf8fa0db05da60bf0ad9bae264c73fa7e32c61d245406f5523174b"),
+        variant: AccountVariantType::OpenZeppelin,
+        // Same hash for v0.18.0
+        description: "OpenZeppelin account contract v0.19.0 compiled with cairo v2.8.4",
     },
 ];
 
