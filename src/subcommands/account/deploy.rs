@@ -20,10 +20,10 @@ use crate::{
     error::account_factory_error_mapper,
     fee::{FeeArgs, FeeSetting, FeeToken, TokenFeeSetting},
     path::ExpandedPathbufParser,
+    provider::ProviderArgs,
     signer::SignerArgs,
     utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
-    ProviderArgs,
 };
 
 #[derive(Debug, Parser)]
@@ -52,6 +52,8 @@ pub struct Deploy {
     file: PathBuf,
     #[clap(flatten)]
     verbosity: VerbosityArgs,
+    #[clap(long)]
+    skip_manual_confirmation: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -246,7 +248,12 @@ impl Deploy {
                     return Ok(());
                 }
 
-                fee_prompt(fee_type, target_deployment_address, FeeToken::Eth)?;
+                fee_prompt(
+                    fee_type,
+                    target_deployment_address,
+                    FeeToken::Eth,
+                    self.skip_manual_confirmation,
+                )?;
 
                 account_deployment.send().await
             }
@@ -368,7 +375,12 @@ impl Deploy {
                     return Ok(());
                 }
 
-                fee_prompt(fee_type, target_deployment_address, FeeToken::Strk)?;
+                fee_prompt(
+                    fee_type,
+                    target_deployment_address,
+                    FeeToken::Strk,
+                    self.skip_manual_confirmation,
+                )?;
 
                 account_deployment.send().await
             }
@@ -420,7 +432,12 @@ impl Deploy {
     }
 }
 
-fn fee_prompt(fee_type: MaxFeeType, deployed_address: Felt, fee_token: FeeToken) -> Result<()> {
+fn fee_prompt(
+    fee_type: MaxFeeType,
+    deployed_address: Felt,
+    fee_token: FeeToken,
+    skip_manual_confirmation: bool,
+) -> Result<()> {
     match fee_type {
         MaxFeeType::Manual { max_fee } => {
             eprintln!(
@@ -453,9 +470,10 @@ fn fee_prompt(fee_type: MaxFeeType, deployed_address: Felt, fee_token: FeeToken)
         format!("{:#064x}", deployed_address).bright_yellow()
     );
 
-    // TODO: add flag for skipping this manual confirmation step
-    eprint!("Press [ENTER] once you've funded the address.");
-    std::io::stdin().read_line(&mut String::new())?;
+    if !skip_manual_confirmation {
+        eprint!("Press [ENTER] once you've funded the address.");
+        std::io::stdin().read_line(&mut String::new())?;
+    }
 
     Ok(())
 }

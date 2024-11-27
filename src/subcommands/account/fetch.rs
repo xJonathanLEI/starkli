@@ -16,8 +16,8 @@ use crate::{
         BraavosMultisigConfig, BraavosSigner, BraavosStarkSigner, DeployedStatus, DeploymentStatus,
         OzAccountConfig, KNOWN_ACCOUNT_CLASSES,
     },
+    provider::ProviderArgs,
     verbosity::VerbosityArgs,
-    ProviderArgs,
 };
 
 #[derive(Debug, Parser)]

@@ -6,10 +6,11 @@ use starknet::{
     core::types::{BlockId, FunctionCall},
     providers::Provider,
 };
+use starknet_crypto::Felt;
 
 use crate::{
     address_book::AddressBookResolver, block_id::BlockIdParser, decode::FeltDecoder,
-    error::provider_error_mapper, verbosity::VerbosityArgs, ProviderArgs,
+    error::provider_error_mapper, provider::ProviderArgs, verbosity::VerbosityArgs,
 };
 
 #[derive(Debug, Parser)]
@@ -36,7 +37,11 @@ pub struct Call {
 impl Call {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
+        let _ = self.call().await?;
+        Ok(())
+    }
 
+    pub async fn call(self) -> Result<Vec<Felt>> {
         let provider = Arc::new(self.provider.into_provider()?);
         let felt_decoder = FeltDecoder::new(AddressBookResolver::new(provider.clone()));
 
@@ -83,7 +88,6 @@ impl Call {
 
             println!("]");
         }
-
-        Ok(())
+        Ok(result)
     }
 }
