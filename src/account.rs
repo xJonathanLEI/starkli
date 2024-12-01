@@ -445,10 +445,28 @@ impl AccountConfig {
                 }
                 None => {
                     // Cairo 1 account deployment without using proxy
+
+                    // This assumes Argent account contract v0.4.0 or later, as the constructor
+                    // signature changed with v0.4.0. This means that trying to deploy older Argent
+                    // account files will fail.
+                    //
+                    // We simply assume that no one still has undeployed old Argent account files to
+                    // reduce maintenance burden.
+                    let mut calldata = vec![Felt::ZERO, argent.owner];
+                    if argent.guardian == Felt::ZERO {
+                        // Option::None
+                        calldata.push(Felt::ONE);
+                    } else {
+                        // Option::Some(Signer::StarknetSigner)
+                        calldata.push(Felt::ZERO);
+                        calldata.push(Felt::ZERO);
+                        calldata.push(argent.guardian);
+                    }
+
                     Ok(get_contract_address(
                         undeployed_status.salt,
                         undeployed_status.class_hash,
-                        &[argent.owner, argent.guardian],
+                        &calldata,
                         Felt::ZERO,
                     ))
                 }

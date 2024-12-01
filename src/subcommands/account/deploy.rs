@@ -138,7 +138,7 @@ impl Deploy {
                 let mut factory = ArgentAccountFactory::new(
                     undeployed_status.class_hash,
                     chain_id,
-                    Felt::ZERO,
+                    None,
                     signer.clone(),
                     provider.clone(),
                 )
