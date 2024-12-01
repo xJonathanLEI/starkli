@@ -9,7 +9,10 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 use starknet::{
     core::types::*,
     macros::short_string,
-    providers::{jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider, ProviderError},
+    providers::{
+        jsonrpc::HttpTransport, AnyProvider, JsonRpcClient, Provider, ProviderError,
+        ProviderRequestData, ProviderResponseData,
+    },
 };
 use tokio::sync::OnceCell;
 use url::Url;
@@ -601,6 +604,16 @@ impl Provider for ExtendedProvider {
         B: AsRef<BlockId> + Send + Sync,
     {
         <AnyProvider as Provider>::trace_block_transactions(&self.provider, block_id).await
+    }
+
+    async fn batch_requests<R>(
+        &self,
+        requests: R,
+    ) -> Result<Vec<ProviderResponseData>, ProviderError>
+    where
+        R: AsRef<[ProviderRequestData]> + Send + Sync,
+    {
+        <AnyProvider as Provider>::batch_requests(&self.provider, requests).await
     }
 }
 

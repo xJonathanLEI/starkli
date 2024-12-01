@@ -4,8 +4,8 @@ use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 use starknet::{
-    accounts::{Account, Call},
-    core::types::Felt,
+    accounts::Account,
+    core::types::{Call, Felt},
 };
 
 use crate::{

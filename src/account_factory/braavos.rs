@@ -6,7 +6,7 @@ use starknet::{
     },
     core::types::{BlockId, BlockTag, Felt},
     providers::Provider,
-    signers::Signer,
+    signers::{Signer, SignerInteractivityContext},
 };
 use starknet_crypto::poseidon_hash_many;
 
@@ -77,7 +77,8 @@ where
     }
 
     fn is_signer_interactive(&self) -> bool {
-        self.signer.is_interactive()
+        self.signer
+            .is_interactive(SignerInteractivityContext::Other)
     }
 
     fn block_id(&self) -> BlockId {

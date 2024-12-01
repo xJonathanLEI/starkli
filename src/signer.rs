@@ -6,7 +6,10 @@ use clap::Parser;
 use colored::Colorize;
 use starknet::{
     core::{crypto::Signature, types::Felt},
-    signers::{DerivationPath, LedgerSigner, LocalWallet, Signer, SigningKey, VerifyingKey},
+    signers::{
+        DerivationPath, LedgerSigner, LocalWallet, Signer, SignerInteractivityContext, SigningKey,
+        VerifyingKey,
+    },
 };
 
 use crate::hd_path::{DerivationPathParser, Eip2645Path};
@@ -121,10 +124,10 @@ impl Signer for AnySigner {
         }
     }
 
-    fn is_interactive(&self) -> bool {
+    fn is_interactive(&self, context: SignerInteractivityContext<'_>) -> bool {
         match self {
-            Self::LocalWallet(inner) => <LocalWallet as Signer>::is_interactive(inner),
-            Self::Ledger(inner) => <LedgerSigner as Signer>::is_interactive(inner),
+            Self::LocalWallet(inner) => <LocalWallet as Signer>::is_interactive(inner, context),
+            Self::Ledger(inner) => <LedgerSigner as Signer>::is_interactive(inner, context),
         }
     }
 }
