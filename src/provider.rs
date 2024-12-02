@@ -10,8 +10,7 @@ use starknet::{
     core::types::*,
     macros::short_string,
     providers::{
-        jsonrpc::HttpTransport, JsonRpcClient, Provider, ProviderError, ProviderRequestData,
-        ProviderResponseData,
+        JsonRpcClient, Provider, ProviderError, ProviderRequestData, ProviderResponseData,
     },
 };
 use tokio::sync::OnceCell;
@@ -28,6 +27,14 @@ use crate::{
 const CHAIN_ID_MAINNET: Felt = short_string!("SN_MAIN");
 const CHAIN_ID_SEPOLIA: Felt = short_string!("SN_SEPOLIA");
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "wasi")))]
+type Transport = starknet::providers::jsonrpc::HttpTransport;
+
+#[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
+mod web_transport;
+#[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
+type Transport = web_transport::WebTransport;
+
 #[derive(Debug, Clone, Parser)]
 pub struct ProviderArgs {
     #[clap(
@@ -41,7 +48,7 @@ pub struct ProviderArgs {
 }
 
 pub struct ExtendedProvider {
-    provider: JsonRpcClient<HttpTransport>,
+    provider: JsonRpcClient<Transport>,
     rpc_version: OnceCell<String>,
 }
 
@@ -49,7 +56,7 @@ impl ProviderArgs {
     pub fn into_provider(self) -> Result<ExtendedProvider> {
         Ok(match (self.rpc, self.network) {
             (Some(rpc), None) => {
-                ExtendedProvider::new(JsonRpcClient::new(HttpTransport::new(rpc)), None)
+                ExtendedProvider::new(JsonRpcClient::new(Transport::new(rpc)), None)
             }
             (Some(rpc), Some(_)) => {
                 eprintln!(
@@ -60,7 +67,7 @@ impl ProviderArgs {
                         .bright_magenta()
                 );
 
-                ExtendedProvider::new(JsonRpcClient::new(HttpTransport::new(rpc)), None)
+                ExtendedProvider::new(JsonRpcClient::new(Transport::new(rpc)), None)
             }
             (None, Some(network)) => Self::resolve_network(&network)?,
             (None, None) => {
@@ -246,7 +253,7 @@ impl ProviderArgs {
             }
         };
 
-        let mut transport = HttpTransport::new(rpc_config.url);
+        let mut transport = Transport::new(rpc_config.url);
         for header in rpc_config.headers.iter() {
             transport.add_header(header.name.clone(), header.value.clone());
         }
@@ -262,7 +269,7 @@ impl ProviderArgs {
 }
 
 impl ExtendedProvider {
-    pub fn new(provider: JsonRpcClient<HttpTransport>, rpc_version: Option<String>) -> Self {
+    pub fn new(provider: JsonRpcClient<Transport>, rpc_version: Option<String>) -> Self {
         Self {
             provider,
             rpc_version: match rpc_version {
@@ -277,7 +284,7 @@ impl ExtendedProvider {
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 impl Provider for ExtendedProvider {
     async fn spec_version(&self) -> Result<String, ProviderError> {
-        <JsonRpcClient<HttpTransport> as Provider>::spec_version(&self.provider).await
+        <JsonRpcClient<Transport> as Provider>::spec_version(&self.provider).await
     }
 
     async fn get_block_with_tx_hashes<B>(
@@ -287,11 +294,8 @@ impl Provider for ExtendedProvider {
     where
         B: AsRef<BlockId> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_block_with_tx_hashes(
-            &self.provider,
-            block_id,
-        )
-        .await
+        <JsonRpcClient<Transport> as Provider>::get_block_with_tx_hashes(&self.provider, block_id)
+            .await
     }
 
     async fn get_block_with_txs<B>(
@@ -301,8 +305,7 @@ impl Provider for ExtendedProvider {
     where
         B: AsRef<BlockId> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_block_with_txs(&self.provider, block_id)
-            .await
+        <JsonRpcClient<Transport> as Provider>::get_block_with_txs(&self.provider, block_id).await
     }
 
     async fn get_block_with_receipts<B>(
@@ -312,11 +315,8 @@ impl Provider for ExtendedProvider {
     where
         B: AsRef<BlockId> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_block_with_receipts(
-            &self.provider,
-            block_id,
-        )
-        .await
+        <JsonRpcClient<Transport> as Provider>::get_block_with_receipts(&self.provider, block_id)
+            .await
     }
 
     async fn get_state_update<B>(
@@ -326,7 +326,7 @@ impl Provider for ExtendedProvider {
     where
         B: AsRef<BlockId> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_state_update(&self.provider, block_id).await
+        <JsonRpcClient<Transport> as Provider>::get_state_update(&self.provider, block_id).await
     }
 
     async fn get_storage_at<A, K, B>(
@@ -340,7 +340,7 @@ impl Provider for ExtendedProvider {
         K: AsRef<Felt> + Send + Sync,
         B: AsRef<BlockId> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_storage_at(
+        <JsonRpcClient<Transport> as Provider>::get_storage_at(
             &self.provider,
             contract_address,
             key,
@@ -356,7 +356,7 @@ impl Provider for ExtendedProvider {
     where
         H: AsRef<Felt> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_transaction_status(
+        <JsonRpcClient<Transport> as Provider>::get_transaction_status(
             &self.provider,
             transaction_hash,
         )
@@ -370,7 +370,7 @@ impl Provider for ExtendedProvider {
     where
         H: AsRef<Felt> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_transaction_by_hash(
+        <JsonRpcClient<Transport> as Provider>::get_transaction_by_hash(
             &self.provider,
             transaction_hash,
         )
@@ -385,7 +385,7 @@ impl Provider for ExtendedProvider {
     where
         B: AsRef<BlockId> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_transaction_by_block_id_and_index(
+        <JsonRpcClient<Transport> as Provider>::get_transaction_by_block_id_and_index(
             &self.provider,
             block_id,
             index,
@@ -400,7 +400,7 @@ impl Provider for ExtendedProvider {
     where
         H: AsRef<Felt> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_transaction_receipt(
+        <JsonRpcClient<Transport> as Provider>::get_transaction_receipt(
             &self.provider,
             transaction_hash,
         )
@@ -416,7 +416,7 @@ impl Provider for ExtendedProvider {
         B: AsRef<BlockId> + Send + Sync,
         H: AsRef<Felt> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_class(&self.provider, block_id, class_hash)
+        <JsonRpcClient<Transport> as Provider>::get_class(&self.provider, block_id, class_hash)
             .await
     }
 
@@ -429,7 +429,7 @@ impl Provider for ExtendedProvider {
         B: AsRef<BlockId> + Send + Sync,
         A: AsRef<Felt> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_class_hash_at(
+        <JsonRpcClient<Transport> as Provider>::get_class_hash_at(
             &self.provider,
             block_id,
             contract_address,
@@ -446,7 +446,7 @@ impl Provider for ExtendedProvider {
         B: AsRef<BlockId> + Send + Sync,
         A: AsRef<Felt> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_class_at(
+        <JsonRpcClient<Transport> as Provider>::get_class_at(
             &self.provider,
             block_id,
             contract_address,
@@ -458,7 +458,7 @@ impl Provider for ExtendedProvider {
     where
         B: AsRef<BlockId> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_block_transaction_count(
+        <JsonRpcClient<Transport> as Provider>::get_block_transaction_count(
             &self.provider,
             block_id,
         )
@@ -470,7 +470,7 @@ impl Provider for ExtendedProvider {
         R: AsRef<FunctionCall> + Send + Sync,
         B: AsRef<BlockId> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::call(&self.provider, request, block_id).await
+        <JsonRpcClient<Transport> as Provider>::call(&self.provider, request, block_id).await
     }
 
     async fn estimate_fee<R, S, B>(
@@ -509,7 +509,7 @@ impl Provider for ExtendedProvider {
             );
         }
 
-        <JsonRpcClient<HttpTransport> as Provider>::estimate_fee(
+        <JsonRpcClient<Transport> as Provider>::estimate_fee(
             &self.provider,
             request,
             simulation_flags,
@@ -527,7 +527,7 @@ impl Provider for ExtendedProvider {
         M: AsRef<MsgFromL1> + Send + Sync,
         B: AsRef<BlockId> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::estimate_message_fee(
+        <JsonRpcClient<Transport> as Provider>::estimate_message_fee(
             &self.provider,
             message,
             block_id,
@@ -536,19 +536,19 @@ impl Provider for ExtendedProvider {
     }
 
     async fn block_number(&self) -> Result<u64, ProviderError> {
-        <JsonRpcClient<HttpTransport> as Provider>::block_number(&self.provider).await
+        <JsonRpcClient<Transport> as Provider>::block_number(&self.provider).await
     }
 
     async fn block_hash_and_number(&self) -> Result<BlockHashAndNumber, ProviderError> {
-        <JsonRpcClient<HttpTransport> as Provider>::block_hash_and_number(&self.provider).await
+        <JsonRpcClient<Transport> as Provider>::block_hash_and_number(&self.provider).await
     }
 
     async fn chain_id(&self) -> Result<Felt, ProviderError> {
-        <JsonRpcClient<HttpTransport> as Provider>::chain_id(&self.provider).await
+        <JsonRpcClient<Transport> as Provider>::chain_id(&self.provider).await
     }
 
     async fn syncing(&self) -> Result<SyncStatusType, ProviderError> {
-        <JsonRpcClient<HttpTransport> as Provider>::syncing(&self.provider).await
+        <JsonRpcClient<Transport> as Provider>::syncing(&self.provider).await
     }
 
     async fn get_events(
@@ -557,7 +557,7 @@ impl Provider for ExtendedProvider {
         continuation_token: Option<String>,
         chunk_size: u64,
     ) -> Result<EventsPage, ProviderError> {
-        <JsonRpcClient<HttpTransport> as Provider>::get_events(
+        <JsonRpcClient<Transport> as Provider>::get_events(
             &self.provider,
             filter,
             continuation_token,
@@ -571,7 +571,7 @@ impl Provider for ExtendedProvider {
         B: AsRef<BlockId> + Send + Sync,
         A: AsRef<Felt> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::get_nonce(
+        <JsonRpcClient<Transport> as Provider>::get_nonce(
             &self.provider,
             block_id,
             contract_address,
@@ -586,7 +586,7 @@ impl Provider for ExtendedProvider {
     where
         I: AsRef<BroadcastedInvokeTransaction> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::add_invoke_transaction(
+        <JsonRpcClient<Transport> as Provider>::add_invoke_transaction(
             &self.provider,
             invoke_transaction,
         )
@@ -600,7 +600,7 @@ impl Provider for ExtendedProvider {
     where
         D: AsRef<BroadcastedDeclareTransaction> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::add_declare_transaction(
+        <JsonRpcClient<Transport> as Provider>::add_declare_transaction(
             &self.provider,
             declare_transaction,
         )
@@ -614,7 +614,7 @@ impl Provider for ExtendedProvider {
     where
         D: AsRef<BroadcastedDeployAccountTransaction> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::add_deploy_account_transaction(
+        <JsonRpcClient<Transport> as Provider>::add_deploy_account_transaction(
             &self.provider,
             deploy_account_transaction,
         )
@@ -628,11 +628,8 @@ impl Provider for ExtendedProvider {
     where
         H: AsRef<Felt> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::trace_transaction(
-            &self.provider,
-            transaction_hash,
-        )
-        .await
+        <JsonRpcClient<Transport> as Provider>::trace_transaction(&self.provider, transaction_hash)
+            .await
     }
 
     async fn simulate_transactions<B, T, S>(
@@ -646,7 +643,7 @@ impl Provider for ExtendedProvider {
         T: AsRef<[BroadcastedTransaction]> + Send + Sync,
         S: AsRef<[SimulationFlag]> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::simulate_transactions(
+        <JsonRpcClient<Transport> as Provider>::simulate_transactions(
             &self.provider,
             block_id,
             transactions,
@@ -662,11 +659,8 @@ impl Provider for ExtendedProvider {
     where
         B: AsRef<BlockId> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::trace_block_transactions(
-            &self.provider,
-            block_id,
-        )
-        .await
+        <JsonRpcClient<Transport> as Provider>::trace_block_transactions(&self.provider, block_id)
+            .await
     }
 
     async fn batch_requests<R>(
@@ -676,7 +670,7 @@ impl Provider for ExtendedProvider {
     where
         R: AsRef<[ProviderRequestData]> + Send + Sync,
     {
-        <JsonRpcClient<HttpTransport> as Provider>::batch_requests(&self.provider, requests).await
+        <JsonRpcClient<Transport> as Provider>::batch_requests(&self.provider, requests).await
     }
 }
 
