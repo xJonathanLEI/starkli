@@ -5,7 +5,6 @@ use std::{
 };
 
 use anyhow::Result;
-use etcetera::{choose_base_strategy, BaseStrategy};
 use indexmap::IndexMap;
 use serde::{de::Visitor, Deserialize, Serialize};
 use starknet::core::{
@@ -114,11 +113,20 @@ impl Profiles {
     }
 
     fn get_config_folder() -> Result<PathBuf> {
-        let strategy = choose_base_strategy()
-            .map_err(|_| anyhow::anyhow!("unable to find the config directory"))?;
-        let mut path = strategy.config_dir();
-        path.push("starkli");
-        Ok(path)
+        #[cfg(target_arch = "wasm32")]
+        {
+            Ok(PathBuf::from("/home/dev/.config/starkli"))
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use etcetera::{choose_base_strategy, BaseStrategy};
+            let strategy = choose_base_strategy()
+                .map_err(|_| anyhow::anyhow!("unable to find the config directory"))?;
+            let mut path = strategy.config_dir();
+            path.push("starkli");
+            Ok(path)
+        }
     }
 
     fn get_profiles_path() -> Result<PathBuf> {

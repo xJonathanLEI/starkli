@@ -3,16 +3,24 @@ use std::{path::PathBuf, str::FromStr};
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
+use coins_bip32::path::DerivationPath;
 use colored::Colorize;
 use starknet::{
     core::{crypto::Signature, types::Felt},
-    signers::{
-        DerivationPath, LedgerSigner, LocalWallet, Signer, SignerInteractivityContext, SigningKey,
-        VerifyingKey,
-    },
+    signers::{LocalWallet, Signer, SignerInteractivityContext, SigningKey, VerifyingKey},
 };
 
 use crate::hd_path::{DerivationPathParser, Eip2645Path};
+
+#[cfg(feature = "ledger")]
+type LedgerSigner = starknet::signers::LedgerSigner;
+
+// This is not ideal. All command line options related to Ledger should removed instead.
+// TODO: properly disable Ledger
+#[cfg(not(feature = "ledger"))]
+mod void_signer;
+#[cfg(not(feature = "ledger"))]
+type LedgerSigner = void_signer::VoidSigner;
 
 #[derive(Debug)]
 pub enum AnySigner {
@@ -80,6 +88,7 @@ pub struct PrivateKeyTaskContent {
 
 #[derive(Debug)]
 pub struct LedgerTaskContent {
+    #[cfg_attr(not(feature = "ledger"), allow(unused))]
     path: DerivationPath,
 }
 
@@ -398,7 +407,15 @@ impl PrivateKeyTaskContent {
 
 impl LedgerTaskContent {
     pub async fn resolve(self) -> Result<AnySigner> {
-        Ok(AnySigner::Ledger(LedgerSigner::new(self.path).await?))
+        #[cfg(feature = "ledger")]
+        {
+            Ok(AnySigner::Ledger(LedgerSigner::new(self.path).await?))
+        }
+
+        #[cfg(not(feature = "ledger"))]
+        {
+            Ok(AnySigner::Ledger(LedgerSigner::default()))
+        }
     }
 }
 

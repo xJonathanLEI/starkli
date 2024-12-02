@@ -121,6 +121,7 @@ enum Subcommands {
     //
     #[clap(about = "Signer management commands")]
     Signer(Signer),
+    #[cfg(feature = "ledger")]
     #[clap(about = "Shortcut for `starkli signer ledger`")]
     Ledger(crate::subcommands::signer::ledger::Ledger),
     #[clap(aliases = ["erc2645"], about = "EIP-2645 helper commands")]
@@ -155,7 +156,8 @@ enum Subcommands {
     Lab(Lab),
 }
 
-#[tokio::main]
+#[cfg_attr(target_arch = "wasm32", tokio::main(flavor = "current_thread"))]
+#[cfg_attr(not(target_arch = "wasm32"), tokio::main)]
 async fn main() {
     if let Err(err) = run_command(Cli::parse()).await {
         eprintln!("{}", format!("Error: {err}").red());
@@ -206,6 +208,7 @@ async fn run_command(cli: Cli) -> Result<()> {
             Subcommands::Syncing(cmd) => cmd.run().await,
             Subcommands::SpecVersion(cmd) => cmd.run().await,
             Subcommands::Signer(cmd) => cmd.run().await,
+            #[cfg(feature = "ledger")]
             Subcommands::Ledger(cmd) => cmd.run().await,
             Subcommands::Eip2645(cmd) => cmd.run(),
             Subcommands::Account(cmd) => cmd.run().await,

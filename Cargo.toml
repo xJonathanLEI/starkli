@@ -17,10 +17,10 @@ cairo-starknet-2-8-2 = { package = "cairo-lang-starknet-classes", git = "https:/
 chrono = "0.4.26"
 clap = { version = "4.3.8", features = ["derive", "env", "string"] }
 clap_complete = "4.3.1"
+coins-bip32 = "0.11.1"
 colored = "2.0.0"
 colored_json = "3.2.0"
 env_logger = "0.10.0"
-etcetera = "0.8.0"
 flate2 = "1.0.28"
 hex = "0.4.3"
 hex-literal = "0.4.1"
@@ -39,16 +39,27 @@ serde_json_pythonic = { version = "0.1.2", default-features = false, features = 
 serde_with = "3.11.0"
 sha2 = "0.10.8"
 shellexpand = "3.1.0"
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "b4d90ac9c839cb7f48e9a88032a4ee50be8c85b6", features = ["ledger"] }
-starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "b4d90ac9c839cb7f48e9a88032a4ee50be8c85b6" }
+starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "093d5ecbbd0929720db38a1ca34d516ccb807398" }
+starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "093d5ecbbd0929720db38a1ca34d516ccb807398" }
 tempfile = "3.8.0"
 thiserror = "1.0.40"
-tokio = { version = "1.28.2", default-features = false, features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.28.2", default-features = false, features = ["macros"] }
 toml = "0.8.8"
 url = "2.4.0"
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+tokio = { version = "1.28.2", default-features = false, features = ["rt", "time", "sync"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+etcetera = "0.8.0"
+tokio = { version = "1.28.2", default-features = false, features = ["rt-multi-thread"] }
+
 [build-dependencies]
 vergen = { version = "8.2.1", features = ["build", "git", "git2"] }
+
+[features]
+default = ["ledger"]
+ledger = ["starknet/ledger"]
 
 # We need https://github.com/roynalnaruto/eth-keystore-rs/pull/15 for Android.
 #

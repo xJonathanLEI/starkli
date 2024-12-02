@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
 use clap::{builder::TypedValueParser, error::ErrorKind, Arg, Command, Error};
+use coins_bip32::path::DerivationPath;
 use colored::Colorize;
 use sha2::{Digest, Sha256};
-use starknet::signers::DerivationPath;
 
 const EIP2645_LENGTH: usize = 6;
 
