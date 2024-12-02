@@ -1,9 +1,8 @@
 use anyhow::Result;
 use clap::Parser;
-use colored_json::{ColorMode, Output};
 use starknet::{core::types::SyncStatusType, providers::Provider};
 
-use crate::{verbosity::VerbosityArgs, ProviderArgs};
+use crate::{utils::print_colored_json, verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct Syncing {
@@ -23,10 +22,7 @@ impl Syncing {
 
         match sync_status {
             SyncStatusType::Syncing(status) => {
-                let status_json = serde_json::to_value(status)?;
-                let status_json =
-                    colored_json::to_colored_json(&status_json, ColorMode::Auto(Output::StdOut))?;
-                println!("{status_json}");
+                print_colored_json(&status)?;
             }
             SyncStatusType::NotSyncing => {
                 println!("Not syncing");

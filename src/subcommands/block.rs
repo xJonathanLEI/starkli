@@ -1,9 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
-use colored_json::{ColorMode, Output};
 use starknet::{core::types::BlockId, providers::Provider};
 
-use crate::{block_id::BlockIdParser, verbosity::VerbosityArgs, ProviderArgs};
+use crate::{
+    block_id::BlockIdParser, utils::print_colored_json, verbosity::VerbosityArgs, ProviderArgs,
+};
 
 #[derive(Debug, Parser)]
 pub struct Block {
@@ -29,17 +30,13 @@ impl Block {
 
         let provider = self.provider.into_provider()?;
 
-        let block_json = if self.receipts {
-            serde_json::to_value(provider.get_block_with_receipts(self.block_id).await?)?
+        if self.receipts {
+            print_colored_json(&provider.get_block_with_receipts(self.block_id).await?)?;
         } else if self.full {
-            serde_json::to_value(provider.get_block_with_txs(self.block_id).await?)?
+            print_colored_json(&provider.get_block_with_txs(self.block_id).await?)?;
         } else {
-            serde_json::to_value(provider.get_block_with_tx_hashes(self.block_id).await?)?
+            print_colored_json(&provider.get_block_with_tx_hashes(self.block_id).await?)?;
         };
-
-        let block_json =
-            colored_json::to_colored_json(&block_json, ColorMode::Auto(Output::StdOut))?;
-        println!("{block_json}");
 
         Ok(())
     }

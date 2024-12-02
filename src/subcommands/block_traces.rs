@@ -1,9 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
-use colored_json::{ColorMode, Output};
 use starknet::{core::types::BlockId, providers::Provider};
 
-use crate::{block_id::BlockIdParser, verbosity::VerbosityArgs, ProviderArgs};
+use crate::{
+    block_id::BlockIdParser, utils::print_colored_json, verbosity::VerbosityArgs, ProviderArgs,
+};
 
 #[derive(Debug, Parser)]
 pub struct BlockTraces {
@@ -25,12 +26,7 @@ impl BlockTraces {
 
         let provider = self.provider.into_provider()?;
 
-        let traces_json =
-            serde_json::to_value(provider.trace_block_transactions(self.block_id).await?)?;
-
-        let traces_json =
-            colored_json::to_colored_json(&traces_json, ColorMode::Auto(Output::StdOut))?;
-        println!("{traces_json}");
+        print_colored_json(&provider.trace_block_transactions(self.block_id).await?)?;
 
         Ok(())
     }

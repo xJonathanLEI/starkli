@@ -3,7 +3,7 @@ use std::{io::Read, time::Duration};
 use anyhow::Result;
 use bigdecimal::{BigDecimal, Zero};
 use colored::Colorize;
-use colored_json::{ColorMode, ColoredFormatter, Output};
+use colored_json::ColoredFormatter;
 use flate2::read::GzDecoder;
 use num_bigint::{BigInt, Sign};
 use num_integer::Integer;
@@ -116,7 +116,13 @@ where
 {
     let mut writer = Vec::with_capacity(128);
 
-    if ColorMode::Auto(Output::StdOut).use_color() {
+    #[cfg(not(all(target_arch = "wasm32", target_os = "wasi")))]
+    let use_color = colored_json::ColorMode::Auto(colored_json::Output::StdOut).use_color();
+
+    #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
+    let use_color = true;
+
+    if use_color {
         let formatter = ColoredFormatter::new(PrettyFormatter::new());
         let mut serializer = serde_json::Serializer::with_formatter(&mut writer, formatter);
         value.serialize(&mut serializer)?;

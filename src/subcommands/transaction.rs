@@ -1,9 +1,8 @@
 use anyhow::Result;
 use clap::Parser;
-use colored_json::{ColorMode, Output};
 use starknet::{core::types::Felt, providers::Provider};
 
-use crate::{verbosity::VerbosityArgs, ProviderArgs};
+use crate::{utils::print_colored_json, verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct Transaction {
@@ -23,11 +22,7 @@ impl Transaction {
         let transaction_hash = Felt::from_hex(&self.hash)?;
 
         let transaction = provider.get_transaction_by_hash(transaction_hash).await?;
-
-        let transaction_json = serde_json::to_value(transaction)?;
-        let transaction_json =
-            colored_json::to_colored_json(&transaction_json, ColorMode::Auto(Output::StdOut))?;
-        println!("{transaction_json}");
+        print_colored_json(&transaction)?;
 
         Ok(())
     }

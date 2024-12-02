@@ -1,9 +1,8 @@
 use anyhow::Result;
 use clap::Parser;
-use colored_json::{ColorMode, Output};
 use starknet::{core::types::Felt, providers::Provider};
 
-use crate::{verbosity::VerbosityArgs, ProviderArgs};
+use crate::{utils::print_colored_json, verbosity::VerbosityArgs, ProviderArgs};
 
 #[derive(Debug, Parser)]
 pub struct TransactionTrace {
@@ -23,11 +22,7 @@ impl TransactionTrace {
         let transaction_hash: Felt = self.hash.parse()?;
 
         let trace = provider.trace_transaction(transaction_hash).await?;
-
-        let trace_json = serde_json::to_value(trace)?;
-        let trace_json =
-            colored_json::to_colored_json(&trace_json, ColorMode::Auto(Output::StdOut))?;
-        println!("{trace_json}");
+        print_colored_json(&trace)?;
 
         Ok(())
     }
