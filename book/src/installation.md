@@ -6,7 +6,7 @@ Note that if you use any installation method other than `starkliup`, you will ne
 
 ## Using `starkliup`
 
-If you're on Linux/macOS/WSL/Android, you can install `stakrliup` by running the following command:
+If you're on Linux/macOS/WSL/Android, you can install `starkliup` by running the following command:
 
 ```console
 curl https://get.starkli.sh | sh
