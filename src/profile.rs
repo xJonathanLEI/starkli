@@ -250,7 +250,7 @@ impl Display for FreeProviderVendor {
     }
 }
 
-impl<'de> Visitor<'de> for ChainIdVisitor {
+impl Visitor<'_> for ChainIdVisitor {
     type Value = Felt;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -270,7 +270,7 @@ impl<'de> Visitor<'de> for ChainIdVisitor {
     }
 }
 
-impl<'de> Visitor<'de> for UrlVisitor {
+impl Visitor<'_> for UrlVisitor {
     type Value = Url;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
