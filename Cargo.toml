@@ -40,8 +40,8 @@ serde_json_pythonic = { version = "0.1.2", default-features = false, features = 
 serde_with = "3.11.0"
 sha2 = "0.10.8"
 shellexpand = "3.1.0"
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "093d5ecbbd0929720db38a1ca34d516ccb807398" }
-starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "093d5ecbbd0929720db38a1ca34d516ccb807398" }
+starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "8755b68675f103ee011f1d964fcec55f1902fa09" }
+starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "8755b68675f103ee011f1d964fcec55f1902fa09" }
 tempfile = "3.8.0"
 thiserror = "1.0.40"
 tokio = { version = "1.28.2", default-features = false, features = ["macros"] }

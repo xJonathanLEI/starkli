@@ -2,7 +2,8 @@ use anyhow::Result;
 use num_bigint::BigUint;
 use starknet::{
     core::{
-        types::Felt,
+        codec::Encode,
+        types::{ByteArray, Felt},
         utils::{cairo_short_string_to_felt, get_selector_from_name, get_storage_var_address},
     },
     macros::felt,
@@ -140,6 +141,17 @@ where
                 anyhow::bail!("cannot resolve storage address: maps not supported yet")
             }
             Ok(vec![get_storage_var_address(storage, &[])?])
+        } else if let Some(byte_array) = raw.strip_prefix("bytearray:") {
+            let raw_bytes = if let Some(str) = byte_array.strip_prefix("str:") {
+                str.as_bytes().to_vec()
+            } else {
+                hex::decode(byte_array.trim_start_matches("0x"))?
+            };
+
+            let mut serialized = vec![];
+            ByteArray::from(raw_bytes).encode(&mut serialized)?;
+
+            Ok(serialized)
         } else {
             match raw.parse::<Felt>() {
                 Ok(value) => Ok(vec![value]),

@@ -37,6 +37,14 @@ The `selector` scheme calculates the _Starknet Keccak_ hash for the content to d
 
 This scheme is currently the same as `selector`, but support for offsets and maps (e.g. `ERC20_balances[0x1234]`) might be added in the future to differentiate it.
 
+### `bytearray`
+
+The `bytearray` scheme encodes a list of bytes in the format of the `ByteArray` Cairo type.
+
+The simplest use of this scheme is by supplying a hexadecimal representation of the raw bytes. Example: `bytearray:0x1234`.
+
+Since a common use of the `ByteArray` type is to encode strings, the `bytearray` scheme has support for that too. To use it, simply prepend `str:` to the value. For example, `bytearray:str:hello` is equivalent to `bytearray:0x68656c6c6f`, which is eventually encoded into `[0x0, 0x68656c6c6f, 0x5]`.
+
 ## Scheme omission
 
 Normally, the `scheme:` prefix is required for opting in to argument resolution. However, there are a few exceptions:
