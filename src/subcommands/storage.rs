@@ -2,19 +2,24 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use clap::Parser;
-use starknet::{
-    core::types::{BlockId, BlockTag},
-    providers::Provider,
-};
+use starknet::{core::types::BlockId, providers::Provider};
 
 use crate::{
-    address_book::AddressBookResolver, decode::FeltDecoder, verbosity::VerbosityArgs, ProviderArgs,
+    address_book::AddressBookResolver, block_id::BlockIdParser, decode::FeltDecoder,
+    verbosity::VerbosityArgs, ProviderArgs,
 };
 
 #[derive(Debug, Parser)]
 pub struct Storage {
     #[clap(flatten)]
     provider: ProviderArgs,
+    #[clap(
+        long,
+        value_parser = BlockIdParser,
+        default_value = "pending",
+        help = "Block number, hash, or tag (latest/pending)"
+    )]
+    block: BlockId,
     #[clap(help = "Contract address")]
     address: String,
     #[clap(help = "Storage key")]
@@ -37,10 +42,7 @@ impl Storage {
             .decode_single_with_storage_fallback(&self.key)
             .await?;
 
-        // TODO: allow custom block
-        let value = provider
-            .get_storage_at(address, key, BlockId::Tag(BlockTag::Pending))
-            .await?;
+        let value = provider.get_storage_at(address, key, self.block).await?;
 
         println!("{:#064x}", value);
 
