@@ -193,6 +193,7 @@ impl Deploy {
 
         let account_deployment_tx = match fee_setting {
             FeeSetting::Eth(fee_setting) => {
+                #[allow(deprecated)]
                 let account_deployment = factory.deploy_v1(undeployed_status.salt);
                 let account_deployment = match self.nonce {
                     Some(nonce) => account_deployment.nonce(nonce),

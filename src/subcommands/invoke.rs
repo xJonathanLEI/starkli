@@ -104,6 +104,7 @@ impl Invoke {
 
         let invoke_tx = match fee_setting {
             FeeSetting::Eth(fee_setting) => {
+                #[allow(deprecated)]
                 let execution = account.execute_v1(calls).fee_estimate_multiplier(1.5f64);
                 let execution = match self.nonce {
                     Some(nonce) => execution.nonce(nonce),

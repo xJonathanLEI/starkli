@@ -83,6 +83,7 @@ impl Deploy {
         let factory = ContractFactory::new_with_udc(class_hash, account, DEFAULT_UDC_ADDRESS);
 
         // Deployed address is the same regardless of v1 or v3 transaction is used
+        #[allow(deprecated)]
         let deployed_address = factory
             .deploy_v1(ctor_args.clone(), salt, !self.not_unique)
             .deployed_address();
@@ -101,6 +102,7 @@ impl Deploy {
 
         let deployment_tx = match fee_setting {
             FeeSetting::Eth(fee_setting) => {
+                #[allow(deprecated)]
                 let contract_deployment = factory
                     .deploy_v1(ctor_args, salt, !self.not_unique)
                     .fee_estimate_multiplier(1.5f64);

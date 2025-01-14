@@ -179,6 +179,7 @@ impl Declare {
 
                 let declare_tx = match fee_setting {
                     FeeSetting::Eth(fee_setting) => {
+                        #[allow(deprecated)]
                         let declaration = account
                             .declare_v2(Arc::new(class), casm_class_hash)
                             .fee_estimate_multiplier(1.5f64);

@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter};
 use anyhow::Result;
 use bigdecimal::BigDecimal;
 use clap::{builder::PossibleValue, Parser, ValueEnum};
+use colored::Colorize;
 use num_traits::ToPrimitive;
 use starknet::{core::types::Felt, macros::felt};
 
@@ -69,7 +70,16 @@ pub struct StrkManualFeeSetting {
 impl FeeArgs {
     pub fn into_setting(self) -> Result<FeeSetting> {
         let fee_token = match (self.fee_token, self.eth, self.strk) {
-            (None, false, false) => FeeToken::Eth,
+            (None, false, false) => {
+                eprintln!(
+                    "{}",
+                    "WARNING: you're not specifying a fee token and ETH is automatically used. \
+                    The default token will change to STRK in the next breaking release."
+                        .bright_magenta()
+                );
+
+                FeeToken::Eth
+            }
             (Some(fee_token), false, false) => fee_token,
             (None, true, false) => FeeToken::Eth,
             (None, false, true) => FeeToken::Strk,
@@ -78,6 +88,13 @@ impl FeeArgs {
 
         match fee_token {
             FeeToken::Eth => {
+                eprintln!(
+                    "{}",
+                    "WARNING: paying transaction fees in ETH is deprecated and will soon \
+                    be disabled on Starknet. Consider using STRK for fees instead."
+                        .bright_magenta()
+                );
+
                 if self.gas.is_some() {
                     anyhow::bail!(
                         "the --gas option is not allowed when paying fees in ETH. \
