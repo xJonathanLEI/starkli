@@ -20,7 +20,7 @@ use crate::signer::{AnySigner, SignerArgs, SignerResolutionTask};
 
 const BRAAVOS_SIGNER_TYPE_STARK: Felt = Felt::ONE;
 
-pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 23] = [
+pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 24] = [
     KnownAccountClass {
         class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
         variant: AccountVariantType::OpenZeppelinLegacy,
@@ -137,6 +137,11 @@ pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 23] = [
         variant: AccountVariantType::OpenZeppelin,
         // Same hash for v0.18.0
         description: "OpenZeppelin account contract v0.19.0 compiled with cairo v2.8.4",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x044cab2e6a3a7bc516425d06d76c6ffd56ae308864dbc66f8e75028e3784aa29"),
+        variant: AccountVariantType::OpenZeppelin,
+        description: "OpenZeppelin account contract v0.20.0 compiled with cairo v2.9.2",
     },
 ];
 
