@@ -16,6 +16,7 @@ use starknet::{
 use crate::{
     account::AccountArgs,
     casm::{CasmArgs, CasmHashSource},
+    compiler::BuiltInCompiler,
     error::account_error_mapper,
     fee::{FeeArgs, FeeSetting, TokenFeeSetting},
     path::ExpandedPathbufParser,
@@ -118,7 +119,21 @@ impl Declare {
                     return Ok(());
                 }
 
-                let casm_source = self.casm.into_casm_hash_source(&provider).await?;
+                // Reconstructs an original Sierra class just for CASM compilation purposes. It's a
+                // bit inefficient but acceptable.
+                let sierra_class = SierraClass {
+                    sierra_program: class.sierra_program.clone(),
+                    sierra_program_debug_info: SierraClassDebugInfo {
+                        type_names: vec![],
+                        libfunc_names: vec![],
+                        user_func_names: vec![],
+                    },
+                    contract_class_version: class.contract_class_version.clone(),
+                    entry_points_by_type: class.entry_points_by_type.clone(),
+                    abi: vec![],
+                };
+
+                let casm_source = self.casm.into_casm_hash_source()?;
 
                 if !fee_setting.is_estimate_only() {
                     eprintln!(
@@ -127,10 +142,11 @@ impl Declare {
                     );
 
                     match &casm_source {
-                        CasmHashSource::BuiltInCompiler(compiler) => {
+                        CasmHashSource::BuiltInCompiler(_) => {
                             eprintln!(
                                 "Compiling Sierra class to CASM with compiler version {}...",
-                                format!("{}", compiler.version()).bright_yellow()
+                                format!("{}", BuiltInCompiler::version_for_class(&sierra_class)?)
+                                    .bright_yellow()
                             );
                         }
                         CasmHashSource::CompilerBinary(compiler) => {
@@ -153,20 +169,6 @@ impl Declare {
                         }
                     }
                 }
-
-                // Reconstructs an original Sierra class just for CASM compilation purposes. It's a
-                // bit inefficient but acceptable.
-                let sierra_class = SierraClass {
-                    sierra_program: class.sierra_program.clone(),
-                    sierra_program_debug_info: SierraClassDebugInfo {
-                        type_names: vec![],
-                        libfunc_names: vec![],
-                        user_func_names: vec![],
-                    },
-                    contract_class_version: class.contract_class_version.clone(),
-                    entry_points_by_type: class.entry_points_by_type.clone(),
-                    abi: vec![],
-                };
 
                 let casm_class_hash = casm_source.get_casm_hash(&sierra_class)?;
 

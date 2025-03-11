@@ -2,27 +2,41 @@ use std::{
     fmt::Display,
     path::{Path, PathBuf},
     process::Command,
-    str::FromStr,
 };
 
 use anyhow::Result;
+use cairo_starknet_1_0_0::{
+    casm_contract_class::CasmContractClass as Cairo_1_0_0_CasmClass,
+    contract_class::ContractClass as Cairo_1_0_0_Class,
+};
+use cairo_starknet_1_1_1::{
+    casm_contract_class::CasmContractClass as Cairo_1_1_1_CasmClass,
+    contract_class::ContractClass as Cairo_1_1_1_Class,
+};
+use cairo_starknet_2_0_2::{
+    casm_contract_class::CasmContractClass as Cairo_2_0_2_CasmClass,
+    contract_class::ContractClass as Cairo_2_0_2_Class,
+};
+use cairo_starknet_2_11_2::{
+    casm_contract_class::CasmContractClass as Cairo_2_11_2_CasmClass,
+    contract_class::ContractClass as Cairo_2_11_2_Class,
+};
+use cairo_starknet_2_3_1::{
+    casm_contract_class::CasmContractClass as Cairo_2_3_1_CasmClass,
+    contract_class::ContractClass as Cairo_2_3_1_Class,
+};
+use cairo_starknet_2_5_4::{
+    casm_contract_class::CasmContractClass as Cairo_2_5_4_CasmClass,
+    contract_class::ContractClass as Cairo_2_5_4_Class,
+};
 use cairo_starknet_2_6_4::{
-    casm_contract_class::CasmContractClass as Cairo264CasmClass,
-    contract_class::ContractClass as Cairo264Class,
+    casm_contract_class::CasmContractClass as Cairo_2_6_4_CasmClass,
+    contract_class::ContractClass as Cairo_2_6_4_Class,
 };
-use cairo_starknet_2_7_1::{
-    casm_contract_class::CasmContractClass as Cairo271CasmClass,
-    contract_class::ContractClass as Cairo271Class,
+use cairo_starknet_2_9_4::{
+    casm_contract_class::CasmContractClass as Cairo_2_9_4_CasmClass,
+    contract_class::ContractClass as Cairo_2_9_4_Class,
 };
-use cairo_starknet_2_8_5::{
-    casm_contract_class::CasmContractClass as Cairo285CasmClass,
-    contract_class::ContractClass as Cairo285Class,
-};
-use cairo_starknet_2_9_1::{
-    casm_contract_class::CasmContractClass as Cairo291CasmClass,
-    contract_class::ContractClass as Cairo291Class,
-};
-use clap::{builder::PossibleValue, ValueEnum};
 use starknet::core::types::{
     contract::{CompiledClass, SierraClass},
     Felt,
@@ -31,27 +45,75 @@ use starknet::core::types::{
 const MAX_BYTECODE_SIZE: usize = 180000;
 
 #[derive(Debug)]
-pub struct BuiltInCompiler {
-    version: CompilerVersion,
-}
+pub struct BuiltInCompiler;
 
 #[derive(Debug)]
 pub struct CompilerBinary {
     path: PathBuf,
 }
 
-// TODO: separate known compiler versions with linked versions
+/// Statically linked Sierra compiler versions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CompilerVersion {
+pub enum LinkedCompilerVersion {
+    V1_0_0,
+    V1_1_1,
+    V2_0_2,
+    V2_3_1,
+    V2_5_4,
     V2_6_4,
-    V2_7_1,
-    V2_8_5,
-    V2_9_1,
+    V2_9_4,
+    V2_11_2,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MaybeUnknownSierraVersion {
+    Known(SierraVersion),
+    Unknown { major: u8, minor: u8, patch: u8 },
+}
+
+/// Sierra bytecode versions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SierraVersion {
+    V1_0_0,
+    V1_1_0,
+    V1_2_0,
+    V1_3_0,
+    V1_4_0,
+    V1_5_0,
+    V1_6_0,
+    V1_7_0,
 }
 
 impl BuiltInCompiler {
-    pub fn version(&self) -> CompilerVersion {
-        self.version
+    pub fn version_for_class(class: &SierraClass) -> Result<LinkedCompilerVersion> {
+        if class.sierra_program.len() < 3 {
+            anyhow::bail!("invalid Sierra bytecode: too few elements");
+        }
+
+        let major: u8 = class.sierra_program[0]
+            .try_into()
+            .map_err(|_| anyhow::anyhow!("Sierra major version out of range"))?;
+        let minor: u8 = class.sierra_program[1]
+            .try_into()
+            .map_err(|_| anyhow::anyhow!("Sierra minor version out of range"))?;
+        let patch: u8 = class.sierra_program[2]
+            .try_into()
+            .map_err(|_| anyhow::anyhow!("Sierra patch version out of range"))?;
+
+        let seirra_version = MaybeUnknownSierraVersion::new(major, minor, patch);
+        match seirra_version {
+            MaybeUnknownSierraVersion::Known(version) => Ok(version.into()),
+            MaybeUnknownSierraVersion::Unknown {
+                major,
+                minor,
+                patch,
+            } => Err(anyhow::anyhow!(
+                "unsupported Sierra version: {}.{}.{}",
+                major,
+                minor,
+                patch
+            )),
+        }
     }
 
     pub fn compile(&self, class: &SierraClass) -> Result<Felt> {
@@ -63,14 +125,69 @@ impl BuiltInCompiler {
 
         let sierra_class_json = serde_json::to_string(&class)?;
 
-        let casm_class_json = match self.version {
-            CompilerVersion::V2_6_4 => {
+        let casm_class_json = match Self::version_for_class(&class)? {
+            LinkedCompilerVersion::V1_0_0 => {
                 // TODO: directly convert type without going through JSON
-                let contract_class: Cairo264Class = serde_json::from_str(&sierra_class_json)?;
+                let contract_class: Cairo_1_0_0_Class = serde_json::from_str(&sierra_class_json)?;
 
                 // TODO: implement the `validate_compatible_sierra_version` call
 
-                let casm_contract = Cairo264CasmClass::from_contract_class(
+                let casm_contract =
+                    Cairo_1_0_0_CasmClass::from_contract_class(contract_class, false)?;
+
+                serde_json::to_string(&casm_contract)?
+            }
+            LinkedCompilerVersion::V1_1_1 => {
+                // TODO: directly convert type without going through JSON
+                let contract_class: Cairo_1_1_1_Class = serde_json::from_str(&sierra_class_json)?;
+
+                // TODO: implement the `validate_compatible_sierra_version` call
+
+                let casm_contract =
+                    Cairo_1_1_1_CasmClass::from_contract_class(contract_class, false)?;
+
+                serde_json::to_string(&casm_contract)?
+            }
+            LinkedCompilerVersion::V2_0_2 => {
+                // TODO: directly convert type without going through JSON
+                let contract_class: Cairo_2_0_2_Class = serde_json::from_str(&sierra_class_json)?;
+
+                // TODO: implement the `validate_compatible_sierra_version` call
+
+                let casm_contract =
+                    Cairo_2_0_2_CasmClass::from_contract_class(contract_class, false)?;
+
+                serde_json::to_string(&casm_contract)?
+            }
+            LinkedCompilerVersion::V2_3_1 => {
+                // TODO: directly convert type without going through JSON
+                let contract_class: Cairo_2_3_1_Class = serde_json::from_str(&sierra_class_json)?;
+
+                // TODO: implement the `validate_compatible_sierra_version` call
+
+                let casm_contract =
+                    Cairo_2_3_1_CasmClass::from_contract_class(contract_class, false)?;
+
+                serde_json::to_string(&casm_contract)?
+            }
+            LinkedCompilerVersion::V2_5_4 => {
+                // TODO: directly convert type without going through JSON
+                let contract_class: Cairo_2_5_4_Class = serde_json::from_str(&sierra_class_json)?;
+
+                // TODO: implement the `validate_compatible_sierra_version` call
+
+                let casm_contract =
+                    Cairo_2_5_4_CasmClass::from_contract_class(contract_class, false)?;
+
+                serde_json::to_string(&casm_contract)?
+            }
+            LinkedCompilerVersion::V2_6_4 => {
+                // TODO: directly convert type without going through JSON
+                let contract_class: Cairo_2_6_4_Class = serde_json::from_str(&sierra_class_json)?;
+
+                // TODO: implement the `validate_compatible_sierra_version` call
+
+                let casm_contract = Cairo_2_6_4_CasmClass::from_contract_class(
                     contract_class,
                     false,
                     MAX_BYTECODE_SIZE,
@@ -78,13 +195,13 @@ impl BuiltInCompiler {
 
                 serde_json::to_string(&casm_contract)?
             }
-            CompilerVersion::V2_7_1 => {
+            LinkedCompilerVersion::V2_9_4 => {
                 // TODO: directly convert type without going through JSON
-                let contract_class: Cairo271Class = serde_json::from_str(&sierra_class_json)?;
+                let contract_class: Cairo_2_9_4_Class = serde_json::from_str(&sierra_class_json)?;
 
                 // TODO: implement the `validate_compatible_sierra_version` call
 
-                let casm_contract = Cairo271CasmClass::from_contract_class(
+                let casm_contract = Cairo_2_9_4_CasmClass::from_contract_class(
                     contract_class,
                     false,
                     MAX_BYTECODE_SIZE,
@@ -92,27 +209,13 @@ impl BuiltInCompiler {
 
                 serde_json::to_string(&casm_contract)?
             }
-            CompilerVersion::V2_8_5 => {
+            LinkedCompilerVersion::V2_11_2 => {
                 // TODO: directly convert type without going through JSON
-                let contract_class: Cairo285Class = serde_json::from_str(&sierra_class_json)?;
+                let contract_class: Cairo_2_11_2_Class = serde_json::from_str(&sierra_class_json)?;
 
                 // TODO: implement the `validate_compatible_sierra_version` call
 
-                let casm_contract = Cairo285CasmClass::from_contract_class(
-                    contract_class,
-                    false,
-                    MAX_BYTECODE_SIZE,
-                )?;
-
-                serde_json::to_string(&casm_contract)?
-            }
-            CompilerVersion::V2_9_1 => {
-                // TODO: directly convert type without going through JSON
-                let contract_class: Cairo291Class = serde_json::from_str(&sierra_class_json)?;
-
-                // TODO: implement the `validate_compatible_sierra_version` call
-
-                let casm_contract = Cairo291CasmClass::from_contract_class(
+                let casm_contract = Cairo_2_11_2_CasmClass::from_contract_class(
                     contract_class,
                     false,
                     MAX_BYTECODE_SIZE,
@@ -172,80 +275,110 @@ impl CompilerBinary {
     }
 }
 
-impl Default for CompilerVersion {
+impl MaybeUnknownSierraVersion {
+    fn new(major: u8, minor: u8, patch: u8) -> Self {
+        match (major, minor, patch) {
+            (1, 0, 0) => Self::Known(SierraVersion::V1_0_0),
+            (1, 1, 0) => Self::Known(SierraVersion::V1_1_0),
+            (1, 2, 0) => Self::Known(SierraVersion::V1_2_0),
+            (1, 3, 0) => Self::Known(SierraVersion::V1_3_0),
+            (1, 4, 0) => Self::Known(SierraVersion::V1_4_0),
+            (1, 5, 0) => Self::Known(SierraVersion::V1_5_0),
+            (1, 6, 0) => Self::Known(SierraVersion::V1_6_0),
+            (1, 7, 0) => Self::Known(SierraVersion::V1_7_0),
+            _ => Self::Unknown {
+                major,
+                minor,
+                patch,
+            },
+        }
+    }
+}
+
+impl Default for LinkedCompilerVersion {
     fn default() -> Self {
-        Self::V2_6_4
+        Self::V2_11_2
     }
 }
 
-impl ValueEnum for CompilerVersion {
-    fn value_variants<'a>() -> &'a [Self] {
-        &[Self::V2_6_4, Self::V2_7_1, Self::V2_8_5, Self::V2_9_1]
-    }
-
-    fn to_possible_value(&self) -> Option<PossibleValue> {
-        match self {
-            Self::V2_6_4 => Some(
-                PossibleValue::new("2.6.4")
-                    .alias("v2.6.4")
-                    .alias("2.6")
-                    .alias("v2.6"),
-            ),
-            Self::V2_7_1 => Some(
-                PossibleValue::new("2.7.1")
-                    .alias("v2.7.1")
-                    .alias("2.7")
-                    .alias("v2.7"),
-            ),
-            Self::V2_8_5 => Some(
-                PossibleValue::new("2.8.5")
-                    .alias("v2.8.5")
-                    .alias("2.8")
-                    .alias("v2.8"),
-            ),
-            Self::V2_9_1 => Some(
-                PossibleValue::new("2.9.1")
-                    .alias("v2.9.1")
-                    .alias("2.9")
-                    .alias("v2.9"),
-            ),
-        }
-    }
-}
-
-impl FromStr for CompilerVersion {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
-            "2.6.4" | "v2.6.4" | "2.6" | "v2.6" => Ok(Self::V2_6_4),
-            "2.7.1" | "v2.7.1" | "2.7" | "v2.7" => Ok(Self::V2_7_1),
-            "2.8.5" | "v2.8.5" | "2.8" | "v2.8" => Ok(Self::V2_8_5),
-            "2.9.1" | "v2.9.1" | "2.9" | "v2.9" => Ok(Self::V2_9_1),
-            _ => Err(anyhow::anyhow!("unknown version: {}", s)),
-        }
-    }
-}
-
-impl Display for CompilerVersion {
+impl Display for LinkedCompilerVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CompilerVersion::V2_6_4 => write!(f, "2.6.4"),
-            CompilerVersion::V2_7_1 => write!(f, "2.7.1"),
-            CompilerVersion::V2_8_5 => write!(f, "2.8.5"),
-            CompilerVersion::V2_9_1 => write!(f, "2.9.1"),
+            LinkedCompilerVersion::V1_0_0 => write!(f, "1.0.0"),
+            LinkedCompilerVersion::V1_1_1 => write!(f, "1.1.1"),
+            LinkedCompilerVersion::V2_0_2 => write!(f, "2.0.2"),
+            LinkedCompilerVersion::V2_3_1 => write!(f, "2.3.1"),
+            LinkedCompilerVersion::V2_5_4 => write!(f, "2.5.4"),
+            LinkedCompilerVersion::V2_6_4 => write!(f, "2.6.4"),
+            LinkedCompilerVersion::V2_9_4 => write!(f, "2.9.4"),
+            LinkedCompilerVersion::V2_11_2 => write!(f, "2.11.2"),
         }
-    }
-}
-
-impl From<CompilerVersion> for BuiltInCompiler {
-    fn from(value: CompilerVersion) -> Self {
-        Self { version: value }
     }
 }
 
 impl From<PathBuf> for CompilerBinary {
     fn from(value: PathBuf) -> Self {
         Self { path: value }
+    }
+}
+
+impl From<SierraVersion> for LinkedCompilerVersion {
+    fn from(value: SierraVersion) -> Self {
+        // Full Cairo-Sierra version map for reference:
+        //
+        // - v1.0.0: 1.0.0
+        // - v1.1.0: 1.1.0
+        // - v1.1.1: 1.1.0
+        // - v2.0.0: 1.2.0
+        // - v2.0.1: 1.2.0
+        // - v2.0.2: 1.2.0
+        // - v2.1.0: 1.3.0
+        // - v2.1.1: 1.3.0
+        // - v2.1.2: 1.3.0
+        // - v2.2.0: 1.3.0
+        // - v2.3.0: 1.3.0
+        // - v2.3.1: 1.3.0
+        // - v2.4.0: 1.4.0
+        // - v2.4.1: 1.4.0
+        // - v2.4.2: 1.4.0
+        // - v2.4.3: 1.4.0
+        // - v2.4.4: 1.4.0
+        // - v2.5.0: 1.4.0
+        // - v2.5.1: 1.4.0
+        // - v2.5.2: 1.4.0
+        // - v2.5.3: 1.4.0
+        // - v2.5.4: 1.4.0
+        // - v2.6.0: 1.5.0
+        // - v2.6.1: 1.5.0
+        // - v2.6.2: 1.5.0
+        // - v2.6.3: 1.5.0
+        // - v2.6.4: 1.5.0
+        // - v2.7.0: 1.6.0
+        // - v2.7.1: 1.6.0
+        // - v2.8.0: 1.6.0
+        // - v2.8.2: 1.6.0
+        // - v2.8.4: 1.6.0
+        // - v2.8.5: 1.6.0
+        // - v2.9.0: 1.6.0
+        // - v2.9.1: 1.6.0
+        // - v2.9.2: 1.6.0
+        // - v2.9.3: 1.6.0
+        // - v2.9.4: 1.6.0
+        // - v2.10.0: 1.7.0
+        // - v2.10.1: 1.7.0
+        // - v2.11.0: 1.7.0
+        // - v2.11.1: 1.7.0
+        // - v2.11.2: 1.7.0
+
+        match value {
+            SierraVersion::V1_0_0 => Self::V1_0_0,
+            SierraVersion::V1_1_0 => Self::V1_1_1,
+            SierraVersion::V1_2_0 => Self::V2_0_2,
+            SierraVersion::V1_3_0 => Self::V2_3_1,
+            SierraVersion::V1_4_0 => Self::V2_5_4,
+            SierraVersion::V1_5_0 => Self::V2_6_4,
+            SierraVersion::V1_6_0 => Self::V2_9_4,
+            SierraVersion::V1_7_0 => Self::V2_11_2,
+        }
     }
 }

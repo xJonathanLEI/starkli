@@ -11,10 +11,14 @@ anyhow = "1.0.75"
 async-trait = "0.1.68"
 auto_impl = "1.1.0"
 bigdecimal = "0.4.1"
+cairo-starknet-1-0-0 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v1.0.0" }
+cairo-starknet-1-1-1 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v1.1.1" }
+cairo-starknet-2-0-2 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v2.0.2" }
+cairo-starknet-2-3-1 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v2.3.1" }
+cairo-starknet-2-5-4 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v2.5.4" }
 cairo-starknet-2-6-4 = { package = "cairo-lang-starknet-classes", git = "https://github.com/starkware-libs/cairo", tag = "v2.6.4" }
-cairo-starknet-2-7-1 = { package = "cairo-lang-starknet-classes", git = "https://github.com/starkware-libs/cairo", tag = "v2.7.1" }
-cairo-starknet-2-8-5 = { package = "cairo-lang-starknet-classes", git = "https://github.com/starkware-libs/cairo", tag = "v2.8.5" }
-cairo-starknet-2-9-1 = { package = "cairo-lang-starknet-classes", git = "https://github.com/starkware-libs/cairo", tag = "v2.9.1" }
+cairo-starknet-2-9-4 = { package = "cairo-lang-starknet-classes", git = "https://github.com/starkware-libs/cairo", tag = "v2.9.4" }
+cairo-starknet-2-11-2 = { package = "cairo-lang-starknet-classes", git = "https://github.com/starkware-libs/cairo", tag = "v2.11.2" }
 chrono = "0.4.26"
 clap = { version = "4.3.8", features = ["derive", "env", "string"] }
 clap_complete = "4.3.1"
