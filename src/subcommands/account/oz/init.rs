@@ -15,9 +15,9 @@ use crate::{
     signer::SignerArgs,
 };
 
-/// OpenZeppelin account contract v0.19.0 compiled with cairo v2.8.4
+/// OpenZeppelin account contract v1.0.0 compiled with cairo v2.9.4
 const OZ_ACCOUNT_CLASS_HASH: Felt =
-    felt!("0x04a444ef8caf8fa0db05da60bf0ad9bae264c73fa7e32c61d245406f5523174b");
+    felt!("0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564");
 
 #[derive(Debug, Parser)]
 pub struct Init {
