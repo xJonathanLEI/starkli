@@ -1,8 +1,7 @@
 use async_trait::async_trait;
 use starknet::{
     accounts::{
-        AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory, RawAccountDeploymentV1,
-        RawAccountDeploymentV3,
+        AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory, RawAccountDeploymentV3,
     },
     core::types::{BlockId, Felt},
     providers::Provider,
@@ -73,24 +72,6 @@ where
             AnyAccountFactory::OpenZeppelin(inner) => inner.block_id(),
             AnyAccountFactory::Argent(inner) => inner.block_id(),
             AnyAccountFactory::Braavos(inner) => inner.block_id(),
-        }
-    }
-
-    async fn sign_deployment_v1(
-        &self,
-        deployment: &RawAccountDeploymentV1,
-        query_only: bool,
-    ) -> Result<Vec<Felt>, Self::SignError> {
-        match self {
-            AnyAccountFactory::OpenZeppelin(inner) => {
-                inner.sign_deployment_v1(deployment, query_only).await
-            }
-            AnyAccountFactory::Argent(inner) => {
-                inner.sign_deployment_v1(deployment, query_only).await
-            }
-            AnyAccountFactory::Braavos(inner) => {
-                inner.sign_deployment_v1(deployment, query_only).await
-            }
         }
     }
 

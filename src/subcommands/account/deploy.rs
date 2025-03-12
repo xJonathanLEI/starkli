@@ -3,10 +3,11 @@ use std::{io::Write, path::PathBuf, sync::Arc, time::Duration};
 use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
-use num_traits::ToPrimitive;
 use starknet::{
-    accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory},
-    core::types::{BlockId, BlockTag, Felt, NonZeroFelt},
+    accounts::{
+        AccountDeploymentV3, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
+    },
+    core::types::{BlockId, BlockTag, FeeEstimate, Felt, NonZeroFelt},
     providers::Provider,
     signers::Signer,
 };
@@ -20,7 +21,8 @@ use crate::{
     error::account_factory_error_mapper,
     fee::{FeeArgs, FeeSetting, FeeToken, TokenFeeSetting},
     path::ExpandedPathbufParser,
-    signer::SignerArgs,
+    provider::ExtendedProvider,
+    signer::{AnySigner, SignerArgs},
     utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
@@ -63,6 +65,11 @@ enum MaxFeeType {
         estimate: Felt,
         estimate_with_buffer: Felt,
     },
+}
+
+struct AmountWithBuffer<T> {
+    amount: T,
+    amount_with_buffer: T,
 }
 
 impl Deploy {
@@ -192,65 +199,6 @@ impl Deploy {
         let target_deployment_address = account.deploy_account_address()?;
 
         let account_deployment_tx = match fee_setting {
-            FeeSetting::Eth(fee_setting) => {
-                #[allow(deprecated)]
-                let account_deployment = factory.deploy_v1(undeployed_status.salt);
-                let account_deployment = match self.nonce {
-                    Some(nonce) => account_deployment.nonce(nonce),
-                    None => account_deployment,
-                };
-
-                // Sanity check. We don't really need to check again here actually
-                if account_deployment.address() != target_deployment_address {
-                    panic!("Unexpected account deployment address mismatch");
-                }
-
-                let (fee_type, account_deployment) = match fee_setting {
-                    TokenFeeSetting::Manual(fee) => (
-                        MaxFeeType::Manual {
-                            max_fee: fee.max_fee,
-                        },
-                        account_deployment.max_fee(fee.max_fee),
-                    ),
-                    TokenFeeSetting::EstimateOnly | TokenFeeSetting::None => {
-                        let estimated_fee = account_deployment
-                            .estimate_fee()
-                            .await
-                            .map_err(account_factory_error_mapper)?
-                            .overall_fee;
-
-                        if fee_setting.is_estimate_only() {
-                            println!(
-                                "{} ETH",
-                                format!("{}", felt_to_bigdecimal(estimated_fee, 18))
-                                    .bright_yellow(),
-                            );
-                            return Ok(());
-                        }
-
-                        // TODO: make buffer configurable
-                        let estimated_fee_with_buffer =
-                            (estimated_fee * Felt::THREE).floor_div(&NonZeroFelt::TWO);
-
-                        (
-                            MaxFeeType::Estimated {
-                                estimate: estimated_fee,
-                                estimate_with_buffer: estimated_fee_with_buffer,
-                            },
-                            account_deployment.max_fee(estimated_fee_with_buffer),
-                        )
-                    }
-                };
-
-                if self.simulate {
-                    print_colored_json(&account_deployment.simulate(false, false).await?)?;
-                    return Ok(());
-                }
-
-                fee_prompt(fee_type, target_deployment_address, FeeToken::Eth)?;
-
-                account_deployment.send().await
-            }
             FeeSetting::Strk(fee_setting) => {
                 let account_deployment = factory.deploy_v3(undeployed_status.salt);
                 let account_deployment = match self.nonce {
@@ -264,63 +212,109 @@ impl Deploy {
                 }
 
                 let (fee_type, account_deployment) = match fee_setting {
-                    TokenFeeSetting::Manual(fee) => match (fee.gas, fee.gas_price) {
+                    TokenFeeSetting::Manual(fee) => match (
+                        fee.l1_gas,
+                        fee.l1_gas_price,
+                        fee.l2_gas,
+                        fee.l2_gas_price,
+                        fee.l1_data_gas,
+                        fee.l1_data_gas_price,
+                    ) {
                         // Fees fully specified
-                        (Some(gas), Some(gas_price)) => (
+                        (
+                            Some(l1_gas),
+                            Some(l1_gas_price),
+                            Some(l2_gas),
+                            Some(l2_gas_price),
+                            Some(l1_data_gas),
+                            Some(l1_data_gas_price),
+                        ) => (
                             MaxFeeType::Manual {
-                                max_fee: Felt::from(gas) * Felt::from(gas_price),
+                                max_fee: Felt::from(l1_gas) * Felt::from(l1_gas_price)
+                                    + Felt::from(l2_gas) * Felt::from(l2_gas_price)
+                                    + Felt::from(l1_data_gas) * Felt::from(l1_data_gas_price),
                             },
-                            account_deployment.gas(gas).gas_price(gas_price),
+                            account_deployment
+                                .l1_gas(l1_gas)
+                                .l1_gas_price(l1_gas_price)
+                                .l2_gas(l2_gas)
+                                .l2_gas_price(l2_gas_price)
+                                .l1_data_gas(l1_data_gas)
+                                .l1_data_gas_price(l1_data_gas_price),
                         ),
-                        // `gas_price` only: fee estimation needed
-                        (None, Some(gas_price)) => {
+                        // All gas amounts specified: just need to find gas price
+                        (
+                            Some(l1_gas),
+                            l1_gas_price,
+                            Some(l2_gas),
+                            l2_gas_price,
+                            Some(l1_data_gas),
+                            l1_data_gas_price,
+                        ) => {
+                            let block = provider
+                                .get_block_with_tx_hashes(factory.block_id())
+                                .await?;
+
+                            let l1_gas_price = resolve_amount_buffer(
+                                &l1_gas_price,
+                                block.l1_gas_price().price_in_fri,
+                            )?;
+                            let l2_gas_price = resolve_amount_buffer(
+                                &l2_gas_price,
+                                block.l2_gas_price().price_in_fri,
+                            )?;
+                            let l1_data_gas_price = resolve_amount_buffer(
+                                &l1_data_gas_price,
+                                block.l1_data_gas_price().price_in_fri,
+                            )?;
+
+                            (
+                                MaxFeeType::Estimated {
+                                    estimate: Felt::from(l1_gas) * Felt::from(l1_gas_price.amount)
+                                        + Felt::from(l2_gas) * Felt::from(l2_gas_price.amount)
+                                        + Felt::from(l1_data_gas)
+                                            * Felt::from(l1_data_gas_price.amount),
+                                    estimate_with_buffer: Felt::from(l1_gas)
+                                        * Felt::from(l1_gas_price.amount_with_buffer)
+                                        + Felt::from(l2_gas)
+                                            * Felt::from(l2_gas_price.amount_with_buffer)
+                                        + Felt::from(l1_data_gas)
+                                            * Felt::from(l1_data_gas_price.amount_with_buffer),
+                                },
+                                account_deployment
+                                    .l1_gas(l1_gas)
+                                    .l1_gas_price(l1_gas_price.amount_with_buffer)
+                                    .l2_gas(l2_gas)
+                                    .l2_gas_price(l2_gas_price.amount_with_buffer)
+                                    .l1_data_gas(l1_data_gas)
+                                    .l1_data_gas_price(l1_data_gas_price.amount_with_buffer),
+                            )
+                        }
+                        // Full estimation needed
+                        (
+                            l1_gas,
+                            l1_gas_price,
+                            l2_gas,
+                            l2_gas_price,
+                            l1_data_gas,
+                            l1_data_gas_price,
+                        ) => {
                             let estimated_fee = account_deployment
                                 .estimate_fee()
                                 .await
                                 .map_err(account_factory_error_mapper)?;
 
-                            // TODO: make buffer configurable
-                            let gas_with_buffer = (estimated_fee.gas_consumed * Felt::THREE)
-                                .floor_div(&NonZeroFelt::TWO);
-
-                            (
-                                MaxFeeType::Estimated {
-                                    estimate: estimated_fee.gas_consumed * Felt::from(gas_price),
-                                    estimate_with_buffer: gas_with_buffer * Felt::from(gas_price),
-                                },
-                                account_deployment
-                                    .gas(
-                                        gas_with_buffer.to_u64().ok_or_else(|| {
-                                            anyhow::anyhow!("gas amount overflow")
-                                        })?,
-                                    )
-                                    .gas_price(gas_price),
-                            )
+                            resolve_estimate_buffer(
+                                account_deployment,
+                                &estimated_fee,
+                                &l1_gas,
+                                &l1_gas_price,
+                                &l2_gas,
+                                &l2_gas_price,
+                                &l1_data_gas,
+                                &l1_data_gas_price,
+                            )?
                         }
-                        // `gas` only: need to find gas price
-                        (Some(gas), None) => {
-                            let block = provider
-                                .get_block_with_tx_hashes(factory.block_id())
-                                .await?;
-
-                            // TODO: make buffer configurable
-                            let gas_price_with_buffer = (block.l1_gas_price().price_in_fri
-                                * Felt::THREE)
-                                .floor_div(&NonZeroFelt::TWO);
-
-                            (
-                                MaxFeeType::Estimated {
-                                    estimate: Felt::from(gas) * block.l1_gas_price().price_in_fri,
-                                    estimate_with_buffer: Felt::from(gas) * gas_price_with_buffer,
-                                },
-                                account_deployment.gas(gas).gas_price(
-                                    gas_price_with_buffer
-                                        .to_u128()
-                                        .ok_or_else(|| anyhow::anyhow!("gas price overflow"))?,
-                                ),
-                            )
-                        }
-                        (None, None) => unreachable!(),
                     },
                     TokenFeeSetting::EstimateOnly | TokenFeeSetting::None => {
                         let estimated_fee = account_deployment
@@ -337,30 +331,16 @@ impl Deploy {
                             return Ok(());
                         }
 
-                        // TODO: make buffer configurable
-                        let gas =
-                            (estimated_fee.gas_consumed * Felt::THREE).floor_div(&NonZeroFelt::TWO);
-                        let gas_price =
-                            (estimated_fee.gas_price * Felt::THREE).floor_div(&NonZeroFelt::TWO);
-
-                        let estimated_fee_with_buffer = gas * gas_price;
-
-                        (
-                            MaxFeeType::Estimated {
-                                estimate: estimated_fee.overall_fee,
-                                estimate_with_buffer: estimated_fee_with_buffer,
-                            },
-                            account_deployment
-                                .gas(
-                                    gas.to_u64()
-                                        .ok_or_else(|| anyhow::anyhow!("gas amount overflow"))?,
-                                )
-                                .gas_price(
-                                    gas_price
-                                        .to_u128()
-                                        .ok_or_else(|| anyhow::anyhow!("gas price overflow"))?,
-                                ),
-                        )
+                        resolve_estimate_buffer(
+                            account_deployment,
+                            &estimated_fee,
+                            &None,
+                            &None,
+                            &None,
+                            &None,
+                            &None,
+                            &None,
+                        )?
                     }
                 };
 
@@ -459,4 +439,75 @@ fn fee_prompt(fee_type: MaxFeeType, deployed_address: Felt, fee_token: FeeToken)
     std::io::stdin().read_line(&mut String::new())?;
 
     Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::type_complexity)]
+fn resolve_estimate_buffer<'a>(
+    account_deployment: AccountDeploymentV3<
+        'a,
+        AnyAccountFactory<Arc<AnySigner>, Arc<ExtendedProvider>>,
+    >,
+    estimated_fee: &FeeEstimate,
+    l1_gas: &Option<u64>,
+    l1_gas_price: &Option<u128>,
+    l2_gas: &Option<u64>,
+    l2_gas_price: &Option<u128>,
+    l1_data_gas: &Option<u64>,
+    l1_data_gas_price: &Option<u128>,
+) -> Result<(
+    MaxFeeType,
+    AccountDeploymentV3<'a, AnyAccountFactory<Arc<AnySigner>, Arc<ExtendedProvider>>>,
+)> {
+    let l1_gas = resolve_amount_buffer(l1_gas, estimated_fee.l1_gas_consumed)?;
+    let l2_gas = resolve_amount_buffer(l2_gas, estimated_fee.l2_gas_consumed)?;
+    let l1_data_gas = resolve_amount_buffer(l1_data_gas, estimated_fee.l1_data_gas_consumed)?;
+
+    let l1_gas_price = resolve_amount_buffer(l1_gas_price, estimated_fee.l1_gas_price)?;
+    let l2_gas_price = resolve_amount_buffer(l2_gas_price, estimated_fee.l2_gas_price)?;
+    let l1_data_gas_price =
+        resolve_amount_buffer(l1_data_gas_price, estimated_fee.l1_data_gas_price)?;
+
+    Ok((
+        MaxFeeType::Estimated {
+            estimate: Felt::from(l1_gas.amount) * Felt::from(l1_gas_price.amount)
+                + Felt::from(l2_gas.amount) * Felt::from(l2_gas_price.amount)
+                + Felt::from(l1_data_gas.amount) * Felt::from(l1_data_gas_price.amount),
+            estimate_with_buffer: Felt::from(l1_gas.amount_with_buffer)
+                * Felt::from(l1_gas_price.amount_with_buffer)
+                + Felt::from(l2_gas.amount_with_buffer)
+                    * Felt::from(l2_gas_price.amount_with_buffer)
+                + Felt::from(l1_data_gas.amount_with_buffer)
+                    * Felt::from(l1_data_gas_price.amount_with_buffer),
+        },
+        account_deployment
+            .l1_gas(l1_gas.amount_with_buffer)
+            .l1_gas_price(l1_gas_price.amount_with_buffer)
+            .l2_gas(l2_gas.amount_with_buffer)
+            .l2_gas_price(l2_gas_price.amount_with_buffer)
+            .l1_data_gas(l1_data_gas.amount_with_buffer)
+            .l1_data_gas_price(l1_data_gas_price.amount_with_buffer),
+    ))
+}
+
+fn resolve_amount_buffer<T>(manual: &Option<T>, estimate: Felt) -> Result<AmountWithBuffer<T>>
+where
+    T: Copy + TryFrom<Felt>,
+{
+    Ok(match manual {
+        // No buffer applied when a manual override exists
+        Some(manual) => AmountWithBuffer {
+            amount: *manual,
+            amount_with_buffer: *manual,
+        },
+        // TODO: make buffer configurable
+        None => AmountWithBuffer {
+            amount: estimate
+                .try_into()
+                .map_err(|_| anyhow::anyhow!("gas amount or price overflow"))?,
+            amount_with_buffer: ((estimate * Felt::THREE).floor_div(&NonZeroFelt::TWO))
+                .try_into()
+                .map_err(|_| anyhow::anyhow!("gas amount or price overflow"))?,
+        },
+    })
 }

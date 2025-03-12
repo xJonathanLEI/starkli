@@ -82,10 +82,8 @@ impl Deploy {
         // TODO: allow custom UDC
         let factory = ContractFactory::new_with_udc(class_hash, account, DEFAULT_UDC_ADDRESS);
 
-        // Deployed address is the same regardless of v1 or v3 transaction is used
-        #[allow(deprecated)]
         let deployed_address = factory
-            .deploy_v1(ctor_args.clone(), salt, !self.not_unique)
+            .deploy_v3(ctor_args.clone(), salt, !self.not_unique)
             .deployed_address();
 
         if !fee_setting.is_estimate_only() {
@@ -101,41 +99,6 @@ impl Deploy {
         }
 
         let deployment_tx = match fee_setting {
-            FeeSetting::Eth(fee_setting) => {
-                #[allow(deprecated)]
-                let contract_deployment = factory
-                    .deploy_v1(ctor_args, salt, !self.not_unique)
-                    .fee_estimate_multiplier(1.5f64);
-                let contract_deployment = match self.nonce {
-                    Some(nonce) => contract_deployment.nonce(nonce),
-                    None => contract_deployment,
-                };
-
-                let contract_deployment = match fee_setting {
-                    TokenFeeSetting::EstimateOnly => {
-                        let estimated_fee = contract_deployment
-                            .estimate_fee()
-                            .await
-                            .map_err(account_error_mapper)?
-                            .overall_fee;
-
-                        eprintln!(
-                            "{} ETH",
-                            format!("{}", felt_to_bigdecimal(estimated_fee, 18)).bright_yellow(),
-                        );
-                        return Ok(());
-                    }
-                    TokenFeeSetting::Manual(fee) => contract_deployment.max_fee(fee.max_fee),
-                    TokenFeeSetting::None => contract_deployment,
-                };
-
-                if self.simulate {
-                    print_colored_json(&contract_deployment.simulate(false, false).await?)?;
-                    return Ok(());
-                }
-
-                contract_deployment.send().await
-            }
             FeeSetting::Strk(fee_setting) => {
                 let contract_deployment = factory.deploy_v3(ctor_args, salt, !self.not_unique);
                 let contract_deployment = match self.nonce {
@@ -158,14 +121,34 @@ impl Deploy {
                         return Ok(());
                     }
                     TokenFeeSetting::Manual(fee) => {
-                        let contract_deployment = if let Some(gas) = fee.gas {
-                            contract_deployment.gas(gas)
+                        let contract_deployment = if let Some(l1_gas) = fee.l1_gas {
+                            contract_deployment.l1_gas(l1_gas)
+                        } else {
+                            contract_deployment
+                        };
+                        let contract_deployment = if let Some(l2_gas) = fee.l2_gas {
+                            contract_deployment.l2_gas(l2_gas)
+                        } else {
+                            contract_deployment
+                        };
+                        let contract_deployment = if let Some(l1_data_gas) = fee.l1_data_gas {
+                            contract_deployment.l1_data_gas(l1_data_gas)
                         } else {
                             contract_deployment
                         };
 
-                        if let Some(gas_price) = fee.gas_price {
-                            contract_deployment.gas_price(gas_price)
+                        let contract_deployment = if let Some(l1_gas_price) = fee.l1_gas_price {
+                            contract_deployment.l1_gas_price(l1_gas_price)
+                        } else {
+                            contract_deployment
+                        };
+                        let contract_deployment = if let Some(l2_gas_price) = fee.l2_gas_price {
+                            contract_deployment.l2_gas_price(l2_gas_price)
+                        } else {
+                            contract_deployment
+                        };
+                        if let Some(l1_data_gas_price) = fee.l1_data_gas_price {
+                            contract_deployment.l1_data_gas_price(l1_data_gas_price)
                         } else {
                             contract_deployment
                         }

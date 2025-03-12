@@ -1,9 +1,6 @@
 use async_trait::async_trait;
 use starknet::{
-    accounts::{
-        AccountFactory, PreparedAccountDeploymentV1, PreparedAccountDeploymentV3,
-        RawAccountDeploymentV1, RawAccountDeploymentV3,
-    },
+    accounts::{AccountFactory, PreparedAccountDeploymentV3, RawAccountDeploymentV3},
     core::types::{BlockId, BlockTag, Felt},
     providers::Provider,
     signers::{Signer, SignerInteractivityContext},
@@ -83,53 +80,6 @@ where
 
     fn block_id(&self) -> BlockId {
         self.block_id
-    }
-
-    async fn sign_deployment_v1(
-        &self,
-        deployment: &RawAccountDeploymentV1,
-        query_only: bool,
-    ) -> Result<Vec<Felt>, Self::SignError> {
-        let tx_hash = PreparedAccountDeploymentV1::from_raw(deployment.clone(), self)
-            .transaction_hash(query_only);
-
-        let signature = self.signer.sign_hash(&tx_hash).await?;
-
-        let mut aux_data = vec![
-            // account_implementation
-            self.class_hash,
-            // signer_type
-            Felt::ZERO,
-            // secp256r1_signer.x.low
-            Felt::ZERO,
-            // secp256r1_signer.x.high
-            Felt::ZERO,
-            // secp256r1_signer.y.low
-            Felt::ZERO,
-            // secp256r1_signer.y.high
-            Felt::ZERO,
-            // multisig_threshold
-            Felt::ZERO,
-            // withdrawal_limit_low
-            Felt::ZERO,
-            // fee_rate
-            Felt::ZERO,
-            // stark_fee_rate
-            Felt::ZERO,
-            // chain_id
-            self.chain_id,
-        ];
-
-        let aux_hash = poseidon_hash_many(&aux_data);
-
-        let aux_signature = self.signer.sign_hash(&aux_hash).await?;
-
-        let mut full_signature_payload = vec![signature.r, signature.s];
-        full_signature_payload.append(&mut aux_data);
-        full_signature_payload.push(aux_signature.r);
-        full_signature_payload.push(aux_signature.s);
-
-        Ok(full_signature_payload)
     }
 
     async fn sign_deployment_v3(
