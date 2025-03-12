@@ -27,13 +27,11 @@ Once the declaration is successful, Starkli displays the class hash declared. Th
 
 When declaring Sierra classes, Starknet requires a so-called _CASM hash_ to be provided. This is important because as of this writing, the Sierra-to-CASM compilation process isn't proven by the OS. Should the _CASM hash_ not be provided and signed by the user, a malicious sequencer would be able to claim anything to be the CASM output, effectively deploying arbitrary code.
 
-To come up with the _CASM hash_, Starkli compiles the Sierra class provided under the hood. By default, it automatically chooses one of the compiler versions shipped with Starkli itself based on the network. Users can override the compiler version used by providing a `--compiler-version <VERSION>` option.
+To come up with the _CASM hash_, Starkli compiles the Sierra class provided under the hood. Starkli ships with different versions of Sierra compilers built-in so that declaration does not depend on Cairo toolchain installation.
 
 > ℹ️ **Note**
 >
-> Unless you're working with custom networks where it's infeasible for Starkli to detect the right compiler version, you shouldn't need to manually choose a version with `--compiler-version`.
->
-> If Starkli _does_ choose the wrong compiler version, try upgrading Starkli, or file a bug if you're already on the latest release.
+> If you encounter an error similar to `unsupported Sierra version: x.y.z`, try upgrading Starkli, or file a bug if you're already on the latest release.
 
 > ℹ️ **Note**
 >
