@@ -1,12 +1,12 @@
 # Transaction fees
 
-Historically, Starknet transaction fees could only be paid with _ETH_. With the introduction of [v3 transactions](https://github.com/starknet-io/SNIPs/blob/main/SNIPS/snip-8.md), however, users now have the option to pay fees in _STRK_ if they so choose.
-
-By default, Starkli sends transactions with _ETH_ fees. The fee token can be set by using the `--fee-token` option (e.g., `--fee-token STRK`). Alternatively, you can also use the `--eth` or `--strk` shorthands.
+Historically, Starknet transaction fees could be paid with either _ETH_ or _STRK_, as indicated by the transaction version used. However, since Starknet JSON-RPC spec version v0.8.0, the ability to send pre-v3 transactions (and thus pay fees with _ETH_) had been dropped. As a result, Starkli also no longer supports paying fees in _ETH_ starting with release v0.4.0, where Starkli switched from spec v0.7.1 to v0.8.0.
 
 > ℹ️ **Note**
 >
-> While it might seem to be the case, it's not true that v3 transactions provide the option to choose between fee tokens. Instead, v3 transactions are _always_ paid with _STRK_. Starkli abstracts this away by automatically falling back to using older transaction versions when users choose to pay fees in _ETH_.
+> While JSON-RPC spec v0.8.0 dropped support for pre-v3 transactions, as of this writing they are still accepted by the Starknet network itself. If you need to send pre-v3 transactions, use a v0.3.x Starkli release.
+>
+> This could be useful you are working with certain contracts that revert on v3 transactions. Do note that it's recommended that you upgrade these contracts to be v3-compatible, as pre-v3 transactions will eventually be disabled on the network itself.
 
 ## Setting transaction fees manually
 
@@ -16,53 +16,53 @@ By default, Starkli requests a fee estimate from the [provider](./providers.md),
 - You want to speed up command execution by skipping fee estimation; or
 - The transaction in question is flaky, so the estimation might fail.
 
-Since transactions paying in _ETH_ and _STRK_ are priced differently, the options for manually setting fees are different depending on which token you're paying fees with.
-
-### Setting _ETH_ fees manually
-
-Transactions that pay fees in _ETH_ are priced using a single `max_fee` value, which indicates the maximum amount of fees (in `Wei`) that an account is willing to pay.
-
-Users can set the `max_fee` value by using the `--max-fee` option, which accepts a decimal value in Ether (18 decimals). For example, to perform an _ETH_ transfer with a `max_fee` of `0.01 ETH`:
-
-```console
-starkli invoke eth transfer 0x1234 u256:100 --max-fee 0.01
-```
-
-If you already have the `max_fee` value in `Wei`, you can also use the raw value directly via the `--max-fee-raw` option. An equivalent command to the example above would be:
-
-```console
-starkli invoke eth transfer 0x1234 u256:100 --max-fee-raw 10000000000000000
-```
-
 ### Setting _STRK_ fees manually
 
-Transactions that pay fees in _STRK_ are priced differently from those that pay with _ETH_. Specifically, the fee is made up of two components: `gas` and `gas_price`, which indicate the maximum amount of **L1 gas** and the maximum **L1 gas price** a user is willing to pay, respectively.
+In transactions that pay fees in _STRK_, the fee is made up of 6 components:
 
-To set the `gas` value, simply use the `--gas` option. For example, to manually set a `gas` value of `50000`:
+- `l1_gas`
+- `l1_gas_price`
+- `l2_gas`
+- `l2_gas_price`
+- `l1_data_gas`
+- `l1_data_gas_price`
+
+These components indicate the maximum amount a user is willing to pay for a specific resource.
+
+Each component has its own command line option for setting a manual value to be used:
+
+- `l1_gas`: `--l1-gas`
+- `l1_gas_price`: `--l1-gas-price` or `--l1-gas-price-raw`
+- `l2_gas`: `--l2-gas`
+- `l2_gas_price`: `--l2-gas-price` or `--l2-gas-price-raw`
+- `l1_data_gas`: `--l1-data-gas`
+- `l1_data_gas_price`: `--l1-data-gas-price` or `--l1-data-gas-price-raw`
+
+To set any of the `gas` values, simply use its corresponding option. For example, to manually set a `l1_gas` value of `50000`:
 
 ```console
-starkli invoke --strk eth transfer 0x1234 u256:100 --gas 50000
+starkli invoke --strk eth transfer 0x1234 u256:100 --l1-gas 50000
 ```
 
 > 💡 **Tips**
 >
-> When `gas` is manually set but `gas_price` is not, Starkli does _not_ perform a fee estimation and instead sources the `gas_price` value directly from the pending block header. Therefore, transaction failure will _not_ be detected until it's reverted on-chain.
+> When _all_ 3 `gas` options are manually set, Starkli does _not_ perform a fee estimation and instead sources the `gas_price` values directly from the pending block header. Therefore, transaction failure will _not_ be detected until it's reverted on-chain.
 
-To set the `gas_price` value, use the `--gas-price` option, which accepts a decimal value in _STRK_ (18 decimals). For example, to set the L1 gas price at `0.0001` _STRK_:
+To set any of the `gas_price` values, use any of its two options. The `--xx-gas-price` variant accepts a decimal value in _STRK_ (18 decimals). For example, to set the L1 gas price at `0.0001` _STRK_:
 
 ```console
-starkli invoke --strk eth transfer 0x1234 u256:100 --gas-price 0.0001
+starkli invoke --strk eth transfer 0x1234 u256:100 --l1-gas-price 0.0001
 ```
 
-Similar to setting `max_fee` for _ETH_-priced transactions, the `gas_price` value can also be set with raw values by using `--gas-price-raw`. This command is equivalent to the one shown above:
+Alternatively, the `‐‐xx-gas-price-raw` variant can be used for raw price values in _FRI_ (the smallest unit of _STRK_). This command is equivalent to the one shown above:
 
 ```console
-starkli invoke --strk eth transfer 0x1234 u256:100 --gas-price-raw 100000000000000
+starkli invoke --strk eth transfer 0x1234 u256:100 --l1-gas-price-raw 100000000000000
 ```
 
 > 💡 **Tips**
 >
-> When `gas_price` is manually set but `gas` is not, Starkli will still perform a fee estimation to determine how much L1 gas is needed.
+> Even when all `gas_price` options are manually set, as long as _any_ of the `gas` options is not set, Starkli will still perform a fee estimation to determine how much gas is needed.
 
 ## Estimating the fee only (dry run)
 

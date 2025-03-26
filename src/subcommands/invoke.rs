@@ -103,39 +103,6 @@ impl Invoke {
         let account = self.account.into_account(provider.clone()).await?;
 
         let invoke_tx = match fee_setting {
-            FeeSetting::Eth(fee_setting) => {
-                #[allow(deprecated)]
-                let execution = account.execute_v1(calls).fee_estimate_multiplier(1.5f64);
-                let execution = match self.nonce {
-                    Some(nonce) => execution.nonce(nonce),
-                    None => execution,
-                };
-
-                let execution = match fee_setting {
-                    TokenFeeSetting::EstimateOnly => {
-                        let estimated_fee = execution
-                            .estimate_fee()
-                            .await
-                            .map_err(account_error_mapper)?
-                            .overall_fee;
-
-                        println!(
-                            "{} ETH",
-                            format!("{}", felt_to_bigdecimal(estimated_fee, 18)).bright_yellow(),
-                        );
-                        return Ok(());
-                    }
-                    TokenFeeSetting::Manual(fee) => execution.max_fee(fee.max_fee),
-                    TokenFeeSetting::None => execution,
-                };
-
-                if self.simulate {
-                    print_colored_json(&execution.simulate(false, false).await?)?;
-                    return Ok(());
-                }
-
-                execution.send().await
-            }
             FeeSetting::Strk(fee_setting) => {
                 let execution = account.execute_v3(calls);
                 let execution = match self.nonce {
@@ -158,14 +125,34 @@ impl Invoke {
                         return Ok(());
                     }
                     TokenFeeSetting::Manual(fee) => {
-                        let execution = if let Some(gas) = fee.gas {
-                            execution.gas(gas)
+                        let execution = if let Some(l1_gas) = fee.l1_gas {
+                            execution.l1_gas(l1_gas)
+                        } else {
+                            execution
+                        };
+                        let execution = if let Some(l2_gas) = fee.l2_gas {
+                            execution.l2_gas(l2_gas)
+                        } else {
+                            execution
+                        };
+                        let execution = if let Some(l1_data_gas) = fee.l1_data_gas {
+                            execution.l1_data_gas(l1_data_gas)
                         } else {
                             execution
                         };
 
-                        if let Some(gas_price) = fee.gas_price {
-                            execution.gas_price(gas_price)
+                        let execution = if let Some(l1_gas_price) = fee.l1_gas_price {
+                            execution.l1_gas_price(l1_gas_price)
+                        } else {
+                            execution
+                        };
+                        let execution = if let Some(l2_gas_price) = fee.l2_gas_price {
+                            execution.l2_gas_price(l2_gas_price)
+                        } else {
+                            execution
+                        };
+                        if let Some(l1_data_gas_price) = fee.l1_data_gas_price {
+                            execution.l1_data_gas_price(l1_data_gas_price)
                         } else {
                             execution
                         }

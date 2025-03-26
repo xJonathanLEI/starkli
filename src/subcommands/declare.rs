@@ -20,7 +20,7 @@ use crate::{
     error::account_error_mapper,
     fee::{FeeArgs, FeeSetting, TokenFeeSetting},
     path::ExpandedPathbufParser,
-    utils::{felt_to_bigdecimal, parse_compressed_legacy_class, print_colored_json, watch_tx},
+    utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
@@ -61,7 +61,6 @@ pub struct Declare {
 
 enum Declarable {
     CairoOne(FlattenedSierraClass),
-    CairoZero(LegacyContractClass),
 }
 
 impl Declare {
@@ -88,14 +87,20 @@ impl Declare {
             serde_json::from_reader::<_, FlattenedSierraClass>(std::fs::File::open(&self.file)?)
         {
             Declarable::CairoOne(class)
-        } else if let Ok(class) =
-            serde_json::from_reader::<_, LegacyContractClass>(std::fs::File::open(&self.file)?)
+        } else if serde_json::from_reader::<_, LegacyContractClass>(std::fs::File::open(
+            &self.file,
+        )?)
+        .is_ok()
+            || serde_json::from_reader::<_, CompressedLegacyContractClass>(std::fs::File::open(
+                &self.file,
+            )?)
+            .is_ok()
         {
-            Declarable::CairoZero(class)
-        } else if let Ok(class) = serde_json::from_reader::<_, CompressedLegacyContractClass>(
-            std::fs::File::open(&self.file)?,
-        ) {
-            Declarable::CairoZero(parse_compressed_legacy_class(class)?)
+            anyhow::bail!(
+                "declaring Cairo 0 classes is no longer supported starting \
+                from Starkli v0.4.0, as Starknet JSON-RPC v0.8.0 no longer accepts \
+                v1 transactions. Use Starkli v0.3.x to declare this class."
+            )
         } else if serde_json::from_reader::<_, CompiledClass>(std::fs::File::open(&self.file)?)
             .is_ok()
         {
@@ -180,42 +185,6 @@ impl Declare {
                 }
 
                 let declare_tx = match fee_setting {
-                    FeeSetting::Eth(fee_setting) => {
-                        #[allow(deprecated)]
-                        let declaration = account
-                            .declare_v2(Arc::new(class), casm_class_hash)
-                            .fee_estimate_multiplier(1.5f64);
-                        let declaration = match self.nonce {
-                            Some(nonce) => declaration.nonce(nonce),
-                            None => declaration,
-                        };
-
-                        let declaration = match fee_setting {
-                            TokenFeeSetting::EstimateOnly => {
-                                let estimated_fee = declaration
-                                    .estimate_fee()
-                                    .await
-                                    .map_err(account_error_mapper)?
-                                    .overall_fee;
-
-                                println!(
-                                    "{} ETH",
-                                    format!("{}", felt_to_bigdecimal(estimated_fee, 18))
-                                        .bright_yellow(),
-                                );
-                                return Ok(());
-                            }
-                            TokenFeeSetting::Manual(fee) => declaration.max_fee(fee.max_fee),
-                            TokenFeeSetting::None => declaration,
-                        };
-
-                        if self.simulate {
-                            print_colored_json(&declaration.simulate(false, false).await?)?;
-                            return Ok(());
-                        }
-
-                        declaration.send().await
-                    }
                     FeeSetting::Strk(fee_setting) => {
                         let declaration = account.declare_v3(Arc::new(class), casm_class_hash);
                         let declaration = match self.nonce {
@@ -239,14 +208,34 @@ impl Declare {
                                 return Ok(());
                             }
                             TokenFeeSetting::Manual(fee) => {
-                                let declaration = if let Some(gas) = fee.gas {
-                                    declaration.gas(gas)
+                                let declaration = if let Some(l1_gas) = fee.l1_gas {
+                                    declaration.l1_gas(l1_gas)
+                                } else {
+                                    declaration
+                                };
+                                let declaration = if let Some(l2_gas) = fee.l2_gas {
+                                    declaration.l2_gas(l2_gas)
+                                } else {
+                                    declaration
+                                };
+                                let declaration = if let Some(l1_data_gas) = fee.l1_data_gas {
+                                    declaration.l1_data_gas(l1_data_gas)
                                 } else {
                                     declaration
                                 };
 
-                                if let Some(gas_price) = fee.gas_price {
-                                    declaration.gas_price(gas_price)
+                                let declaration = if let Some(l1_gas_price) = fee.l1_gas_price {
+                                    declaration.l1_gas_price(l1_gas_price)
+                                } else {
+                                    declaration
+                                };
+                                let declaration = if let Some(l2_gas_price) = fee.l2_gas_price {
+                                    declaration.l2_gas_price(l2_gas_price)
+                                } else {
+                                    declaration
+                                };
+                                if let Some(l1_data_gas_price) = fee.l1_data_gas_price {
+                                    declaration.l1_data_gas_price(l1_data_gas_price)
                                 } else {
                                     declaration
                                 }
@@ -266,74 +255,6 @@ impl Declare {
                 .transaction_hash;
 
                 (class_hash, declare_tx)
-            }
-            Declarable::CairoZero(mut class) => {
-                if self.no_abi {
-                    class.abi = vec![];
-                }
-
-                // Declaring Cairo 0 class
-                let class_hash = class.class_hash()?;
-
-                // TODO: add option to skip checking
-                if Self::check_already_declared(&provider, class_hash).await? {
-                    return Ok(());
-                }
-
-                if !fee_setting.is_estimate_only() {
-                    eprintln!(
-                        "Declaring Cairo 0 (deprecated) class: {}",
-                        format!("{:#064x}", class_hash).bright_yellow()
-                    );
-                }
-
-                // TODO: make buffer configurable
-                let declaration = account
-                    .declare_legacy(Arc::new(class))
-                    .fee_estimate_multiplier(1.5f64);
-                let declaration = match self.nonce {
-                    Some(nonce) => declaration.nonce(nonce),
-                    None => declaration,
-                };
-
-                let declaration = match fee_setting {
-                    FeeSetting::Eth(TokenFeeSetting::EstimateOnly) => {
-                        let estimated_fee = declaration
-                            .estimate_fee()
-                            .await
-                            .map_err(account_error_mapper)?
-                            .overall_fee;
-
-                        println!(
-                            "{} ETH",
-                            format!("{}", felt_to_bigdecimal(estimated_fee, 18)).bright_yellow(),
-                        );
-                        return Ok(());
-                    }
-                    FeeSetting::Eth(TokenFeeSetting::Manual(fee)) => {
-                        declaration.max_fee(fee.max_fee)
-                    }
-                    FeeSetting::Eth(TokenFeeSetting::None) => declaration,
-                    FeeSetting::Strk(_) => {
-                        anyhow::bail!(
-                            "Cairo 0 declaration transactions must not pay fees with STRK"
-                        )
-                    }
-                };
-
-                if self.simulate {
-                    print_colored_json(&declaration.simulate(false, false).await?)?;
-                    return Ok(());
-                }
-
-                (
-                    class_hash,
-                    declaration
-                        .send()
-                        .await
-                        .map_err(account_error_mapper)?
-                        .transaction_hash,
-                )
             }
         };
 

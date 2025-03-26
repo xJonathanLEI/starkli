@@ -8,18 +8,17 @@ With Starkli, this is done with the `starkli declare` command.
 >
 > You need both a [signer](./signers.md) and an [account](./accounts.md) for this. The commands shown in this page omit the signer and account options for better readability, and assume you've properly configured the environment variables.
 
-You can declare the following types of contract artifacts:
+You can declare Sierra classes, which are the output of the `starknet-compile` command, or `target/dev/xxxx.contract_class.json` files if you're using `Scarb`.
 
-- Sierra classes: output of the `starknet-compile` command; and
-- _(Deprecated)_ Legacy Cairo 0 classes: output of the `starknet-compile-deprecated` command
+> ℹ️ **Note**
+>
+> Starting from Starkli v0.4.0, declaring Cairo 0 (legacy) classes is no longer supported. To declare such a class, use a v0.3.x Starkli release instead.
 
 To declare any class, simply run:
 
 ```console
 starkli declare /path/to/class/file
 ```
-
-Starkli is capable of determining the type of class provided. There are no separate commands for Sierra and legacy classes.
 
 Once the declaration is successful, Starkli displays the class hash declared. The class hash is needed for [deploying contracts](./deploying-contracts.md).
 

@@ -202,18 +202,18 @@ impl ProviderArgs {
                 let url = match vendor {
                     FreeProviderVendor::Blast => {
                         if matched_network.chain_id == CHAIN_ID_MAINNET {
-                            Some("https://starknet-mainnet.public.blastapi.io/rpc/v0_7")
+                            Some("https://starknet-mainnet.public.blastapi.io/rpc/v0_8")
                         } else if matched_network.chain_id == CHAIN_ID_SEPOLIA {
-                            Some("https://starknet-sepolia.public.blastapi.io/rpc/v0_7")
+                            Some("https://starknet-sepolia.public.blastapi.io/rpc/v0_8")
                         } else {
                             None
                         }
                     }
                     FreeProviderVendor::Nethermind => {
                         if matched_network.chain_id == CHAIN_ID_MAINNET {
-                            Some("https://free-rpc.nethermind.io/mainnet-juno/rpc/v0_7")
+                            Some("https://free-rpc.nethermind.io/mainnet-juno/rpc/v0_8")
                         } else if matched_network.chain_id == CHAIN_ID_SEPOLIA {
-                            Some("https://free-rpc.nethermind.io/sepolia-juno/rpc/v0_7")
+                            Some("https://free-rpc.nethermind.io/sepolia-juno/rpc/v0_8")
                         } else {
                             None
                         }
@@ -345,6 +345,17 @@ impl Provider for ExtendedProvider {
             contract_address,
             key,
             block_id,
+        )
+        .await
+    }
+
+    async fn get_messages_status(
+        &self,
+        transaction_hash: Hash256,
+    ) -> Result<Vec<MessageWithStatus>, ProviderError> {
+        <JsonRpcClient<HttpTransport> as Provider>::get_messages_status(
+            &self.provider,
+            transaction_hash,
         )
         .await
     }
@@ -575,6 +586,29 @@ impl Provider for ExtendedProvider {
             &self.provider,
             block_id,
             contract_address,
+        )
+        .await
+    }
+
+    async fn get_storage_proof<B, H, A, K>(
+        &self,
+        block_id: B,
+        class_hashes: H,
+        contract_addresses: A,
+        contracts_storage_keys: K,
+    ) -> Result<StorageProof, ProviderError>
+    where
+        B: AsRef<ConfirmedBlockId> + Send + Sync,
+        H: AsRef<[Felt]> + Send + Sync,
+        A: AsRef<[Felt]> + Send + Sync,
+        K: AsRef<[ContractStorageKeys]> + Send + Sync,
+    {
+        <JsonRpcClient<HttpTransport> as Provider>::get_storage_proof(
+            &self.provider,
+            block_id,
+            class_hashes,
+            contract_addresses,
+            contracts_storage_keys,
         )
         .await
     }

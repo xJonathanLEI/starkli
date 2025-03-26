@@ -39,13 +39,13 @@ pub fn provider_error_mapper(err: ProviderError) -> anyhow::Error {
 fn map_starknet_error(err: StarknetError) -> anyhow::Error {
     match err {
         StarknetError::ContractError(err) => {
-            anyhow::anyhow!("ContractError: {}", err.revert_error.trim())
+            anyhow::anyhow!("ContractError: {:#?}", err.revert_error)
         }
         StarknetError::TransactionExecutionError(err) => {
             anyhow::anyhow!(
-                "TransactionExecutionError (tx index {}): {}",
+                "TransactionExecutionError (tx index {}): {:#?}",
                 err.transaction_index,
-                err.execution_error.trim()
+                err.execution_error
             )
         }
         StarknetError::ValidationFailure(err) => {
