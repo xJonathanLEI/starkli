@@ -17,9 +17,9 @@ use cairo_starknet_2_0_2::{
     casm_contract_class::CasmContractClass as Cairo_2_0_2_CasmClass,
     contract_class::ContractClass as Cairo_2_0_2_Class,
 };
-use cairo_starknet_2_11_2::{
-    casm_contract_class::CasmContractClass as Cairo_2_11_2_CasmClass,
-    contract_class::ContractClass as Cairo_2_11_2_Class,
+use cairo_starknet_2_11_4::{
+    casm_contract_class::CasmContractClass as Cairo_2_11_4_CasmClass,
+    contract_class::ContractClass as Cairo_2_11_4_Class,
 };
 use cairo_starknet_2_3_1::{
     casm_contract_class::CasmContractClass as Cairo_2_3_1_CasmClass,
@@ -62,7 +62,7 @@ pub enum LinkedCompilerVersion {
     V2_5_4,
     V2_6_4,
     V2_9_4,
-    V2_11_2,
+    V2_11_4,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -209,13 +209,13 @@ impl BuiltInCompiler {
 
                 serde_json::to_string(&casm_contract)?
             }
-            LinkedCompilerVersion::V2_11_2 => {
+            LinkedCompilerVersion::V2_11_4 => {
                 // TODO: directly convert type without going through JSON
-                let contract_class: Cairo_2_11_2_Class = serde_json::from_str(&sierra_class_json)?;
+                let contract_class: Cairo_2_11_4_Class = serde_json::from_str(&sierra_class_json)?;
 
                 // TODO: implement the `validate_compatible_sierra_version` call
 
-                let casm_contract = Cairo_2_11_2_CasmClass::from_contract_class(
+                let casm_contract = Cairo_2_11_4_CasmClass::from_contract_class(
                     contract_class,
                     false,
                     MAX_BYTECODE_SIZE,
@@ -297,7 +297,7 @@ impl MaybeUnknownSierraVersion {
 
 impl Default for LinkedCompilerVersion {
     fn default() -> Self {
-        Self::V2_11_2
+        Self::V2_11_4
     }
 }
 
@@ -311,7 +311,7 @@ impl Display for LinkedCompilerVersion {
             LinkedCompilerVersion::V2_5_4 => write!(f, "2.5.4"),
             LinkedCompilerVersion::V2_6_4 => write!(f, "2.6.4"),
             LinkedCompilerVersion::V2_9_4 => write!(f, "2.9.4"),
-            LinkedCompilerVersion::V2_11_2 => write!(f, "2.11.2"),
+            LinkedCompilerVersion::V2_11_4 => write!(f, "2.11.4"),
         }
     }
 }
@@ -369,6 +369,7 @@ impl From<SierraVersion> for LinkedCompilerVersion {
         // - v2.11.0: 1.7.0
         // - v2.11.1: 1.7.0
         // - v2.11.2: 1.7.0
+        // - v2.11.4: 1.7.0
 
         match value {
             SierraVersion::V1_0_0 => Self::V1_0_0,
@@ -378,7 +379,7 @@ impl From<SierraVersion> for LinkedCompilerVersion {
             SierraVersion::V1_4_0 => Self::V2_5_4,
             SierraVersion::V1_5_0 => Self::V2_6_4,
             SierraVersion::V1_6_0 => Self::V2_9_4,
-            SierraVersion::V1_7_0 => Self::V2_11_2,
+            SierraVersion::V1_7_0 => Self::V2_11_4,
         }
     }
 }

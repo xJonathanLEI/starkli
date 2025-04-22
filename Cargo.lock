@@ -565,10 +565,10 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-casm"
-version = "2.11.2"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.2#69807a18ee53d32e3ee12d714d9c1f7abc88279b"
+version = "2.11.4"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
 dependencies = [
- "cairo-lang-utils 2.11.2",
+ "cairo-lang-utils 2.11.4",
  "indoc",
  "num-bigint",
  "num-traits",
@@ -937,10 +937,10 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-eq-solver"
-version = "2.11.2"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.2#69807a18ee53d32e3ee12d714d9c1f7abc88279b"
+version = "2.11.4"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
 dependencies = [
- "cairo-lang-utils 2.11.2",
+ "cairo-lang-utils 2.11.4",
  "good_lp",
 ]
 
@@ -1709,11 +1709,11 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-sierra"
-version = "2.11.2"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.2#69807a18ee53d32e3ee12d714d9c1f7abc88279b"
+version = "2.11.4"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
 dependencies = [
  "anyhow",
- "cairo-lang-utils 2.11.2",
+ "cairo-lang-utils 2.11.4",
  "const-fnv1a-hash",
  "convert_case 0.7.1",
  "derivative",
@@ -1827,13 +1827,13 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-sierra-ap-change"
-version = "2.11.2"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.2#69807a18ee53d32e3ee12d714d9c1f7abc88279b"
+version = "2.11.4"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
 dependencies = [
- "cairo-lang-eq-solver 2.11.2",
- "cairo-lang-sierra 2.11.2",
- "cairo-lang-sierra-type-size 2.11.2",
- "cairo-lang-utils 2.11.2",
+ "cairo-lang-eq-solver 2.11.4",
+ "cairo-lang-sierra 2.11.4",
+ "cairo-lang-sierra-type-size 2.11.4",
+ "cairo-lang-utils 2.11.4",
  "itertools 0.14.0",
  "num-bigint",
  "num-traits",
@@ -1934,13 +1934,13 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-sierra-gas"
-version = "2.11.2"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.2#69807a18ee53d32e3ee12d714d9c1f7abc88279b"
+version = "2.11.4"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
 dependencies = [
- "cairo-lang-eq-solver 2.11.2",
- "cairo-lang-sierra 2.11.2",
- "cairo-lang-sierra-type-size 2.11.2",
- "cairo-lang-utils 2.11.2",
+ "cairo-lang-eq-solver 2.11.4",
+ "cairo-lang-sierra 2.11.4",
+ "cairo-lang-sierra-type-size 2.11.4",
+ "cairo-lang-utils 2.11.4",
  "itertools 0.14.0",
  "num-bigint",
  "num-traits",
@@ -2212,16 +2212,16 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-sierra-to-casm"
-version = "2.11.2"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.2#69807a18ee53d32e3ee12d714d9c1f7abc88279b"
+version = "2.11.4"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
 dependencies = [
  "assert_matches",
- "cairo-lang-casm 2.11.2",
- "cairo-lang-sierra 2.11.2",
- "cairo-lang-sierra-ap-change 2.11.2",
- "cairo-lang-sierra-gas 2.11.2",
- "cairo-lang-sierra-type-size 2.11.2",
- "cairo-lang-utils 2.11.2",
+ "cairo-lang-casm 2.11.4",
+ "cairo-lang-sierra 2.11.4",
+ "cairo-lang-sierra-ap-change 2.11.4",
+ "cairo-lang-sierra-gas 2.11.4",
+ "cairo-lang-sierra-type-size 2.11.4",
+ "cairo-lang-utils 2.11.4",
  "indoc",
  "itertools 0.14.0",
  "num-bigint",
@@ -2268,11 +2268,11 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-sierra-type-size"
-version = "2.11.2"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.2#69807a18ee53d32e3ee12d714d9c1f7abc88279b"
+version = "2.11.4"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
 dependencies = [
- "cairo-lang-sierra 2.11.2",
- "cairo-lang-utils 2.11.2",
+ "cairo-lang-sierra 2.11.4",
+ "cairo-lang-utils 2.11.4",
 ]
 
 [[package]]
@@ -2514,13 +2514,13 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-starknet-classes"
-version = "2.11.2"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.2#69807a18ee53d32e3ee12d714d9c1f7abc88279b"
+version = "2.11.4"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
 dependencies = [
- "cairo-lang-casm 2.11.2",
- "cairo-lang-sierra 2.11.2",
- "cairo-lang-sierra-to-casm 2.11.2",
- "cairo-lang-utils 2.11.2",
+ "cairo-lang-casm 2.11.4",
+ "cairo-lang-sierra 2.11.4",
+ "cairo-lang-sierra-to-casm 2.11.4",
+ "cairo-lang-utils 2.11.4",
  "convert_case 0.7.1",
  "itertools 0.14.0",
  "num-bigint",
@@ -2766,8 +2766,8 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-utils"
-version = "2.11.2"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.2#69807a18ee53d32e3ee12d714d9c1f7abc88279b"
+version = "2.11.4"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
 dependencies = [
  "hashbrown 0.15.2",
  "indexmap 2.8.0",
@@ -5504,7 +5504,7 @@ dependencies = [
  "cairo-lang-starknet 2.0.2",
  "cairo-lang-starknet 2.3.1",
  "cairo-lang-starknet 2.5.4",
- "cairo-lang-starknet-classes 2.11.2",
+ "cairo-lang-starknet-classes 2.11.4",
  "cairo-lang-starknet-classes 2.6.4",
  "cairo-lang-starknet-classes 2.9.4",
  "chrono",
