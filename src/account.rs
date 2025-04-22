@@ -2,6 +2,7 @@ use std::{fmt::Display, path::PathBuf};
 
 use anyhow::Result;
 use clap::Parser;
+use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use starknet::{
@@ -16,11 +17,14 @@ use starknet::{
     signers::{LocalWallet, SigningKey},
 };
 
-use crate::signer::{AnySigner, SignerArgs, SignerResolutionTask};
+use crate::{
+    signer::{AnySigner, SignerArgs, SignerResolutionTask},
+    utils::is_affected_braavos_class,
+};
 
 const BRAAVOS_SIGNER_TYPE_STARK: Felt = Felt::ONE;
 
-pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 25] = [
+pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 26] = [
     KnownAccountClass {
         class_hash: felt!("0x048dd59fabc729a5db3afdf649ecaf388e931647ab2f53ca3c6183fa480aa292"),
         variant: AccountVariantType::OpenZeppelinLegacy,
@@ -147,6 +151,11 @@ pub const KNOWN_ACCOUNT_CLASSES: [KnownAccountClass; 25] = [
         class_hash: felt!("0x05b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564"),
         variant: AccountVariantType::OpenZeppelin,
         description: "OpenZeppelin account contract v1.0.0 compiled with cairo v2.9.4",
+    },
+    KnownAccountClass {
+        class_hash: felt!("0x03957f9f5a1cbfe918cedc2015c85200ca51a5f7506ecb6de98a5207b759bf8a"),
+        variant: AccountVariantType::Braavos,
+        description: "Braavos official account (as of v4.0.7)",
     },
 ];
 
@@ -404,6 +413,15 @@ impl AccountArgs {
             let account_config: AccountConfig =
                 serde_json::from_reader(&mut std::fs::File::open(&account)?)?;
 
+            if is_affected_braavos_class(account_config.deployment.class_hash()) {
+                eprintln!(
+                    "{}",
+                    "WARNING: This Braavos account contract does not work with JSON-RPC v0.8.x. \
+                    Transactions WILL fail."
+                        .bright_magenta()
+                );
+            }
+
             let account_address = match account_config.deployment {
                 DeploymentStatus::Undeployed(_) => anyhow::bail!("account not deployed"),
                 DeploymentStatus::Deployed(inner) => inner.address,
@@ -542,6 +560,15 @@ impl AccountVariant {
                     ExecutionEncoding::New
                 }
             }
+        }
+    }
+}
+
+impl DeploymentStatus {
+    pub fn class_hash(&self) -> Felt {
+        match self {
+            Self::Undeployed(status) => status.class_hash,
+            Self::Deployed(status) => status.class_hash,
         }
     }
 }

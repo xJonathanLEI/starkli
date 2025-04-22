@@ -22,6 +22,7 @@ use starknet::{
         CompressedLegacyContractClass, ExecutionResult, Felt, FlattenedSierraClass,
         LegacyContractEntryPoint, StarknetError,
     },
+    macros::felt,
     providers::{Provider, ProviderError},
 };
 
@@ -210,6 +211,15 @@ pub fn parse_compressed_legacy_class(
         },
         program,
     })
+}
+
+/// Checks whether the class hash is affected by the JSON-RPC v0.8.x compatibility issue:
+///
+/// https://github.com/myBraavos/braavos-account-cairo/blob/12b82a87b93ba9bfdf2cbbde2566437df2e0c6c8/src/utils/utils.cairo#L188
+pub fn is_affected_braavos_class(class_hash: Felt) -> bool {
+    class_hash == felt!("0x02c8c7e6fbcfb3e8e15a46648e8914c6aa1fc506fc1e7fb3d1e19630716174bc")
+        || class_hash == felt!("0x00816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253")
+        || class_hash == felt!("0x041bf1e71792aecb9df3e9d04e1540091c5e13122a731e02bec588f71dc1a5c3")
 }
 
 fn parse_legacy_entrypoint(

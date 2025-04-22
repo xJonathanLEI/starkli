@@ -16,6 +16,7 @@ use crate::{
         BraavosMultisigConfig, BraavosSigner, BraavosStarkSigner, DeployedStatus, DeploymentStatus,
         OzAccountConfig, KNOWN_ACCOUNT_CLASSES,
     },
+    utils::is_affected_braavos_class,
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
@@ -79,6 +80,15 @@ impl Fetch {
             format!("{}", known_class.variant).bright_yellow()
         );
         eprintln!("Description: {}", known_class.description.bright_yellow());
+
+        if is_affected_braavos_class(class_hash) {
+            eprintln!(
+                "{}",
+                "WARNING: This Braavos account contract does not work with JSON-RPC \
+                v0.8.x. Transactions WILL fail."
+                    .bright_magenta()
+            );
+        }
 
         // No need to proceed if the user doesn't even want to save the config
         let output = match self.output {

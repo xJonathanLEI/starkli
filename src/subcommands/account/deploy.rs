@@ -23,7 +23,7 @@ use crate::{
     path::ExpandedPathbufParser,
     provider::ExtendedProvider,
     signer::{AnySigner, SignerArgs},
-    utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
+    utils::{felt_to_bigdecimal, is_affected_braavos_class, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
@@ -90,6 +90,15 @@ impl Deploy {
 
         let mut account: AccountConfig =
             serde_json::from_reader(&mut std::fs::File::open(&self.file)?)?;
+
+        if is_affected_braavos_class(account.deployment.class_hash()) {
+            eprintln!(
+                "{}",
+                "WARNING: This Braavos account contract does not work with JSON-RPC \
+                v0.8.x. Transactions WILL fail."
+                    .bright_magenta()
+            );
+        }
 
         let signer_public_key = signer.get_public_key().await?.scalar();
 
