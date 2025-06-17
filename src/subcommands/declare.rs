@@ -28,35 +28,40 @@ use crate::{
 #[derive(Debug, Parser)]
 pub struct Declare {
     #[clap(flatten)]
-    provider: ProviderArgs,
+    pub provider: ProviderArgs,
     #[clap(flatten)]
-    account: AccountArgs,
+    pub account: AccountArgs,
     #[clap(flatten)]
-    casm: CasmArgs,
+    pub casm: CasmArgs,
     #[clap(flatten)]
-    fee: FeeArgs,
+    pub fee: FeeArgs,
     #[clap(long, help = "Do not publish the ABI of the class")]
-    no_abi: bool,
+    pub no_abi: bool,
     #[clap(long, help = "Simulate the transaction only")]
-    simulate: bool,
+    pub simulate: bool,
     #[clap(long, help = "Provide transaction nonce manually")]
-    nonce: Option<Felt>,
+    pub nonce: Option<Felt>,
     #[clap(long, short, help = "Wait for the transaction to confirm")]
-    watch: bool,
+    pub watch: bool,
     #[clap(
         long,
         env = "STARKNET_POLL_INTERVAL",
         default_value = "5000",
         help = "Transaction result poll interval in milliseconds"
     )]
-    poll_interval: u64,
+    pub poll_interval: u64,
     #[clap(
         value_parser = ExpandedPathbufParser,
         help = "Path to contract artifact file"
     )]
-    file: PathBuf,
+    pub file: PathBuf,
     #[clap(flatten)]
-    verbosity: VerbosityArgs,
+    pub verbosity: VerbosityArgs,
+}
+
+pub struct DeclareOutput {
+    pub class_hash: Felt,
+    pub transaction_hash: Felt,
 }
 
 enum Declarable {
@@ -65,6 +70,40 @@ enum Declarable {
 
 impl Declare {
     pub async fn run(self) -> Result<()> {
+        let watch = self.watch;
+        let poll_interval = self.poll_interval;
+        let provider_args = self.provider.clone();
+
+        let result = self.run_as_lib().await?;
+
+        eprintln!(
+            "Contract declaration transaction: {}",
+            format!("{:#064x}", result.transaction_hash).bright_yellow()
+        );
+
+        if watch {
+            let provider = provider_args.into_provider()?;
+            eprintln!(
+                "Waiting for transaction {} to confirm...",
+                format!("{:#064x}", result.transaction_hash).bright_yellow(),
+            );
+            watch_tx(
+                &provider,
+                result.transaction_hash,
+                Duration::from_millis(poll_interval),
+            )
+            .await?;
+        }
+
+        eprintln!("Class hash declared:");
+
+        // Only the class hash goes to stdout so this can be easily scripted
+        println!("{}", format!("{:#064x}", result.class_hash).bright_yellow());
+
+        Ok(())
+    }
+
+    pub async fn run_as_lib(self) -> Result<DeclareOutput> {
         self.verbosity.setup_logging();
 
         let fee_setting = self.fee.into_setting()?;
@@ -121,7 +160,13 @@ impl Declare {
 
                 // TODO: add option to skip checking
                 if Self::check_already_declared(&provider, class_hash).await? {
-                    return Ok(());
+                    // This is not ideal, but we need to get the transaction hash
+                    // even if the class is already declared.
+                    // When a class is already declared, there's no transaction.
+                    // We can't proceed with the upgrade without a tx hash to watch.
+                    // For now, we return an error. A better solution would be to
+                    // find the original declaration transaction.
+                    anyhow::bail!("class already declared");
                 }
 
                 // Reconstructs an original Sierra class just for CASM compilation purposes. It's a
@@ -205,7 +250,10 @@ impl Declare {
                                     format!("{}", felt_to_bigdecimal(estimated_fee, 18))
                                         .bright_yellow(),
                                 );
-                                return Ok(());
+                                return Ok(DeclareOutput {
+                                    class_hash,
+                                    transaction_hash: Felt::default(),
+                                });
                             }
                             TokenFeeSetting::Manual(fee) => {
                                 let declaration = if let Some(l1_gas) = fee.l1_gas {
@@ -245,43 +293,24 @@ impl Declare {
 
                         if self.simulate {
                             print_colored_json(&declaration.simulate(false, false).await?)?;
-                            return Ok(());
+                            // Simulating doesn't return a tx hash, so we can't proceed.
+                            anyhow::bail!("cannot use `upgrade` with `--simulate`");
                         }
 
-                        declaration.send().await
+                        let declaration_result = declaration.send().await.map_err(account_error_mapper)?;
+
+                        (declaration_result.class_hash, declaration_result.transaction_hash)
                     }
-                }
-                .map_err(account_error_mapper)?
-                .transaction_hash;
+                };
 
                 (class_hash, declare_tx)
             }
         };
 
-        eprintln!(
-            "Contract declaration transaction: {}",
-            format!("{:#064x}", declaration_tx_hash).bright_yellow()
-        );
-
-        if self.watch {
-            eprintln!(
-                "Waiting for transaction {} to confirm...",
-                format!("{:#064x}", declaration_tx_hash).bright_yellow(),
-            );
-            watch_tx(
-                &provider,
-                declaration_tx_hash,
-                Duration::from_millis(self.poll_interval),
-            )
-            .await?;
-        }
-
-        eprintln!("Class hash declared:");
-
-        // Only the class hash goes to stdout so this can be easily scripted
-        println!("{}", format!("{:#064x}", class_hash).bright_yellow());
-
-        Ok(())
+        Ok(DeclareOutput {
+            class_hash,
+            transaction_hash: declaration_tx_hash.1,
+        })
     }
 
     async fn check_already_declared<P>(provider: P, class_hash: Felt) -> Result<bool>

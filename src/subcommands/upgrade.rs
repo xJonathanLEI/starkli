@@ -1,18 +1,21 @@
-
 use anyhow::Result;
 use clap::Parser;
 use starknet::core::types::Felt;
+use std::{path::PathBuf, time::Duration};
 
 use crate::{
     account::AccountArgs,
-    fee::{FeeArgs},
+    casm::CasmArgs,
+    fee::FeeArgs,
+    subcommands::{Declare, Invoke},
+    utils::watch_tx,
     verbosity::VerbosityArgs,
     ProviderArgs,
-    subcommands::{Deploy, Invoke},
 };
 
 #[derive(Debug, Parser)]
 pub struct Upgrade {
+    // SHARED ARGS
     #[clap(flatten)]
     provider: ProviderArgs,
     #[clap(flatten)]
@@ -21,74 +24,85 @@ pub struct Upgrade {
     fee: FeeArgs,
     #[clap(flatten)]
     verbosity: VerbosityArgs,
-    #[clap(long, help = "Do not derive contract address from deployer address")]
-    not_unique: bool,
-    #[clap(long, help = "Use the given salt to compute contract deploy address")]
-    salt: Option<String>,
-    #[clap(long, help = "Provide transaction nonce manually for the first transaction")]
-    nonce: Option<Felt>,
-    #[clap(long, short, help = "Wait for the transactions to confirm")]
+    #[clap(long, short, help = "Wait for each transaction to confirm before proceeding")]
     watch: bool,
-    #[clap(help = "Class hash for the new implementation")]
-    class_hash: String,
-    #[clap(help = "Raw constructor arguments for the new implementation")]
-    ctor_args: Vec<String>,
-    #[clap(help = "Address of the upgradeable contract to call upgrade on")]
-    upgrade_contract: String,
-    #[clap(long, default_value = "upgrade", help = "Selector for the upgrade entrypoint")]
-    selector: String,
-    #[clap(help = "Additional arguments for the upgrade call (e.g. new class hash)")]
-    upgrade_args: Vec<String>,
     #[clap(
         long,
         env = "STARKNET_POLL_INTERVAL",
         default_value = "5000",
         help = "Transaction result poll interval in milliseconds"
     )]
-    pub poll_interval: u64,
+    poll_interval: u64,
+
+    // DECLARE-SPECIFIC ARGS
+    #[clap(help = "Path to the contract artifact file (json)")]
+    file: PathBuf,
+    #[clap(flatten)]
+    casm: CasmArgs,
+    #[clap(long, help = "Do not publish the ABI of the class")]
+    no_abi: bool,
+    #[clap(long, help = "Provide transaction nonce manually for the declare transaction")]
+    nonce: Option<Felt>,
+
+    // UPGRADE-SPECIFIC ARGS
+    #[clap(help = "Address of the upgradeable contract to call upgrade on")]
+    upgrade_contract: String,
+    #[clap(long, default_value = "upgrade", help = "Selector for the upgrade entrypoint")]
+    selector: String,
 }
 
 impl Upgrade {
     pub async fn run(self) -> Result<()> {
         self.verbosity.setup_logging();
 
-        // 1. Deploy new class using Deploy subcommand
-        let deploy_cmd = Deploy {
+        // 1. Declare the new class
+        let declare_cmd = Declare {
             provider: self.provider.clone(),
             account: self.account.clone(),
-            not_unique: self.not_unique,
+            casm: self.casm,
             fee: self.fee.clone(),
-            simulate: false,
-            salt: self.salt.clone(),
+            no_abi: self.no_abi,
+            simulate: false, // Not supported for upgrade
             nonce: self.nonce,
-            watch: self.watch,
+            watch: true, // We handle watch logic manually
             poll_interval: self.poll_interval,
-            class_hash: self.class_hash.clone(),
-            ctor_args: self.ctor_args.clone(),
+            file: self.file,
             verbosity: self.verbosity.clone(),
         };
-        deploy_cmd.run().await?;
 
-        // 2. Invoke upgrade entrypoint using Invoke subcommand
-        let mut calls = vec![self.upgrade_contract, self.selector];
-        if self.upgrade_args.is_empty() {
-            calls.push(self.class_hash);
-        } else {
-            calls.extend(self.upgrade_args);
-        }
+        eprintln!("Declaring new contract class...");
+        let declare_result = declare_cmd.run_as_lib().await?;
+        eprintln!("Declaration transaction: {:#064x}", declare_result.transaction_hash);
+
+        let class_hash = declare_result.class_hash;
+        eprintln!("Successfully declared class: {:#064x}", class_hash);
+
+        // 2. Invoke the upgrade function
+        eprintln!("\nInvoking upgrade function on contract: {}", self.upgrade_contract.as_str());
+
+        let calls = vec![
+            self.upgrade_contract,
+            self.selector,
+            format!("{:#064x}", class_hash),
+        ];
 
         let invoke_cmd = Invoke {
-            provider: self.provider.clone(),
+            provider: self.provider,
             account: self.account,
             fee: self.fee,
-            simulate: false,
+            simulate: false, // Not supported for upgrade
             nonce: self.nonce.map(|n| n + 1),
             watch: self.watch,
             poll_interval: self.poll_interval,
             calls,
             verbosity: self.verbosity,
         };
+
         invoke_cmd.run().await?;
+
+        eprintln!("\nUpgrade complete. New class hash:");
+        println!("{:#064x}", class_hash);
+
         Ok(())
     }
 }
