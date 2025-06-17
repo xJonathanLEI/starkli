@@ -154,6 +154,10 @@ enum Subcommands {
             They might break or be removed anytime."
     )]
     Lab(Lab),
+    #[clap(
+        about = "Upgrade a contract by declaring a new class and invoking the upgrade entrypoint"
+    )]
+    Upgrade(Upgrade),
 }
 
 #[cfg_attr(target_arch = "wasm32", tokio::main(flavor = "current_thread"))]
@@ -217,6 +221,7 @@ async fn run_command(cli: Cli) -> Result<()> {
             Subcommands::Deploy(cmd) => cmd.run().await,
             Subcommands::Completions(cmd) => cmd.run(),
             Subcommands::Lab(cmd) => cmd.run(),
+            Subcommands::Upgrade(cmd) => cmd.run().await,
         },
     }
 }

@@ -23,34 +23,34 @@ const DEFAULT_UDC_ADDRESS: Felt =
 #[derive(Debug, Parser)]
 pub struct Deploy {
     #[clap(flatten)]
-    provider: ProviderArgs,
+    pub provider: ProviderArgs,
     #[clap(flatten)]
-    account: AccountArgs,
+    pub account: AccountArgs,
     #[clap(long, help = "Do not derive contract address from deployer address")]
-    not_unique: bool,
+    pub not_unique: bool,
     #[clap(flatten)]
-    fee: FeeArgs,
+    pub fee: FeeArgs,
     #[clap(long, help = "Simulate the transaction only")]
-    simulate: bool,
+    pub simulate: bool,
     #[clap(long, help = "Use the given salt to compute contract deploy address")]
-    salt: Option<String>,
+    pub salt: Option<String>,
     #[clap(long, help = "Provide transaction nonce manually")]
-    nonce: Option<Felt>,
+    pub nonce: Option<Felt>,
     #[clap(long, short, help = "Wait for the transaction to confirm")]
-    watch: bool,
+    pub watch: bool,
     #[clap(
         long,
         env = "STARKNET_POLL_INTERVAL",
         default_value = "5000",
         help = "Transaction result poll interval in milliseconds"
     )]
-    poll_interval: u64,
+    pub poll_interval: u64,
     #[clap(help = "Class hash")]
-    class_hash: String,
+    pub class_hash: String,
     #[clap(help = "Raw constructor arguments")]
-    ctor_args: Vec<String>,
+    pub ctor_args: Vec<String>,
     #[clap(flatten)]
-    verbosity: VerbosityArgs,
+    pub verbosity: VerbosityArgs,
 }
 
 impl Deploy {

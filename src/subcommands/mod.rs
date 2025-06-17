@@ -99,3 +99,6 @@ pub use transaction_status::TransactionStatus;
 
 mod abi;
 pub use abi::Abi;
+
+mod upgrade;
+pub use upgrade::Upgrade;
