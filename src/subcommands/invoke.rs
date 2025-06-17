@@ -22,28 +22,28 @@ use crate::{
 #[derive(Debug, Parser)]
 pub struct Invoke {
     #[clap(flatten)]
-    provider: ProviderArgs,
+    pub provider: ProviderArgs,
     #[clap(flatten)]
-    account: AccountArgs,
+    pub account: AccountArgs,
     #[clap(flatten)]
-    fee: FeeArgs,
+    pub fee: FeeArgs,
     #[clap(long, help = "Simulate the transaction only")]
-    simulate: bool,
+    pub simulate: bool,
     #[clap(long, help = "Provide transaction nonce manually")]
-    nonce: Option<Felt>,
+    pub nonce: Option<Felt>,
     #[clap(long, short, help = "Wait for the transaction to confirm")]
-    watch: bool,
+    pub watch: bool,
     #[clap(
         long,
         env = "STARKNET_POLL_INTERVAL",
         default_value = "5000",
         help = "Transaction result poll interval in milliseconds"
     )]
-    poll_interval: u64,
+    pub poll_interval: u64,
     #[clap(help = "One or more contract calls. See documentation for more details")]
-    calls: Vec<String>,
+    pub calls: Vec<String>,
     #[clap(flatten)]
-    verbosity: VerbosityArgs,
+    pub verbosity: VerbosityArgs,
 }
 
 impl Invoke {
