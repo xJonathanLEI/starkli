@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use std::{path::PathBuf, sync::Arc};
 
 use anyhow::Result;
 use clap::Parser;
@@ -20,7 +20,7 @@ use crate::{
     error::account_error_mapper,
     fee::{FeeArgs, FeeSetting, TokenFeeSetting},
     path::ExpandedPathbufParser,
-    utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
+    utils::{felt_to_bigdecimal, print_colored_json},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
