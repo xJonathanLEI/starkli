@@ -61,7 +61,7 @@ pub struct Declare {
 
 pub struct DeclareOutput {
     pub class_hash: Felt,
-    pub transaction_hash: Felt,
+    pub transaction_hash: Option<Felt>,
 }
 
 enum Declarable {
@@ -70,29 +70,13 @@ enum Declarable {
 
 impl Declare {
     pub async fn run(self) -> Result<()> {
-        let watch = self.watch;
-        let poll_interval = self.poll_interval;
-        let provider_args = self.provider.clone();
-
         let result = self.run_as_lib().await?;
 
-        eprintln!(
-            "Contract declaration transaction: {}",
-            format!("{:#064x}", result.transaction_hash).bright_yellow()
-        );
-
-        if watch {
-            let provider = provider_args.into_provider()?;
+        if let Some(transaction_hash) = result.transaction_hash {
             eprintln!(
-                "Waiting for transaction {} to confirm...",
-                format!("{:#064x}", result.transaction_hash).bright_yellow(),
+                "Contract declaration transaction: {}",
+                format!("{:#064x}", transaction_hash).bright_yellow()
             );
-            watch_tx(
-                &provider,
-                result.transaction_hash,
-                Duration::from_millis(poll_interval),
-            )
-            .await?;
         }
 
         eprintln!("Class hash declared:");
@@ -160,13 +144,10 @@ impl Declare {
 
                 // TODO: add option to skip checking
                 if Self::check_already_declared(&provider, class_hash).await? {
-                    // This is not ideal, but we need to get the transaction hash
-                    // even if the class is already declared.
-                    // When a class is already declared, there's no transaction.
-                    // We can't proceed with the upgrade without a tx hash to watch.
-                    // For now, we return an error. A better solution would be to
-                    // find the original declaration transaction.
-                    anyhow::bail!("class already declared");
+                    return Ok(DeclareOutput {
+                        class_hash,
+                        transaction_hash: None,
+                    });
                 }
 
                 // Reconstructs an original Sierra class just for CASM compilation purposes. It's a
@@ -252,7 +233,7 @@ impl Declare {
                                 );
                                 return Ok(DeclareOutput {
                                     class_hash,
-                                    transaction_hash: Felt::default(),
+                                    transaction_hash: None,
                                 });
                             }
                             TokenFeeSetting::Manual(fee) => {
@@ -293,13 +274,19 @@ impl Declare {
 
                         if self.simulate {
                             print_colored_json(&declaration.simulate(false, false).await?)?;
-                            // Simulating doesn't return a tx hash, so we can't proceed.
-                            anyhow::bail!("cannot use `upgrade` with `--simulate`");
+                            return Ok(DeclareOutput {
+                                class_hash,
+                                transaction_hash: None,
+                            });
                         }
 
-                        let declaration_result = declaration.send().await.map_err(account_error_mapper)?;
+                        let declaration_result =
+                            declaration.send().await.map_err(account_error_mapper)?;
 
-                        (declaration_result.class_hash, declaration_result.transaction_hash)
+                        (
+                            declaration_result.class_hash,
+                            declaration_result.transaction_hash,
+                        )
                     }
                 };
 
@@ -309,7 +296,7 @@ impl Declare {
 
         Ok(DeclareOutput {
             class_hash,
-            transaction_hash: declaration_tx_hash.1,
+            transaction_hash: Some(declaration_tx_hash.1),
         })
     }
 

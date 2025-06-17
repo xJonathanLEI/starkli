@@ -24,7 +24,11 @@ pub struct Upgrade {
     fee: FeeArgs,
     #[clap(flatten)]
     verbosity: VerbosityArgs,
-    #[clap(long, short, help = "Wait for each transaction to confirm before proceeding")]
+    #[clap(
+        long,
+        short,
+        help = "Wait for each transaction to confirm before proceeding"
+    )]
     watch: bool,
     #[clap(
         long,
@@ -41,13 +45,22 @@ pub struct Upgrade {
     casm: CasmArgs,
     #[clap(long, help = "Do not publish the ABI of the class")]
     no_abi: bool,
-    #[clap(long, help = "Provide transaction nonce manually for the declare transaction")]
+    #[clap(
+        long,
+        help = "Provide transaction nonce manually for the declare transaction"
+    )]
     nonce: Option<Felt>,
+    #[clap(long, default_value = "false", help = "Simulate the transaction only")]
+    simulate: bool,
 
     // UPGRADE-SPECIFIC ARGS
     #[clap(help = "Address of the upgradeable contract to call upgrade on")]
     upgrade_contract: String,
-    #[clap(long, default_value = "upgrade", help = "Selector for the upgrade entrypoint")]
+    #[clap(
+        long,
+        default_value = "upgrade",
+        help = "Selector for the upgrade entrypoint"
+    )]
     upgrade_selector: String,
 }
 
@@ -62,9 +75,9 @@ impl Upgrade {
             casm: self.casm,
             fee: self.fee.clone(),
             no_abi: self.no_abi,
-            simulate: false, // Not supported for upgrade
+            simulate: self.simulate,
             nonce: self.nonce,
-            watch: true, // We handle watch logic manually
+            watch: true,
             poll_interval: self.poll_interval,
             file: self.file,
             verbosity: self.verbosity.clone(),
@@ -72,13 +85,15 @@ impl Upgrade {
 
         eprintln!("Declaring new contract class...");
         let declare_result = declare_cmd.run_as_lib().await?;
-        eprintln!("Declaration transaction: {:#064x}", declare_result.transaction_hash);
 
         let class_hash = declare_result.class_hash;
         eprintln!("Successfully declared class: {:#064x}", class_hash);
 
         // 2. Invoke the upgrade function
-        eprintln!("\nInvoking upgrade function on contract: {}", self.upgrade_contract.as_str());
+        eprintln!(
+            "\nInvoking upgrade function on contract: {}",
+            self.upgrade_contract.as_str()
+        );
 
         let calls = vec![
             self.upgrade_contract,
@@ -90,7 +105,7 @@ impl Upgrade {
             provider: self.provider,
             account: self.account,
             fee: self.fee,
-            simulate: false, // Not supported for upgrade
+            simulate: self.simulate,
             nonce: self.nonce.map(|n| n + 1),
             watch: self.watch,
             poll_interval: self.poll_interval,
