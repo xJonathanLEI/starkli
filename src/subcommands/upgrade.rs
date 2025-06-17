@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use colored::Colorize;
 use starknet::core::types::Felt;
 use std::path::PathBuf;
 
@@ -100,7 +101,7 @@ impl Upgrade {
         invoke_cmd.run().await?;
 
         eprintln!("\nUpgrade complete. New class hash:");
-        println!("{:#064x}", class_hash);
+        println!("{}", format!("{:#064x}", class_hash).bright_yellow());
 
         Ok(())
     }
