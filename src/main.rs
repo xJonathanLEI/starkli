@@ -154,7 +154,7 @@ enum Subcommands {
             They might break or be removed anytime."
     )]
     Lab(Lab),
-    #[clap(about = "Upgrade a contract by deploying a new class and invoking the upgrade entrypoint")]
+    #[clap(about = "Upgrade a contract by declaring a new class and invoking the upgrade entrypoint")]
     Upgrade(Upgrade),
 }
 

@@ -28,6 +28,7 @@ Starkli offers the following commands:
 - invoke
 - declare
 - deploy
+- upgrade
 - completions
 
 To check usage of each command, run with the `--help` option.
