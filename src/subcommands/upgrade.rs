@@ -1,14 +1,13 @@
 use anyhow::Result;
 use clap::Parser;
 use starknet::core::types::Felt;
-use std::{path::PathBuf, time::Duration};
+use std::path::PathBuf;
 
 use crate::{
     account::AccountArgs,
     casm::CasmArgs,
     fee::FeeArgs,
     subcommands::{Declare, Invoke},
-    utils::watch_tx,
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
