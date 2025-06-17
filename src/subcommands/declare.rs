@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use clap::Parser;
@@ -20,7 +20,7 @@ use crate::{
     error::account_error_mapper,
     fee::{FeeArgs, FeeSetting, TokenFeeSetting},
     path::ExpandedPathbufParser,
-    utils::{felt_to_bigdecimal, print_colored_json},
+    utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
 };
@@ -282,6 +282,15 @@ impl Declare {
 
                         let declaration_result =
                             declaration.send().await.map_err(account_error_mapper)?;
+
+                        if self.watch {
+                            watch_tx(
+                                &provider,
+                                declaration_result.transaction_hash,
+                                Duration::from_millis(self.poll_interval),
+                            )
+                            .await?;
+                        }
 
                         (
                             declaration_result.class_hash,
