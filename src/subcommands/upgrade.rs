@@ -47,7 +47,7 @@ pub struct Upgrade {
     #[clap(help = "Address of the upgradeable contract to call upgrade on")]
     upgrade_contract: String,
     #[clap(long, default_value = "upgrade", help = "Selector for the upgrade entrypoint")]
-    selector: String,
+    upgrade_selector: String,
 }
 
 impl Upgrade {
@@ -81,7 +81,7 @@ impl Upgrade {
 
         let calls = vec![
             self.upgrade_contract,
-            self.selector,
+            self.upgrade_selector,
             format!("{:#064x}", class_hash),
         ];
 
