@@ -1,19 +1,11 @@
-use std::{sync::Arc, time::Duration};
 
 use anyhow::Result;
 use clap::Parser;
-use colored::Colorize;
-use starknet::{
-    contract::ContractFactory,
-    core::types::{Call, Felt},
-    macros::felt,
-    signers::SigningKey,
-};
+use starknet::core::types::Felt;
 
 use crate::{
     account::AccountArgs,
     fee::{FeeArgs},
-    utils::{felt_to_bigdecimal, print_colored_json, watch_tx},
     verbosity::VerbosityArgs,
     ProviderArgs,
     subcommands::{Deploy, Invoke},
@@ -47,6 +39,13 @@ pub struct Upgrade {
     selector: String,
     #[clap(help = "Additional arguments for the upgrade call (e.g. new class hash)")]
     upgrade_args: Vec<String>,
+    #[clap(
+        long,
+        env = "STARKNET_POLL_INTERVAL",
+        default_value = "5000",
+        help = "Transaction result poll interval in milliseconds"
+    )]
+    pub poll_interval: u64,
 }
 
 impl Upgrade {
@@ -63,7 +62,7 @@ impl Upgrade {
             salt: self.salt.clone(),
             nonce: self.nonce,
             watch: self.watch,
-            poll_interval: 5000,
+            poll_interval: self.poll_interval,
             class_hash: self.class_hash.clone(),
             ctor_args: self.ctor_args.clone(),
             verbosity: self.verbosity.clone(),
@@ -83,9 +82,9 @@ impl Upgrade {
             account: self.account,
             fee: self.fee,
             simulate: false,
-            nonce: None,
+            nonce: self.nonce.map(|n| n + 1),
             watch: self.watch,
-            poll_interval: 5000,
+            poll_interval: self.poll_interval,
             calls,
             verbosity: self.verbosity,
         };
