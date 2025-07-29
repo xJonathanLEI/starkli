@@ -20,7 +20,7 @@ impl SpecVersion {
 
         let spec_version = provider.spec_version().await?;
 
-        println!("{}", spec_version);
+        println!("{spec_version}");
 
         Ok(())
     }

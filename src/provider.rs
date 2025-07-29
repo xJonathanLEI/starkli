@@ -135,12 +135,12 @@ impl ProviderArgs {
                                     eprintln!(
                                         "{}{}{}{}{}",
                                         "NOTE: you're using the `".bright_magenta(),
-                                        format!("{}", builtin_network).bright_yellow(),
+                                        format!("{builtin_network}").bright_yellow(),
                                         "` network without specifying an RPC endpoint for the \
                                         first time. A random free RPC vendor has been selected \
                                         for you: "
                                             .bright_magenta(),
-                                        format!("{}", chosen_provider).bright_yellow(),
+                                        format!("{chosen_provider}").bright_yellow(),
                                         ". This message will only be shown once. See \
                                         https://book.starkli.rs/providers for more details."
                                             .bright_magenta()
@@ -511,10 +511,9 @@ impl Provider for ExtendedProvider {
             eprintln!(
                 "{}",
                 format!(
-                    "WARNING: the JSON-RPC endpoint you're using serves specs {}, which might be \
-                    incompatible with the version {} supported by this Starkli release for the \
-                    `starknet_estimateFee` method. You might encounter errors.",
-                    spec_version, JSON_RPC_VERSION
+                    "WARNING: the JSON-RPC endpoint you're using serves specs {spec_version}, which might be \
+                    incompatible with the version {JSON_RPC_VERSION} supported by this Starkli release for the \
+                    `starknet_estimateFee` method. You might encounter errors."
                 )
                 .bright_magenta()
             );

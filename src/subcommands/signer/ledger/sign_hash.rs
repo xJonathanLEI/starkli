@@ -38,7 +38,7 @@ impl SignHash {
         eprintln!("Please confirm the signing operation on your Ledger");
 
         let signature = ledger.sign_hash(self.path, &hash).await?;
-        println!("0x{}", signature);
+        println!("0x{signature}");
 
         Ok(())
     }

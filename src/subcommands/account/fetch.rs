@@ -68,7 +68,7 @@ impl Fetch {
                 eprintln!(
                     "{} is not a known account class hash. \
                     If you believe this is a bug, submit a PR to:",
-                    format!("{:#064x}", class_hash).bright_yellow()
+                    format!("{class_hash:#064x}").bright_yellow()
                 );
                 eprintln!("    https://github.com/xJonathanLEI/starkli");
                 anyhow::bail!("unknown class hash: {:#064x}", class_hash);

@@ -44,7 +44,7 @@ impl Storage {
 
         let value = provider.get_storage_at(address, key, self.block).await?;
 
-        println!("{:#064x}", value);
+        println!("{value:#064x}");
 
         Ok(())
     }

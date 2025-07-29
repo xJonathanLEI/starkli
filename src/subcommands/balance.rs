@@ -72,13 +72,13 @@ impl Balance {
         let raw_balance: BigUint = (high << 128) + low;
 
         if self.raw {
-            println!("{}", raw_balance);
+            println!("{raw_balance}");
         } else if self.hex {
-            println!("{:#x}", raw_balance);
+            println!("{raw_balance:#x}");
         } else {
             // `to_bigint()` from `BigUint` always returns `Some`.
             let balance_dec = BigDecimal::new(raw_balance.to_bigint().unwrap(), 18);
-            println!("{}", balance_dec);
+            println!("{balance_dec}");
         }
 
         Ok(())

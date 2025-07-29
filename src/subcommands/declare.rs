@@ -143,7 +143,7 @@ impl Declare {
                 if !fee_setting.is_estimate_only() {
                     eprintln!(
                         "Declaring Cairo 1 class: {}",
-                        format!("{:#064x}", class_hash).bright_yellow()
+                        format!("{class_hash:#064x}").bright_yellow()
                     );
 
                     match &casm_source {
@@ -169,7 +169,7 @@ impl Declare {
                         CasmHashSource::Hash(hash) => {
                             eprintln!(
                                 "Using the provided CASM hash: {}...",
-                                format!("{:#064x}", hash).bright_yellow()
+                                format!("{hash:#064x}").bright_yellow()
                             );
                         }
                     }
@@ -180,7 +180,7 @@ impl Declare {
                 if !fee_setting.is_estimate_only() {
                     eprintln!(
                         "CASM class hash: {}",
-                        format!("{:#064x}", casm_class_hash).bright_yellow()
+                        format!("{casm_class_hash:#064x}").bright_yellow()
                     );
                 }
 
@@ -260,13 +260,13 @@ impl Declare {
 
         eprintln!(
             "Contract declaration transaction: {}",
-            format!("{:#064x}", declaration_tx_hash).bright_yellow()
+            format!("{declaration_tx_hash:#064x}").bright_yellow()
         );
 
         if self.watch {
             eprintln!(
                 "Waiting for transaction {} to confirm...",
-                format!("{:#064x}", declaration_tx_hash).bright_yellow(),
+                format!("{declaration_tx_hash:#064x}").bright_yellow(),
             );
             watch_tx(
                 &provider,
@@ -279,7 +279,7 @@ impl Declare {
         eprintln!("Class hash declared:");
 
         // Only the class hash goes to stdout so this can be easily scripted
-        println!("{}", format!("{:#064x}", class_hash).bright_yellow());
+        println!("{}", format!("{class_hash:#064x}").bright_yellow());
 
         Ok(())
     }
@@ -294,7 +294,7 @@ impl Declare {
         {
             Ok(_) => {
                 eprintln!("Not declaring class as it's already declared. Class hash:");
-                println!("{}", format!("{:#064x}", class_hash).bright_yellow());
+                println!("{}", format!("{class_hash:#064x}").bright_yellow());
 
                 Ok(true)
             }

@@ -10,7 +10,7 @@ impl AppVersion {
         let ledger = LedgerStarknetApp::new().await?;
 
         let version = ledger.get_version().await?;
-        println!("{}", version);
+        println!("{version}");
 
         Ok(())
     }

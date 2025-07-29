@@ -22,9 +22,9 @@ impl Mont {
 
         for element in mont.into_iter() {
             output.push_str(&if self.hex {
-                format!("    {:#x},\n", element)
+                format!("    {element:#x},\n")
             } else {
-                format!("    {},\n", element)
+                format!("    {element},\n")
             });
         }
 

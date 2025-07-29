@@ -368,7 +368,7 @@ impl Deploy {
 
         eprintln!(
             "Account deployment transaction: {}",
-            format!("{:#064x}", account_deployment_tx).bright_yellow()
+            format!("{account_deployment_tx:#064x}").bright_yellow()
         );
 
         // By default we wait for the tx to confirm so that we don't incorrectly mark the account
@@ -376,7 +376,7 @@ impl Deploy {
         eprintln!(
             "Waiting for transaction {} to confirm. \
             If this process is interrupted, you will need to run `{}` to update the account file.",
-            format!("{:#064x}", account_deployment_tx).bright_yellow(),
+            format!("{account_deployment_tx:#064x}").bright_yellow(),
             "starkli account fetch".bright_yellow(),
         );
         watch_tx(
@@ -440,7 +440,7 @@ fn fee_prompt(fee_type: MaxFeeType, deployed_address: Felt, fee_token: FeeToken)
 
     eprintln!(
         "to the following address:\n    {}",
-        format!("{:#064x}", deployed_address).bright_yellow()
+        format!("{deployed_address:#064x}").bright_yellow()
     );
 
     // TODO: add flag for skipping this manual confirmation step

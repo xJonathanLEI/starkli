@@ -606,7 +606,7 @@ impl Display for AccountVariantType {
 fn find_builtin_account(id: &str) -> Option<&'static BuiltinAccount> {
     BUILTIN_ACCOUNTS
         .iter()
-        .find(|&account| account.id == id || account.aliases.iter().any(|alias| *alias == id))
+        .find(|&account| account.id == id || account.aliases.contains(&id))
 }
 
 fn true_as_default() -> bool {

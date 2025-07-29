@@ -36,7 +36,7 @@ where
                 ExecutionResult::Succeeded => {
                     eprintln!(
                         "Transaction {} confirmed",
-                        format!("{:#064x}", transaction_hash).bright_yellow()
+                        format!("{transaction_hash:#064x}").bright_yellow()
                     );
 
                     return Ok(());
@@ -138,7 +138,7 @@ where
         String::from_utf8_unchecked(writer)
     };
 
-    println!("{}", json);
+    println!("{json}");
 
     Ok(())
 }

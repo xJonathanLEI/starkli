@@ -78,7 +78,7 @@ impl Init {
         eprintln!();
         eprintln!(
             "Once deployed, this account will be available at:\n    {}",
-            format!("{:#064x}", deployed_address).bright_yellow()
+            format!("{deployed_address:#064x}").bright_yellow()
         );
         eprintln!();
         eprintln!(

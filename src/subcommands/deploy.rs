@@ -89,12 +89,12 @@ impl Deploy {
         if !fee_setting.is_estimate_only() {
             eprintln!(
                 "Deploying class {} with salt {}...",
-                format!("{:#064x}", class_hash).bright_yellow(),
-                format!("{:#064x}", salt).bright_yellow()
+                format!("{class_hash:#064x}").bright_yellow(),
+                format!("{salt:#064x}").bright_yellow()
             );
             eprintln!(
                 "The contract will be deployed at address {}",
-                format!("{:#064x}", deployed_address).bright_yellow()
+                format!("{deployed_address:#064x}").bright_yellow()
             );
         }
 
@@ -169,13 +169,13 @@ impl Deploy {
 
         eprintln!(
             "Contract deployment transaction: {}",
-            format!("{:#064x}", deployment_tx).bright_yellow()
+            format!("{deployment_tx:#064x}").bright_yellow()
         );
 
         if self.watch {
             eprintln!(
                 "Waiting for transaction {} to confirm...",
-                format!("{:#064x}", deployment_tx).bright_yellow(),
+                format!("{deployment_tx:#064x}").bright_yellow(),
             );
             watch_tx(
                 &provider,
@@ -188,7 +188,7 @@ impl Deploy {
         eprintln!("Contract deployed:");
 
         // Only the contract goes to stdout so this can be easily scripted
-        println!("{}", format!("{:#064x}", deployed_address).bright_yellow());
+        println!("{}", format!("{deployed_address:#064x}").bright_yellow());
 
         Ok(())
     }

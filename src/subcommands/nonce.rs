@@ -29,7 +29,7 @@ impl Nonce {
             .get_nonce(BlockId::Tag(BlockTag::Pending), address)
             .await?;
 
-        println!("{}", nonce);
+        println!("{nonce}");
 
         Ok(())
     }

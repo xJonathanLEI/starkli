@@ -29,7 +29,7 @@ impl ClassHashAt {
             .get_class_hash_at(BlockId::Tag(BlockTag::Pending), address)
             .await?;
 
-        println!("{:#064x}", class_hash);
+        println!("{class_hash:#064x}");
 
         Ok(())
     }

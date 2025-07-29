@@ -173,13 +173,13 @@ impl Invoke {
 
         eprintln!(
             "Invoke transaction: {}",
-            format!("{:#064x}", invoke_tx).bright_yellow()
+            format!("{invoke_tx:#064x}").bright_yellow()
         );
 
         if self.watch {
             eprintln!(
                 "Waiting for transaction {} to confirm...",
-                format!("{:#064x}", invoke_tx).bright_yellow(),
+                format!("{invoke_tx:#064x}").bright_yellow(),
             );
             watch_tx(
                 &provider,

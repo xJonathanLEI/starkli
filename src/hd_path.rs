@@ -78,9 +78,8 @@ impl TypedValueParser for DerivationPathParser {
                     Err(err) => Err(cmd.clone().error(
                         ErrorKind::InvalidValue,
                         format!(
-                            "invalid Ledger derivation path: {}. Learn more about using \
-                            Ledger with Starkli at https://book.starkli.rs/ledger",
-                            err
+                            "invalid Ledger derivation path: {err}. Learn more about using \
+                            Ledger with Starkli at https://book.starkli.rs/ledger"
                         ),
                     )),
                 },
@@ -113,9 +112,8 @@ impl TypedValueParser for Eip2645PathParser {
                     Err(err) => Err(cmd.clone().error(
                         ErrorKind::InvalidValue,
                         format!(
-                            "invalid Ledger derivation path: {}. Learn more about using \
-                            Ledger with Starkli at https://book.starkli.rs/ledger",
-                            err
+                            "invalid Ledger derivation path: {err}. Learn more about using \
+                            Ledger with Starkli at https://book.starkli.rs/ledger"
                         ),
                     )),
                 },
