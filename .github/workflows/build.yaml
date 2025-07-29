@@ -1,19 +1,30 @@
 on:
   push:
     branches:
-      - "master"
-  pull_request:
+      - "test/windows_ci_build"
 
-name: "Build"
+name: "Windows Build Test"
 
 jobs:
-  build-docker:
-    name: "Build Docker image"
-    runs-on: "ubuntu-latest"
+  build:
+    name: "Build Windows"
+    runs-on: "windows-latest"
+
     steps:
       - name: "Checkout source code"
         uses: "actions/checkout@v3"
 
-      - name: "Build Docker image"
+      - name: "Setup stable toolchain"
+        uses: "actions-rs/toolchain@v1"
+        with:
+          toolchain: "stable"
+          profile: "minimal"
+          override: true
+
+      - name: "Install cross"
         run: |
-          docker build .
+          cargo install --locked --version 0.2.5 cross
+
+      - name: "Build release"
+        run: |
+          cross build --release --target x86_64-pc-windows-msvc
