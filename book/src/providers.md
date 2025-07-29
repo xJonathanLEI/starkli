@@ -90,10 +90,9 @@ The following 3 networks are eligible for free RPC vendors:
 - `mainnet`
 - `sepolia`
 
-When using these networks, **and when the network is not already defined in the active profile**, a free vendor will be randomly chosen from below:
+When using these networks, **and when the network is not already defined in the active profile**, a free vendor will be used:
 
 - [Blast](https://blastapi.io/public-api/starknet)
-- [Nethermind](https://data.voyager.online/)
 
 Once selected, the vendor choice is persisted in the profile. A message is printed to the console when this happens. All subsequent invocations under the same network use the already chosen vendor automatically.
 

@@ -5,7 +5,6 @@ use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
 use indexmap::map::Entry;
-use rand::{rngs::StdRng, Rng, SeedableRng};
 use starknet::{
     core::types::*,
     macros::short_string,
@@ -97,7 +96,7 @@ impl ProviderArgs {
             }
         };
 
-        let matched_network = match matched_profile.networks.get(network) {
+        let matched_network = match matched_profile.networks.get_mut(network) {
             Some(network) => {
                 // The network has been configured. We're good to go!
                 network
@@ -110,7 +109,10 @@ impl ProviderArgs {
                         // If so, it's possible that the canonical name is configured after all.
                         // Note that we're doing this for backward compatibility only. We might
                         // want to display a warning and remove the aliasing in the future.
-                        match matched_profile.networks.get(&builtin_network.to_string()) {
+                        match matched_profile
+                            .networks
+                            .get_mut(&builtin_network.to_string())
+                        {
                             Some(network) => {
                                 // Yes, although the specified name was not configured, the
                                 // canonical name is. Simply return the configured network.
@@ -120,24 +122,17 @@ impl ProviderArgs {
                                 // The network really is not configured. Let's see if we can
                                 // configure it. Only networks with a free provider available can
                                 // be configured.
-                                //
-                                // When configuring a network, we choose a free provider randomly
-                                // to be as fair as possible. The chosen provider is persisted for
-                                // a consistent experience. A notice is printed to stderr notifying
-                                // the user the first time this happens for a certain network.
 
+                                // Currently there's only one free RPC vendor
                                 fn choose_vendor(builtin_network: &Network) -> FreeProviderVendor {
-                                    let chosen_provider = randome_free_provider(&[
-                                        FreeProviderVendor::Blast,
-                                        FreeProviderVendor::Nethermind,
-                                    ]);
+                                    let chosen_provider = FreeProviderVendor::Blast;
 
                                     eprintln!(
                                         "{}{}{}{}{}",
                                         "NOTE: you're using the `".bright_magenta(),
                                         format!("{builtin_network}").bright_yellow(),
                                         "` network without specifying an RPC endpoint for the \
-                                        first time. A random free RPC vendor has been selected \
+                                        first time. A free RPC vendor has been selected \
                                         for you: "
                                             .bright_magenta(),
                                         format!("{chosen_provider}").bright_yellow(),
@@ -181,7 +176,7 @@ impl ProviderArgs {
                                     .insert(network.to_owned(), new_network);
 
                                 // We just inserted this so it must exist
-                                matched_profile.networks.get(network).unwrap()
+                                matched_profile.networks.get_mut(network).unwrap()
                             }
                         }
                     }
@@ -196,6 +191,24 @@ impl ProviderArgs {
             }
         };
 
+        if matches!(
+            matched_network.provider,
+            NetworkProvider::Free(FreeProviderVendor::Nethermind)
+        ) {
+            eprintln!(
+                "{}{}{}{}{}",
+                "NOTE: ".bright_magenta(),
+                FreeProviderVendor::Nethermind.to_string().bright_yellow(),
+                " has ended its free RPC service. You've been automatically switched to "
+                    .bright_magenta(),
+                FreeProviderVendor::Blast.to_string().bright_yellow(),
+                ".".bright_magenta(),
+            );
+
+            matched_network.provider = NetworkProvider::Free(FreeProviderVendor::Blast);
+            made_changes = true;
+        }
+
         let (rpc_config, rpc_version) = match &matched_network.provider {
             NetworkProvider::Rpc(rpc) => (rpc.clone(), None),
             NetworkProvider::Free(vendor) => {
@@ -209,15 +222,8 @@ impl ProviderArgs {
                             None
                         }
                     }
-                    FreeProviderVendor::Nethermind => {
-                        if matched_network.chain_id == CHAIN_ID_MAINNET {
-                            Some("https://free-rpc.nethermind.io/mainnet-juno/rpc/v0_8")
-                        } else if matched_network.chain_id == CHAIN_ID_SEPOLIA {
-                            Some("https://free-rpc.nethermind.io/sepolia-juno/rpc/v0_8")
-                        } else {
-                            None
-                        }
-                    }
+                    // Nethermind is always changed into Blast
+                    FreeProviderVendor::Nethermind => unreachable!(),
                 };
 
                 let url = match url {
@@ -711,12 +717,4 @@ impl Provider for ExtendedProvider {
     {
         <JsonRpcClient<HttpTransport> as Provider>::batch_requests(&self.provider, requests).await
     }
-}
-
-fn randome_free_provider(choices: &[FreeProviderVendor]) -> FreeProviderVendor {
-    let mut rng = StdRng::from_entropy();
-
-    // We never call this function with an empty slice
-    let index = rng.gen_range(0..choices.len());
-    choices[index]
 }
