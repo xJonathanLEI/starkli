@@ -59,7 +59,10 @@ tokio = { version = "1.28.2", default-features = false, features = ["rt", "time"
 etcetera = "0.8.0"
 tokio = { version = "1.28.2", default-features = false, features = ["rt-multi-thread"] }
 
-[build-dependencies]
+[target.'cfg(target_os = "windows")'.build-dependencies]
+vergen = { version = "8.2.1", features = ["build", "git", "gitcl"] }
+
+[target.'cfg(not(target_os = "windows"))'.build-dependencies]
 vergen = { version = "8.2.1", features = ["build", "git", "git2"] }
 
 [features]
