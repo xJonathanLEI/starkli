@@ -381,6 +381,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "borsh"
+version = "1.5.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad8646f98db542e39fc66e68a20b2144f6a732636df7c2354e74645faaa433ce"
+dependencies = [
+ "cfg_aliases",
+]
+
+[[package]]
 name = "bs58"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -565,10 +574,10 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-casm"
-version = "2.11.4"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
+version = "2.12.0"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.12.0#c9743105fc68b86bab514780aaecf465ae335100"
 dependencies = [
- "cairo-lang-utils 2.11.4",
+ "cairo-lang-utils 2.12.0",
  "indoc",
  "num-bigint",
  "num-traits",
@@ -597,7 +606,7 @@ dependencies = [
  "clap",
  "log",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -622,7 +631,7 @@ dependencies = [
  "clap",
  "log",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -646,7 +655,7 @@ dependencies = [
  "cairo-lang-utils 2.0.2",
  "log",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -742,7 +751,7 @@ dependencies = [
  "indexmap 1.9.3",
  "itertools 0.10.5",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -759,7 +768,7 @@ dependencies = [
  "indexmap 1.9.3",
  "itertools 0.10.5",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -776,7 +785,7 @@ dependencies = [
  "indexmap 1.9.3",
  "itertools 0.10.5",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -792,7 +801,7 @@ dependencies = [
  "cairo-lang-utils 2.3.1",
  "itertools 0.11.0",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -808,7 +817,7 @@ dependencies = [
  "cairo-lang-utils 2.5.4",
  "itertools 0.11.0",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -937,10 +946,10 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-eq-solver"
-version = "2.11.4"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
+version = "2.12.0"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.12.0#c9743105fc68b86bab514780aaecf465ae335100"
 dependencies = [
- "cairo-lang-utils 2.11.4",
+ "cairo-lang-utils 2.12.0",
  "good_lp",
 ]
 
@@ -954,7 +963,7 @@ dependencies = [
  "path-clean 0.1.0",
  "salsa",
  "serde",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -967,7 +976,7 @@ dependencies = [
  "path-clean 0.1.0",
  "salsa",
  "serde",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -980,7 +989,7 @@ dependencies = [
  "path-clean 0.1.0",
  "salsa",
  "serde",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -993,7 +1002,7 @@ dependencies = [
  "path-clean 1.0.1",
  "salsa",
  "serde",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1006,7 +1015,7 @@ dependencies = [
  "path-clean 1.0.1",
  "salsa",
  "serde",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1030,7 +1039,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1054,7 +1063,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1078,7 +1087,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1126,7 +1135,7 @@ dependencies = [
  "num-traits",
  "once_cell",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1145,7 +1154,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "unescaper",
 ]
 
@@ -1165,7 +1174,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "unescaper",
 ]
 
@@ -1185,7 +1194,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "unescaper",
 ]
 
@@ -1204,7 +1213,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "unescaper",
 ]
 
@@ -1223,7 +1232,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "unescaper",
 ]
 
@@ -1242,7 +1251,7 @@ dependencies = [
  "indoc",
  "itertools 0.10.5",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1260,7 +1269,7 @@ dependencies = [
  "indoc",
  "itertools 0.10.5",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1278,7 +1287,7 @@ dependencies = [
  "indoc",
  "itertools 0.10.5",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1296,7 +1305,7 @@ dependencies = [
  "indoc",
  "itertools 0.11.0",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1314,7 +1323,7 @@ dependencies = [
  "indoc",
  "itertools 0.11.0",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1374,7 +1383,7 @@ source = "git+https://github.com/starkware-libs/cairo?tag=v1.0.0#4e32aa52e1109ff
 dependencies = [
  "cairo-lang-filesystem 1.0.0",
  "serde",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
  "toml 0.4.10",
 ]
@@ -1386,7 +1395,7 @@ source = "git+https://github.com/starkware-libs/cairo?tag=v1.1.1#c6b003cc425907a
 dependencies = [
  "cairo-lang-filesystem 1.1.1",
  "serde",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
  "toml 0.4.10",
 ]
@@ -1399,7 +1408,7 @@ dependencies = [
  "cairo-lang-filesystem 2.0.2",
  "cairo-lang-utils 2.0.2",
  "serde",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
  "toml 0.4.10",
 ]
@@ -1412,7 +1421,7 @@ dependencies = [
  "cairo-lang-filesystem 2.3.1",
  "cairo-lang-utils 2.3.1",
  "serde",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
  "toml 0.7.8",
 ]
@@ -1425,7 +1434,7 @@ dependencies = [
  "cairo-lang-filesystem 2.5.4",
  "cairo-lang-utils 2.5.4",
  "serde",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
  "toml 0.8.8",
 ]
@@ -1449,7 +1458,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1471,7 +1480,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1493,7 +1502,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1515,7 +1524,7 @@ dependencies = [
  "num-traits",
  "once_cell",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1539,7 +1548,7 @@ dependencies = [
  "num-traits",
  "once_cell",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1560,7 +1569,7 @@ dependencies = [
  "salsa",
  "serde",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -1582,7 +1591,7 @@ dependencies = [
  "salsa",
  "serde",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -1604,7 +1613,7 @@ dependencies = [
  "salsa",
  "serde",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -1627,7 +1636,7 @@ dependencies = [
  "salsa",
  "serde",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -1652,7 +1661,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -1677,7 +1686,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -1702,20 +1711,20 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "starknet-types-core",
  "thiserror 1.0.61",
 ]
 
 [[package]]
 name = "cairo-lang-sierra"
-version = "2.11.4"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
+version = "2.12.0"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.12.0#c9743105fc68b86bab514780aaecf465ae335100"
 dependencies = [
  "anyhow",
- "cairo-lang-utils 2.11.4",
+ "cairo-lang-utils 2.12.0",
  "const-fnv1a-hash",
- "convert_case 0.7.1",
+ "convert_case 0.8.0",
  "derivative",
  "itertools 0.14.0",
  "lalrpop 0.22.1",
@@ -1728,7 +1737,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.3.2",
  "starknet-types-core",
  "thiserror 2.0.12",
 ]
@@ -1827,13 +1836,13 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-sierra-ap-change"
-version = "2.11.4"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
+version = "2.12.0"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.12.0#c9743105fc68b86bab514780aaecf465ae335100"
 dependencies = [
- "cairo-lang-eq-solver 2.11.4",
- "cairo-lang-sierra 2.11.4",
- "cairo-lang-sierra-type-size 2.11.4",
- "cairo-lang-utils 2.11.4",
+ "cairo-lang-eq-solver 2.12.0",
+ "cairo-lang-sierra 2.12.0",
+ "cairo-lang-sierra-type-size 2.12.0",
+ "cairo-lang-utils 2.12.0",
  "itertools 0.14.0",
  "num-bigint",
  "num-traits",
@@ -1934,13 +1943,13 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-sierra-gas"
-version = "2.11.4"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
+version = "2.12.0"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.12.0#c9743105fc68b86bab514780aaecf465ae335100"
 dependencies = [
- "cairo-lang-eq-solver 2.11.4",
- "cairo-lang-sierra 2.11.4",
- "cairo-lang-sierra-type-size 2.11.4",
- "cairo-lang-utils 2.11.4",
+ "cairo-lang-eq-solver 2.12.0",
+ "cairo-lang-sierra 2.12.0",
+ "cairo-lang-sierra-type-size 2.12.0",
+ "cairo-lang-utils 2.12.0",
  "itertools 0.14.0",
  "num-bigint",
  "num-traits",
@@ -1969,7 +1978,7 @@ dependencies = [
  "itertools 0.10.5",
  "num-bigint",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -1994,7 +2003,7 @@ dependencies = [
  "itertools 0.10.5",
  "num-bigint",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -2019,7 +2028,7 @@ dependencies = [
  "itertools 0.10.5",
  "num-bigint",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -2041,7 +2050,7 @@ dependencies = [
  "num-bigint",
  "once_cell",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -2063,7 +2072,7 @@ dependencies = [
  "num-bigint",
  "once_cell",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
 ]
 
 [[package]]
@@ -2212,16 +2221,16 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-sierra-to-casm"
-version = "2.11.4"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
+version = "2.12.0"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.12.0#c9743105fc68b86bab514780aaecf465ae335100"
 dependencies = [
  "assert_matches",
- "cairo-lang-casm 2.11.4",
- "cairo-lang-sierra 2.11.4",
- "cairo-lang-sierra-ap-change 2.11.4",
- "cairo-lang-sierra-gas 2.11.4",
- "cairo-lang-sierra-type-size 2.11.4",
- "cairo-lang-utils 2.11.4",
+ "cairo-lang-casm 2.12.0",
+ "cairo-lang-sierra 2.12.0",
+ "cairo-lang-sierra-ap-change 2.12.0",
+ "cairo-lang-sierra-gas 2.12.0",
+ "cairo-lang-sierra-type-size 2.12.0",
+ "cairo-lang-utils 2.12.0",
  "indoc",
  "itertools 0.14.0",
  "num-bigint",
@@ -2268,11 +2277,11 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-sierra-type-size"
-version = "2.11.4"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
+version = "2.12.0"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.12.0#c9743105fc68b86bab514780aaecf465ae335100"
 dependencies = [
- "cairo-lang-sierra 2.11.4",
- "cairo-lang-utils 2.11.4",
+ "cairo-lang-sierra 2.12.0",
+ "cairo-lang-utils 2.12.0",
 ]
 
 [[package]]
@@ -2311,7 +2320,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -2351,7 +2360,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -2390,7 +2399,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -2425,7 +2434,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
 ]
 
@@ -2461,7 +2470,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "starknet-crypto 0.6.1",
  "thiserror 1.0.61",
 ]
@@ -2485,7 +2494,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "starknet-crypto 0.6.1",
  "thiserror 1.0.61",
 ]
@@ -2507,21 +2516,21 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.2.0",
  "starknet-types-core",
  "thiserror 1.0.61",
 ]
 
 [[package]]
 name = "cairo-lang-starknet-classes"
-version = "2.11.4"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
+version = "2.12.0"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.12.0#c9743105fc68b86bab514780aaecf465ae335100"
 dependencies = [
- "cairo-lang-casm 2.11.4",
- "cairo-lang-sierra 2.11.4",
- "cairo-lang-sierra-to-casm 2.11.4",
- "cairo-lang-utils 2.11.4",
- "convert_case 0.7.1",
+ "cairo-lang-casm 2.12.0",
+ "cairo-lang-sierra 2.12.0",
+ "cairo-lang-sierra-to-casm 2.12.0",
+ "cairo-lang-utils 2.12.0",
+ "convert_case 0.8.0",
  "itertools 0.14.0",
  "num-bigint",
  "num-integer",
@@ -2529,7 +2538,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3",
- "smol_str",
+ "smol_str 0.3.2",
  "starknet-types-core",
  "thiserror 2.0.12",
 ]
@@ -2545,7 +2554,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
  "unescaper",
 ]
@@ -2561,7 +2570,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
  "unescaper",
 ]
@@ -2577,7 +2586,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "thiserror 1.0.61",
  "unescaper",
 ]
@@ -2593,7 +2602,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "unescaper",
 ]
 
@@ -2608,7 +2617,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "salsa",
- "smol_str",
+ "smol_str 0.2.0",
  "unescaper",
 ]
 
@@ -2766,8 +2775,8 @@ dependencies = [
 
 [[package]]
 name = "cairo-lang-utils"
-version = "2.11.4"
-source = "git+https://github.com/starkware-libs/cairo?tag=v2.11.4#44c1d2a8751df233f6b992c34f2e2702690b4efd"
+version = "2.12.0"
+source = "git+https://github.com/starkware-libs/cairo?tag=v2.12.0#c9743105fc68b86bab514780aaecf465ae335100"
 dependencies = [
  "hashbrown 0.15.2",
  "indexmap 2.8.0",
@@ -2776,6 +2785,7 @@ dependencies = [
  "num-traits",
  "schemars",
  "serde",
+ "smol_str 0.3.2",
 ]
 
 [[package]]
@@ -2793,6 +2803,12 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "cfg_aliases"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
 name = "chrono"
@@ -3013,9 +3029,9 @@ dependencies = [
 
 [[package]]
 name = "convert_case"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb402b8d4c85569410425650ce3eddc7d698ed96d39a73f941b08fb63082f1e7"
+checksum = "baaaa0ecca5b51987b9423ccdc971514dd8b0bb7b4060b983d3664dad3f1f89f"
 dependencies = [
  "unicode-segmentation",
 ]
@@ -5432,6 +5448,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "smol_str"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9676b89cd56310a87b93dec47b11af744f34d5fc9f367b829474eec0a891350d"
+dependencies = [
+ "borsh",
+ "serde",
+]
+
+[[package]]
 name = "socket2"
 version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5504,7 +5530,7 @@ dependencies = [
  "cairo-lang-starknet 2.0.2",
  "cairo-lang-starknet 2.3.1",
  "cairo-lang-starknet 2.5.4",
- "cairo-lang-starknet-classes 2.11.4",
+ "cairo-lang-starknet-classes 2.12.0",
  "cairo-lang-starknet-classes 2.6.4",
  "cairo-lang-starknet-classes 2.9.4",
  "chrono",
